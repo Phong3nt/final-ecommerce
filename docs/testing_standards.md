@@ -181,7 +181,44 @@ php artisan test --coverage --min=80
 
 ---
 
-## 7. Performance Benchmarks (must pass in Feature Tests)
+## 8. Rule: Test-First Upgrade
+
+> **Áp dụng cho mọi nâng cấp A → A.1, bất kể lý do (proposal, regression fix, hay hotfix).**
+
+**Nguyên tắc:** Test mới phải được viết và chạy _trước khi viết bất kỳ dòng code nào_ của phiên bản nâng cấp. Test là "thước đo mới" — không phải là thứ viết sau để xác nhận code đúng.
+
+### Trình tự bắt buộc:
+
+```
+1. Đọc lại tất cả test case hiện có của A
+2. Với mỗi test case hiện có, quyết định:
+   - KEEP   → behavior không đổi, giữ nguyên
+   - UPDATE → behavior thay đổi có chủ ý, sửa assertion trước
+   - DELETE → không còn relevant, xóa + ghi lý do
+   - ADD    → scenario mới của A.1, viết test mới (lúc này sẽ FAIL — đó là đúng)
+3. Chạy toàn bộ suite → phải thấy đúng số test FAIL như kỳ vọng
+4. Chỉ sau bước 3 mới được viết code A.1
+5. Code cho tới khi tất cả test PASS
+```
+
+### Ký hiệu trong commit:
+
+```
+test: upgrade AU-001 test suite to A.1 spec (before code)
+feat: AU-001.1 — implement rate limiting — 14/14 tests pass
+```
+
+> **Cấm:** Viết code A.1 trước, rồi mới sửa test cho khớp. Đó là "test chạy theo code" — không phải "test làm thước đo".
+
+### Liên quan đến Proposal cũ:
+
+Trước khi bắt đầu viết test cho A.1, **kiểm tra tất cả proposal cũ** (AU-001.1, AU-001.2...) trong `evaluation_history.md`:
+
+| Trạng thái proposal                                        | Hành động                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Proposal được thiết kế dựa trên "A cũ" nhưng A đã thay đổi | **Invalidate** — đánh dấu `⚠️ Cần review` trong evaluation block, báo user trước khi implement |
+| Proposal vẫn hợp lệ với "A mới"                            | Giữ nguyên, tiến hành bình thường                                                              |
+| Không chắc chắn                                            | STOP — báo user, liệt kê điểm xung đột cụ thể                                                  |
 
 | Area                          | Threshold            | Measured By                            |
 | ----------------------------- | -------------------- | -------------------------------------- |
