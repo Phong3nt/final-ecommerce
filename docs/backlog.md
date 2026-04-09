@@ -231,7 +231,7 @@
 | Task ID | Epic                           | Status      | Sprint | Assigned To | Evaluation Record                                                                   | Git Tag              | Notes |
 | ------- | ------------------------------ | ----------- | ------ | ----------- | ----------------------------------------------------------------------------------- | -------------------- | ----- |
 | AU-001  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-001](evaluation_history.md#eval-au-001--user-registration-email--password) | `v1.0-AU-001-stable` |       |
-| AU-002  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
+| AU-002  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-002](evaluation_history.md#eval-au-002--user-login-email--password)        | `v1.0-AU-002-stable` |       |
 | AU-003  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
 | AU-004  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
 | AU-005  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
