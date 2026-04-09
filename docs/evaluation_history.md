@@ -148,7 +148,80 @@
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
-<!-- EVAL-AU-002 will appear here after AU-002 is completed -->
+## EVAL-AU-002 · User Login (Email + Password)
+
+**Version:** A  
+**Date:** 2026-04-09  
+**Status in Backlog:** Done  
+**Linked Task:** [AU-002](backlog.md)
+
+---
+
+### Test Results
+
+| Test Case ID | Scenario                                                     | Type     | Result  | Duration | Notes                                               |
+| ------------ | ------------------------------------------------------------ | -------- | ------- | -------- | --------------------------------------------------- |
+| TC-AU002-01  | Valid credentials → session created, redirect to dashboard   | Happy    | PASS ✅ | 0.48s    | `assertAuthenticatedAs` confirmed                   |
+| TC-AU002-02  | Wrong password → redirect back with email error, not authed  | Negative | PASS ✅ | 0.30s    | `assertGuest()` confirmed                           |
+| TC-AU002-03  | Non-existent email → redirect back with error                | Negative | PASS ✅ | 0.23s    |                                                     |
+| TC-AU002-04  | Empty form → validation errors on email + password           | Negative | PASS ✅ | 0.04s    |                                                     |
+| TC-AU002-05  | Missing password → validation error on password field        | Negative | PASS ✅ | 0.03s    |                                                     |
+| TC-AU002-06  | Remember me flag → `remember_token` persisted in DB          | Edge     | PASS ✅ | 0.03s    | `remember_token` column verified non-null           |
+| TC-AU002-07  | Intended URL redirect → after login goes to originally-intended route | Edge | PASS ✅ | 0.10s  |                                                     |
+| TC-AU002-08  | Session ID regenerated after login → prevents session fixation | Security | PASS ✅ | 0.03s  | `session()->getId()` changed before/after login     |
+| TC-AU002-09  | CSRF middleware is active on login route                     | Security | PASS ✅ | 0.08s    |                                                     |
+| TC-AU002-10  | Authenticated user visits `/login` → redirected away         | Security | PASS ✅ | 0.04s    | Guest middleware working                            |
+| TC-AU002-11  | Failure message is generic — does not reveal email existence | Security | PASS ✅ | 0.44s    | Same `auth.failed` message for known/unknown email  |
+| TC-AU002-12  | Login completes within 2s performance threshold              | Perf     | PASS ✅ | 0.04s    | Well under threshold                                |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 37 Assertions  
+**Test Duration:** 2.94s total (combined AU-001 + AU-002 suite)  
+**Regression:** AU-001 — 12/12 still PASS ✅ No regression detected.
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                              |
+| ------------- | ----- | ------------------------------------------------------------------------------------ |
+| Simplicity    | 5/5   | Controller is 45 lines, 3 methods, single responsibility                             |
+| Security      | 5/5   | Session fixation protected, CSRF enforced, generic error message, guest middleware   |
+| Performance   | 5/5   | Login at 0.48s, well under 2s threshold                                              |
+| Test Coverage | 5/5   | 12 cases — happy, 4× negative, 2× edge, 4× security, 1× performance                 |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description   | Severity | Status |
+| ------ | ------------- | -------- | ------ |
+| —      | No bugs found | —        | —      |
+
+---
+
+### Technical Notes
+
+- **`RouteServiceProvider::HOME` updated** from `/home` (non-existent) to `/dashboard`. This affects `RedirectIfAuthenticated` middleware — authenticated users are now correctly redirected to `/dashboard` instead of a 404.
+- **`verified` middleware removed** from dashboard route — `email_verified_at` column is not populated by AU-001/AU-002 (email verification is AU-005). Keeping `verified` would block all users post-login until AU-005 is built. Will be re-added when AU-005 is implemented.
+- **Session fixation** — `$request->session()->regenerate()` is called on every successful login, generating a new session ID. Verified by TC-AU002-08.
+- **Generic error message** — `Auth::attempt()` failure always returns `trans('auth.failed')` regardless of whether the email exists. This prevents user enumeration attacks. Verified by TC-AU002-11.
+- **Mocked Dependencies:** None — login has no external dependencies. `Auth::attempt()`, session, and redirect are all in-memory during testing (SQLite + array session driver via `phpunit.xml`).
+- **`remember me`** — uses Laravel's built-in `remember_token` column. Verified that token is written to DB when `remember=1`. Long-term cookie behaviour is a browser concern, not tested here.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                            | Benefit                                              | Complexity                           |
+| ----------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
+| AU-002.1    | Add rate limiting to `/login` (e.g., 5 attempts/min per IP+email combo)                | Prevents brute-force credential attacks              | Low — Laravel `throttle` or `RateLimiter` |
+| AU-002.2    | Add account lockout after N failed attempts (lock `is_active=false` for 15 min)        | Stronger brute-force protection                      | Medium — requires failed-attempt counter column |
+| AU-002.3    | Return JSON response when `Accept: application/json` header is present                 | Enables SPA / mobile app login                       | Low — `wantsJson()` branch           |
+| AU-002.4    | Add login activity log (IP, user-agent, timestamp) to an `audit_logs` table            | Enables security monitoring and suspicious login alerts | Medium — new table + model          |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-AU-002 END -->
 <!-- EVAL-AU-003 will appear here after AU-003 is completed -->
 <!-- EVAL-AU-004 will appear here after AU-004 is completed -->
 <!-- EVAL-AU-005 will appear here after AU-005 is completed -->
@@ -173,6 +246,7 @@
 | Run Date   | Trigger (Task/Sprint) | Total Tests | Passed | Failed | Regressions  | Run By |
 | ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ |
 | 2026-04-09 | AU-001 (Sprint 1)     | 12          | 12     | 0      | 0 (baseline) | Agent  |
+| 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |
 | --------   | --------------------- | ----------- | ------ | ------ | -----------  | ------ |
 | —          | —                     | —           | —      | —      | —            | —      |
 
