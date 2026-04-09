@@ -1,0 +1,34 @@
+# Workspace-level .gitignore for final-ecommerce
+
+# Laravel application ignores (ecommerce/)
+ecommerce/.env
+ecommerce/.env.backup
+ecommerce/.env.production
+ecommerce/vendor/
+ecommerce/node_modules/
+ecommerce/public/storage
+ecommerce/public/hot
+ecommerce/public/build
+ecommerce/storage/*.key
+ecommerce/.phpunit.result.cache
+ecommerce/.phpunit.cache
+ecommerce/auth.json
+ecommerce/npm-debug.log
+ecommerce/yarn-error.log
+ecommerce/Homestead.json
+ecommerce/Homestead.yaml
+
+# IDE & editors
+.idea/
+.vscode/
+.fleet/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp / build outputs
+*.log
+*.tmp
