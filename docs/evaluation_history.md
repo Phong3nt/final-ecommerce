@@ -159,20 +159,20 @@
 
 ### Test Results
 
-| Test Case ID | Scenario                                                     | Type     | Result  | Duration | Notes                                               |
-| ------------ | ------------------------------------------------------------ | -------- | ------- | -------- | --------------------------------------------------- |
-| TC-AU002-01  | Valid credentials → session created, redirect to dashboard   | Happy    | PASS ✅ | 0.48s    | `assertAuthenticatedAs` confirmed                   |
-| TC-AU002-02  | Wrong password → redirect back with email error, not authed  | Negative | PASS ✅ | 0.30s    | `assertGuest()` confirmed                           |
-| TC-AU002-03  | Non-existent email → redirect back with error                | Negative | PASS ✅ | 0.23s    |                                                     |
-| TC-AU002-04  | Empty form → validation errors on email + password           | Negative | PASS ✅ | 0.04s    |                                                     |
-| TC-AU002-05  | Missing password → validation error on password field        | Negative | PASS ✅ | 0.03s    |                                                     |
-| TC-AU002-06  | Remember me flag → `remember_token` persisted in DB          | Edge     | PASS ✅ | 0.03s    | `remember_token` column verified non-null           |
-| TC-AU002-07  | Intended URL redirect → after login goes to originally-intended route | Edge | PASS ✅ | 0.10s  |                                                     |
-| TC-AU002-08  | Session ID regenerated after login → prevents session fixation | Security | PASS ✅ | 0.03s  | `session()->getId()` changed before/after login     |
-| TC-AU002-09  | CSRF middleware is active on login route                     | Security | PASS ✅ | 0.08s    |                                                     |
-| TC-AU002-10  | Authenticated user visits `/login` → redirected away         | Security | PASS ✅ | 0.04s    | Guest middleware working                            |
-| TC-AU002-11  | Failure message is generic — does not reveal email existence | Security | PASS ✅ | 0.44s    | Same `auth.failed` message for known/unknown email  |
-| TC-AU002-12  | Login completes within 2s performance threshold              | Perf     | PASS ✅ | 0.04s    | Well under threshold                                |
+| Test Case ID | Scenario                                                              | Type     | Result  | Duration | Notes                                              |
+| ------------ | --------------------------------------------------------------------- | -------- | ------- | -------- | -------------------------------------------------- |
+| TC-AU002-01  | Valid credentials → session created, redirect to dashboard            | Happy    | PASS ✅ | 0.48s    | `assertAuthenticatedAs` confirmed                  |
+| TC-AU002-02  | Wrong password → redirect back with email error, not authed           | Negative | PASS ✅ | 0.30s    | `assertGuest()` confirmed                          |
+| TC-AU002-03  | Non-existent email → redirect back with error                         | Negative | PASS ✅ | 0.23s    |                                                    |
+| TC-AU002-04  | Empty form → validation errors on email + password                    | Negative | PASS ✅ | 0.04s    |                                                    |
+| TC-AU002-05  | Missing password → validation error on password field                 | Negative | PASS ✅ | 0.03s    |                                                    |
+| TC-AU002-06  | Remember me flag → `remember_token` persisted in DB                   | Edge     | PASS ✅ | 0.03s    | `remember_token` column verified non-null          |
+| TC-AU002-07  | Intended URL redirect → after login goes to originally-intended route | Edge     | PASS ✅ | 0.10s    |                                                    |
+| TC-AU002-08  | Session ID regenerated after login → prevents session fixation        | Security | PASS ✅ | 0.03s    | `session()->getId()` changed before/after login    |
+| TC-AU002-09  | CSRF middleware is active on login route                              | Security | PASS ✅ | 0.08s    |                                                    |
+| TC-AU002-10  | Authenticated user visits `/login` → redirected away                  | Security | PASS ✅ | 0.04s    | Guest middleware working                           |
+| TC-AU002-11  | Failure message is generic — does not reveal email existence          | Security | PASS ✅ | 0.44s    | Same `auth.failed` message for known/unknown email |
+| TC-AU002-12  | Login completes within 2s performance threshold                       | Perf     | PASS ✅ | 0.04s    | Well under threshold                               |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped · 37 Assertions  
 **Test Duration:** 2.94s total (combined AU-001 + AU-002 suite)  
@@ -182,12 +182,12 @@
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                              |
-| ------------- | ----- | ------------------------------------------------------------------------------------ |
-| Simplicity    | 5/5   | Controller is 45 lines, 3 methods, single responsibility                             |
-| Security      | 5/5   | Session fixation protected, CSRF enforced, generic error message, guest middleware   |
-| Performance   | 5/5   | Login at 0.48s, well under 2s threshold                                              |
-| Test Coverage | 5/5   | 12 cases — happy, 4× negative, 2× edge, 4× security, 1× performance                 |
+| Dimension     | Score | Comment                                                                            |
+| ------------- | ----- | ---------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is 45 lines, 3 methods, single responsibility                           |
+| Security      | 5/5   | Session fixation protected, CSRF enforced, generic error message, guest middleware |
+| Performance   | 5/5   | Login at 0.48s, well under 2s threshold                                            |
+| Test Coverage | 5/5   | 12 cases — happy, 4× negative, 2× edge, 4× security, 1× performance                |
 
 ---
 
@@ -212,16 +212,89 @@
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                                            | Benefit                                              | Complexity                           |
-| ----------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
-| AU-002.1    | Add rate limiting to `/login` (e.g., 5 attempts/min per IP+email combo)                | Prevents brute-force credential attacks              | Low — Laravel `throttle` or `RateLimiter` |
-| AU-002.2    | Add account lockout after N failed attempts (lock `is_active=false` for 15 min)        | Stronger brute-force protection                      | Medium — requires failed-attempt counter column |
-| AU-002.3    | Return JSON response when `Accept: application/json` header is present                 | Enables SPA / mobile app login                       | Low — `wantsJson()` branch           |
-| AU-002.4    | Add login activity log (IP, user-agent, timestamp) to an `audit_logs` table            | Enables security monitoring and suspicious login alerts | Medium — new table + model          |
+| Proposal ID | Description                                                                     | Benefit                                                 | Complexity                                      |
+| ----------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------- |
+| AU-002.1    | Add rate limiting to `/login` (e.g., 5 attempts/min per IP+email combo)         | Prevents brute-force credential attacks                 | Low — Laravel `throttle` or `RateLimiter`       |
+| AU-002.2    | Add account lockout after N failed attempts (lock `is_active=false` for 15 min) | Stronger brute-force protection                         | Medium — requires failed-attempt counter column |
+| AU-002.3    | Return JSON response when `Accept: application/json` header is present          | Enables SPA / mobile app login                          | Low — `wantsJson()` branch                      |
+| AU-002.4    | Add login activity log (IP, user-agent, timestamp) to an `audit_logs` table     | Enables security monitoring and suspicious login alerts | Medium — new table + model                      |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-AU-002 END -->
+
+## EVAL-AU-003 · Google OAuth Login
+
+**Version:** A  
+**Date:** 2026-04-09  
+**Status in Backlog:** Done  
+**Linked Task:** [AU-003](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                              | Type     | Result  | Duration | Notes                                              |
+| ------------ | --------------------------------------------------------------------- | -------- | ------- | -------- | -------------------------------------------------- |
+| TC-AU003-01  | New Google user → auto-registered + logged in + redirect dashboard    | Happy    | PASS ✅ | 0.40s    | `assertAuthenticated`, DB row created              |
+| TC-AU003-02  | Existing email user (no google_id) → google_id linked + logged in     | Happy    | PASS ✅ | 0.05s    | `user->google_id` updated                          |
+| TC-AU003-03  | Already-linked google_id user → logs in directly                      | Happy    | PASS ✅ | 0.03s    | `assertAuthenticatedAs` confirmed                  |
+| TC-AU003-04  | Redirect route → issues redirect to Google                            | Happy    | PASS ✅ | 0.03s    | Location header contains `google.com`              |
+| TC-AU003-05  | New Google user has `email_verified_at` set                           | Edge     | PASS ✅ | 0.03s    | Google already verified the email                  |
+| TC-AU003-06  | New Google user gets `user` role assigned                             | Edge     | PASS ✅ | 0.04s    | Spatie `hasRole('user')` confirmed                 |
+| TC-AU003-07  | New user name taken from Google profile                               | Edge     | PASS ✅ | 0.03s    | `name` column matches Google display name          |
+| TC-AU003-08  | Intended URL is honoured after Google login                           | Edge     | PASS ✅ | 0.04s    | `redirect()->intended()` working                   |
+| TC-AU003-09  | Session regenerated after OAuth login → session fixation prevention   | Security | PASS ✅ | 0.04s    | Session ID changed before/after                    |
+| TC-AU003-10  | Socialite exception → redirect to login with error, stays guest       | Negative | PASS ✅ | 0.04s    | `assertGuest()`, `assertSessionHasErrors('email')` |
+| TC-AU003-11  | Auto-registered user has non-empty bcrypt password (not empty string) | Security | PASS ✅ | 0.03s    | Hash starts with `$2y$`                            |
+| TC-AU003-12  | Google callback responds within 2s performance threshold              | Perf     | PASS ✅ | 0.03s    | Well under threshold                               |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 30 Assertions  
+**Test Duration:** 0.96s (AU-003 alone) · 3.10s (full 36-test suite)  
+**Regression:** AU-001 12/12 PASS ✅ · AU-002 12/12 PASS ✅ · No regression detected.
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                                    |
+| ------------- | ----- | ---------------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is 72 lines, 2 methods (`redirect`, `callback`), single responsibility                          |
+| Security      | 5/5   | Session fixation protected, random 32-char password for auto-registered users, Socialite exception handled |
+| Performance   | 5/5   | Callback at 0.40s first run, 0.03s subsequent (Mockery fast)                                               |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 4× edge, 1× negative, 2× security, 1× performance                                     |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID       | Description                                                                                                                                | Severity | Status                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------ |
+| BUG-AU003-01 | `email_verified_at` was not in `User::$fillable` — `User::create()` silently discarded it, leaving auto-registered Google users unverified | Medium   | Fixed — added `email_verified_at` to `$fillable` |
+
+---
+
+### Technical Notes
+
+- **`email_verified_at` in `$fillable`** — Google has already verified the user's email. Setting `email_verified_at = now()` on auto-registration is correct and intentional. Required adding it to `User::$fillable` (was missing — bug found and fixed by TC-AU003-05).
+- **Random password for Google users** — Auto-registered users have a `bcrypt(Str::random(32))` password. This ensures their account has a valid password hash (required by the `password` column) while making it impossible to log in via the password form without a password-reset flow.
+- **Socialite mocking pattern** — `Socialite::shouldReceive('driver')->with('google')->andReturn($provider)` via Mockery. This avoids any real HTTP calls to Google during tests.
+- **`email:rfc` on registration** — AU-001/AU-002 use `email:rfc` validation. Google users bypass the FormRequest since they arrive via OAuth — Google's own email is trusted.
+- **No CSRF check on callback route** — GET `/auth/google/callback` is a public route. Laravel's CSRF protection only applies to POST/PUT/PATCH/DELETE, so this is correct by design.
+- **Linking logic** — Priority: google_id lookup first (fastest), then email lookup as fallback. This ensures users who registered by email first get seamlessly linked on first Google login.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                                 | Benefit                                          | Complexity                                                        |
+| ----------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------- |
+| AU-003.1    | Add `state` parameter validation to the callback route (verify `state` from session)        | Prevents CSRF attacks on the OAuth callback      | Low — Socialite handles this with `->stateless()` or custom state |
+| AU-003.2    | Add additional OAuth providers (GitHub, Facebook) using the same `GoogleController` pattern | Expands sign-in options                          | Low — Socialite supports many drivers                             |
+| AU-003.3    | Show user-friendly error page instead of a generic redirect when Socialite fails            | Better UX than a flash message on the login page | Low — dedicated `oauth-error` view                                |
+| AU-003.4    | Log the OAuth provider and timestamp to `audit_logs` on each login                          | Enables security monitoring                      | Medium — requires `audit_logs` table (also proposed in AU-002.4)  |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-AU-003 END -->
 <!-- EVAL-AU-003 will appear here after AU-003 is completed -->
 <!-- EVAL-AU-004 will appear here after AU-004 is completed -->
 <!-- EVAL-AU-005 will appear here after AU-005 is completed -->
@@ -244,10 +317,9 @@
 > Each time a new sprint or upgrade is deployed, the full regression result is recorded here.
 
 | Run Date   | Trigger (Task/Sprint) | Total Tests | Passed | Failed | Regressions  | Run By |
-| ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ |
+| ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ | --- | ---------- | ----------------- | --- | --- | --- | --- | ----- | --- | -------- | --------------------- | ----------- | ------ | ------ | ----------- | ------ |
 | 2026-04-09 | AU-001 (Sprint 1)     | 12          | 12     | 0      | 0 (baseline) | Agent  |
-| 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |
-| --------   | --------------------- | ----------- | ------ | ------ | -----------  | ------ |
+| 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |     | 2026-04-09 | AU-003 (Sprint 1) | 36  | 36  | 0   | 0   | Agent |     | -------- | --------------------- | ----------- | ------ | ------ | ----------- | ------ |
 | —          | —                     | —           | —      | —      | —            | —      |
 
 ---
