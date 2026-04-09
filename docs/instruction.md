@@ -87,78 +87,57 @@ When implementing an approved upgrade:
 3. New test cases added in A.1 must have **stricter thresholds** than the A version (see [testing_standards.md §7](testing_standards.md)).
 4. The final test change report in the evaluation block must list every add/update/remove — no silent changes.
 
+### Rule 10 — Architectural Conflict / System Impact Analysis
+
+> **Trigger:** Before STEP 1 of any task, check if the new task conflicts with the security model or core behavior of any already-Done task.
+
+**When to run this rule:**
+
+- Task adds a new authentication path
+- Task removes or weakens a middleware
+- Task changes session, token, or role behavior
+- Task stores or transmits data that a previous task explicitly protects
+
+**Procedure:**
+
+```
+1. Read ALL EVAL blocks in evaluation_history.md for Done tasks
+2. Compare new task's requirements against each Done task's:
+   - Security constraints (CSRF, session, roles)
+   - Middleware stack
+   - Data flow (what is stored / transmitted)
+3. If conflict found, classify severity:
+   - UX/Logic conflict  → WARN — document and proceed with reconciliation plan
+   - Security/Integrity conflict → BLOCK — do not start STEP 1 until resolved
+4. Document in EVAL block under "Architectural Impact" section:
+   - What conflict was found (or "None")
+   - Reconciliation chosen (Option 1: constrain Task B / Option 2: upgrade Task A)
+   - Trade-offs recorded
+```
+
+**Severity table:**
+
+| Conflict Type                               | Example                             | Severity    | Action |
+| ------------------------------------------- | ----------------------------------- | ----------- | ------ |
+| New auth path bypasses session regeneration | Google OAuth skips `regenerate()`   | 🔴 Security | BLOCK  |
+| New route missing auth middleware           | Dashboard accessible without login  | 🔴 Security | BLOCK  |
+| New feature changes redirect flow           | 2FA redirects away from Quick Login | 🟡 UX/Logic | WARN   |
+| New role removes access previously granted  | Admin loses product edit            | 🟡 Logic    | WARN   |
+
 ---
 
 ## Git & GitHub Rules
 
-> These rules apply to **every task execution**. The Agent is both a developer and a Git Manager.
+> Full rules → **[git_workflow.md](git_workflow.md)**
 
-### Rule G1 — Branch-per-Task (Never Code on `main`)
-
-- Before starting any new task, always ensure you are on `main` with a clean working tree.
-- Every task from the backlog must be implemented on its own dedicated branch:
-  ```
-  git checkout main
-  git checkout -b feature/[TaskID]    # example: feature/AU-002
-  ```
-- **Never** commit feature code directly to `main`.
-- For bug-fix iterations (from evaluation): use `fix/[TaskID]` branches.
-
-### Rule G2 — Commit After Tests Pass (Not Before)
-
-- Only commit code when **all unit tests for that task pass** (STEP 2 complete).
-- Use a structured commit message:
-  ```
-  feat: complete [TaskID] — all unit tests pass
-  ```
-  Example: `feat: complete AU-001 — 12/12 unit tests pass`
-- Commit **all** relevant files: controllers, models, migrations, views, test files, and updated docs.
-
-### Rule G3 — Tag Every Stable Milestone
-
-- Immediately after a task is marked `Done` (tests pass + evaluation complete), create an annotated tag:
-  ```
-  git tag -a v1.0-[TaskID]-stable -m "Task [TaskID] complete — all tests pass, evaluation done"
-  ```
-  Example: `git tag -a v1.0-AU-001-stable -m "Task AU-001 complete — 12/12 tests pass, evaluation done"`
-- Record the tag name in `backlog.md` Task Status Tracker under the **Git Tag** column.
-- Tags are the "time machine" — they define exactly where to roll back to if a future task breaks something.
-
-### Rule G4 — Rollback Procedure
-
-- If a task in progress causes regressions or becomes unrecoverable:
-  1. **Do NOT attempt to patch** until you understand the root cause.
-  2. Identify the last stable tag from `backlog.md` Git Tag column.
-  3. Switch back to `main` (which holds merged, tagged, stable code):
-     ```
-     git checkout main
-     ```
-  4. Or check out a specific stable tag directly:
-     ```
-     git checkout v1.0-[LastStableTaskID]-stable
-     ```
-  5. Report to the user: the current branch name, what went wrong, and which tag is the recommended rollback point.
-
-### Rule G5 — Push & Pull Request (User-Approved)
-
-- **Never push** a branch to GitHub or merge to `main` without explicit user approval.
-- After the user approves ("OK, merge AU-002"), perform:
-  ```
-  git checkout main
-  git merge feature/[TaskID] --no-ff -m "merge: integrate [TaskID] into main"
-  git push origin main
-  git push origin --tags
-  ```
-- After merge, create a **Pull Request** on GitHub for historical record if the branch was previously pushed.
-- Delete the feature branch locally and remotely after a successful merge (only with user confirmation).
-
-### Branching Summary Table
-
-| Branch Pattern | Purpose                          | Example          |
-| -------------- | -------------------------------- | ---------------- |
-| `main`         | Production-ready code only       | Stable baseline  |
-| `feature/[ID]` | New task implementation          | `feature/AU-002` |
-| `fix/[ID]`     | Bug fix from evaluation feedback | `fix/AU-001`     |
+| Rule | Summary                                                                                           |
+| ---- | ------------------------------------------------------------------------------------------------- |
+| G1   | One branch per task (`feature/[TaskID]`). Never code on `master`.                                 |
+| G2   | Commit only after all tests pass. Use structured commit message.                                  |
+| G3   | Tag every stable milestone: `v1.0-[TaskID]-stable`.                                               |
+| G4   | Rollback to last stable tag if regressions appear.                                                |
+| G5   | Never push or merge to `master` without explicit user approval.                                   |
+| G6   | Run pre-task health check (`git status`, `git branch`, `git tag --list`) before writing any code. |
 
 ---
 
@@ -175,6 +154,8 @@ Rules:
   - No sensitive data in logs or blade views
   - CSRF protection on all mutating routes (NF-001)
   - All user input validated via FormRequest classes
+  - Security checklist → see security_checks.md
+  - Use task_template.md to fill in task header and pre-task checklist before coding
 ```
 
 ### STEP 2 — UNIT TEST
@@ -230,6 +211,63 @@ Rules:
   - DO NOT write any code for the proposal
   - DO NOT add the proposal to backlog.md until the user approves it
   - Proposals are advisory only
+  - When the user approves a proposal (e.g., "Implement AU-001.1"):
+      1. Add it as a NEW row in backlog.md under the same Epic
+      2. ID format: [ParentID].[SequenceNumber] — e.g., AU-001.1
+      3. Fill in: User Story, Role, Priority (inherit from parent unless specified), Points (re-estimate)
+      4. Status = "Not Started" — treat it as a full task from that point
+      5. Run Rule 8 (Test-First Upgrade) before writing any code
+      6. Check all other proposals of the parent for STALE/INVALID (Proposal Invalidation Rule)
+```
+
+### Proposal Invalidation Rule
+
+> **Áp dụng khi Task B gây regression fix cho A (tạo ra "A mới"), hoặc khi bất kỳ code change nào làm thay đổi behavior của A.**
+
+Các proposal cũ (AU-001.1, AU-001.2...) được thiết kế dựa trên "A cũ" — chúng có thể không còn đúng với "A mới". Thực hiện ngay sau khi "A mới" được merge:
+
+```
+1. Mở evaluation_history.md → tìm tất cả proposal của A
+2. Với mỗi proposal, đánh giá:
+   - Proposal còn hợp lệ với A mới?  → Giữ nguyên
+   - Proposal dựa trên assumption của A cũ? → Đánh dấu ⚠️ STALE
+   - Proposal gây xung đột với behavior A mới? → Đánh dấu ❌ INVALID
+3. Báo user danh sách STALE/INVALID trước khi implement bất kỳ proposal nào
+```
+
+**Lý do:** Nếu bỏ qua bước này, có thể xảy ra vòng lặp:
+
+- B fix A → A thay đổi
+- A.1 cũ implement dựa trên A cũ → A.1 phá A mới
+- B lại phải fix A.1 → lại tạo A.2 cũ... vô tận
+
+Ví dụ ghi chú trong evaluation block:
+
+```markdown
+| AU-001.2 | Add login lockout after 5 fails | ⚠️ STALE — was designed before AU-002 changed session logic. Needs review against A-new before implementing. |
+```
+
+### Upgrade Cleanup Rule
+
+> **Áp dụng ngay sau khi A.1 được merge vào master thành công.**
+
+Khi A được nâng cấp lên A.1, các artifact của A cũ phải được dọn sạch — **ngoại trừ evaluation history** (lưu vĩnh viễn để tra cứu):
+
+| Artifact                                | Hành động                                              |
+| --------------------------------------- | ------------------------------------------------------ |
+| Code cũ bị thay thế hoàn toàn bởi A.1   | Xóa — không giữ dead code dạng comment                 |
+| Route / middleware cũ không còn dùng    | Xóa khỏi `routes/web.php`                              |
+| Migration cũ vẫn cần cho DB schema      | **Giữ nguyên** — không xóa migration                   |
+| Test case cũ đã bị `DELETE` theo Rule 8 | Xóa khỏi file test                                     |
+| Test case cũ đã bị `UPDATE` theo Rule 8 | Đã update tại chỗ — không cần làm thêm                 |
+| View / blade cũ không còn dùng          | Xóa                                                    |
+| `evaluation_history.md` block của A     | **Không bao giờ xóa** — lịch sử bất biến               |
+| Proposal STALE/INVALID trong eval block | Giữ nguyên nhưng đánh dấu `⚠️ STALE` hoặc `❌ INVALID` |
+
+Ghi vào commit message:
+
+```
+chore: cleanup A artifacts after A.1 upgrade — removed [list what was deleted]
 ```
 
 ---
@@ -301,6 +339,7 @@ A task is **Done** only when ALL of the following are true:
 - [x] No regression in existing tests
 - [x] All mocked dependencies are documented in the evaluation block
 - [x] No test was altered to hide a code bug (Rule 8 verified)
+- [x] Pre-task Git health check passed: clean tree, correct branch, no duplicate tag (Rule G6)
 - [x] Code committed on `feature/[TaskID]` branch (Rule G1 & G2)
 - [x] Git tag created: `v1.0-[TaskID]-stable` (Rule G3)
 - [x] Git tag recorded in `backlog.md` Git Tag column (Rule G3)
@@ -347,6 +386,11 @@ testing_standards.md                          evaluation_history.md
   └─ Performance thresholds                      └─ Quality scores
   └─ Regression rules                            └─ Proposals (A.1)
                                                  └─ Regression log
+
+git_workflow.md        security_checks.md        task_template.md
+  └─ Rules G1–G6          └─ CSRF/XSS/SQLi          └─ Per-task fill-in form
+  └─ Branch/tag/push       └─ Auth security          └─ Pre-task checklist
+  └─ Pre-commit hook        └─ Security test table    └─ Git checklist
                    ▲                                       ▲
                    └──────── instruction.md ───────────────┘
                              (this file — the workflow)
