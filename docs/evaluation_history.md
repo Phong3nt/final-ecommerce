@@ -366,6 +366,79 @@
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-AU-004 END -->
+
+## EVAL-AU-005 · Password Reset via Email
+
+**Version:** A  
+**Date:** 2026-04-15  
+**Status in Backlog:** Done  
+**Linked Task:** [AU-005](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Duration | Notes |
+| --- | --- | --- | --- | --- | --- |
+| TC-AU005-01 | GET /forgot-password returns 200 | Happy | PASS ✅ | 0.53s | View renders correctly |
+| TC-AU005-02 | Valid email → ResetPassword notification sent | Happy | PASS ✅ | 0.32s | `Notification::assertSentTo` confirmed |
+| TC-AU005-03 | Unknown email → same "sent" status (no enumeration) | Security | PASS ✅ | 0.03s | Cannot tell if email exists |
+| TC-AU005-04 | Valid token → password changed, redirect to login | Happy | PASS ✅ | 0.08s | `Hash::check` confirmed |
+| TC-AU005-05 | New password stored as bcrypt hash | Security | PASS ✅ | 0.04s | Starts with `$2y$` |
+| TC-AU005-06 | Invalid/expired token → error, password unchanged | Security | PASS ✅ | 0.04s | `assertSessionHasErrors(['email'])` |
+| TC-AU005-07 | Empty email on forgot-password form → validation error | Negative | PASS ✅ | 0.03s | |
+| TC-AU005-08 | Invalid email format → validation error | Negative | PASS ✅ | 0.10s | |
+| TC-AU005-09 | Weak password on reset → validation error | Negative | PASS ✅ | 0.04s | min:8 + uppercase regex |
+| TC-AU005-10 | Password confirmation mismatch → validation error | Negative | PASS ✅ | 0.03s | |
+| TC-AU005-11 | CSRF middleware active on forgot-password route | Security | PASS ✅ | 0.03s | |
+| TC-AU005-12 | Reset link request completes within 2s | Perf | PASS ✅ | 0.03s | Well under threshold |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 24 Assertions  
+**Test Duration:** 1.53s (AU-005 alone) · 4.48s (full 62-test suite)  
+**Regression:** AU-001–004 all 50/50 PASS ✅ · No regression detected.
+
+---
+
+### Quality Scores
+
+| Dimension | Score | Comment |
+| --- | --- | --- |
+| Simplicity | 5/5 | Two controllers, 4 methods total — delegates entirely to Laravel's `Password` facade |
+| Security | 5/5 | No email enumeration, token expiry enforced by Laravel (60 min), new password hashed, CSRF protected |
+| Performance | 5/5 | 0.03s under test, well under 2s threshold |
+| Test Coverage | 5/5 | 12 cases — 3× happy, 4× negative, 4× security, 1× performance |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description | Severity | Status |
+| --- | --- | --- | --- |
+| — | No bugs found — all 12 tests passed on first run | — | — |
+
+---
+
+### Technical Notes
+
+- **No email enumeration** — `ForgotPasswordController::store()` always calls `Password::sendResetLink()` and always returns `with('status', __('passwords.sent'))` regardless of whether the email exists. Unknown emails silently no-op (Laravel handles this internally).
+- **Token expiry** — Default is 60 minutes (configured in `config/auth.php` under `passwords.users.expire = 60`). This matches AC "Reset link expires in 60 minutes".
+- **Password validation** — `min:8` + `confirmed` + `regex:/[A-Z]/` (at least one uppercase) — consistent with AU-001 registration policy.
+- **`Notification::fake()`** — Used in TC-AU005-02 and TC-AU005-12 to prevent actual email sending and assert notification dispatch without a real mail server.
+- **`Password::createToken($user)`** — Used in tests to generate a real valid token for the reset form submission tests, bypassing the email flow.
+- **Mocked Dependencies:** `Notification::fake()` mocks email delivery (AU-005 depends on mail config — mocked per Rule 5).
+- **Architectural Impact:** None. Routes are behind `guest` middleware (password reset is only for unauthenticated users). No conflict with AU-001–004.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description | Benefit | Complexity |
+| --- | --- | --- | --- |
+| AU-005.1 | Add rate limiting to `/forgot-password` (e.g., 3 requests/min per IP) | Prevents email flooding abuse | Low — Laravel `throttle` middleware |
+| AU-005.2 | Show reset link expiry time on the reset-password page | Better UX — user knows how long the link is valid | Low — pass expiry config to view |
+| AU-005.3 | Log password reset events to `audit_logs` (timestamp, IP, user_id) | Security monitoring | Medium — requires `audit_logs` table |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-AU-005 END -->
 <!-- EVAL-AU-005 will appear here after AU-005 is completed -->
 <!-- EVAL-AU-006 will appear here after AU-006 is completed -->
 
@@ -391,6 +464,7 @@
 | 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |
 | 2026-04-09 | AU-003 (Sprint 1)     | 36          | 36     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-004 (Sprint 1)     | 50          | 50     | 0      | 0            | Agent  |
+| 2026-04-15 | AU-005 (Sprint 1)     | 62          | 62     | 0      | 0            | Agent  |
 
 ---
 
