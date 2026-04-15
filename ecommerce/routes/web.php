@@ -103,6 +103,9 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
+    // AD-002: Revenue chart data endpoint
+    Route::get('/chart-data', [AdminController::class, 'chartData'])->name('chart-data');
+
     // OH-003: Admin order status update
     Route::patch('/orders/{order}/status', [OrderStatusController::class, 'update'])->name('orders.status');
 });
