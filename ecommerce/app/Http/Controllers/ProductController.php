@@ -12,10 +12,11 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $filters = $request->only(['category', 'min_price', 'max_price', 'min_rating']);
+        $filters = $request->only(['category', 'min_price', 'max_price', 'min_rating', 'sort']);
         $categories = Category::orderBy('name')->get();
+        $sort = $filters['sort'] ?? 'newest';
 
-        $products = Product::filter($filters)->latest()->paginate(12)->withQueryString();
+        $products = Product::filter($filters)->sort($sort)->paginate(12)->withQueryString();
 
         return view('products.index', compact('products', 'filters', 'categories'));
     }
