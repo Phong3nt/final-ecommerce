@@ -1627,6 +1627,7 @@ This ensures:
 ---
 
 <!-- EVAL-NF-006 START -->
+
 <a id="eval-nf-006--rate-limiting"></a>
 
 ## EVAL-NF-006 — Rate Limiting on Login & Registration Endpoints
@@ -1640,13 +1641,13 @@ This ensures:
 
 ### STEP 1 — Backlog Item
 
-| Field | Value |
-|---|---|
-| ID | NF-006 |
-| Epic | Non-Functional Requirements |
-| Story | Rate limiting on login and registration endpoints |
-| Priority | 1 — Critical |
-| Sprint | 1 — Foundation & Auth |
+| Field    | Value                                             |
+| -------- | ------------------------------------------------- |
+| ID       | NF-006                                            |
+| Epic     | Non-Functional Requirements                       |
+| Story    | Rate limiting on login and registration endpoints |
+| Priority | 1 — Critical                                      |
+| Sprint   | 1 — Foundation & Auth                             |
 
 ---
 
@@ -1678,20 +1679,20 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 **File:** `ecommerce/tests/Feature/RateLimitingTest.php`
 **Tests:** 12 / 12 passed
 
-| TC | Test Name | Result |
-|---|---|---|
-| TC-01 | `nf006 login post route has throttle middleware` | ✅ PASS |
-| TC-02 | `nf006 register post route has throttle middleware` | ✅ PASS |
-| TC-03 | `nf006 forgot password post route has throttle middleware` | ✅ PASS |
-| TC-04 | `nf006 throttle middleware alias is registered in kernel` | ✅ PASS |
-| TC-05 | `nf006 login post returns non 429 within rate limit` | ✅ PASS |
-| TC-06 | `nf006 register post returns non 429 within rate limit` | ✅ PASS |
+| TC    | Test Name                                                      | Result  |
+| ----- | -------------------------------------------------------------- | ------- |
+| TC-01 | `nf006 login post route has throttle middleware`               | ✅ PASS |
+| TC-02 | `nf006 register post route has throttle middleware`            | ✅ PASS |
+| TC-03 | `nf006 forgot password post route has throttle middleware`     | ✅ PASS |
+| TC-04 | `nf006 throttle middleware alias is registered in kernel`      | ✅ PASS |
+| TC-05 | `nf006 login post returns non 429 within rate limit`           | ✅ PASS |
+| TC-06 | `nf006 register post returns non 429 within rate limit`        | ✅ PASS |
 | TC-07 | `nf006 forgot password post returns non 429 within rate limit` | ✅ PASS |
-| TC-08 | `nf006 login throttle limit is at most 10 per minute` | ✅ PASS |
-| TC-09 | `nf006 register throttle limit is at most 10 per minute` | ✅ PASS |
-| TC-10 | `nf006 login get route does not have throttle middleware` | ✅ PASS |
-| TC-11 | `nf006 register get route does not have throttle middleware` | ✅ PASS |
-| TC-12 | `nf006 login post with throttle responds within two seconds` | ✅ PASS |
+| TC-08 | `nf006 login throttle limit is at most 10 per minute`          | ✅ PASS |
+| TC-09 | `nf006 register throttle limit is at most 10 per minute`       | ✅ PASS |
+| TC-10 | `nf006 login get route does not have throttle middleware`      | ✅ PASS |
+| TC-11 | `nf006 register get route does not have throttle middleware`   | ✅ PASS |
+| TC-12 | `nf006 login post with throttle responds within two seconds`   | ✅ PASS |
 
 ---
 
@@ -1706,6 +1707,92 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 - **NF-007 / NF-008 (Security Headers / Content Security Policy)** — HTTP security headers via middleware
 
 <!-- EVAL-NF-006 END -->
+
+---
+
+## EVAL-NF-002 — Input Sanitization Audit
+
+<!-- EVAL-NF-002 START -->
+
+**Task ID:** NF-002
+**Sprint:** 3
+**Date:** 2026-04-16
+**Branch:** `feature/NF-002` → `master`
+**Tag:** `v1.0-NF-002-stable`
+**Requirement:** All user inputs sanitized; no raw SQL (use Eloquent/Query Builder).
+
+---
+
+### STEP 1 — Production Code Audit
+
+**Controllers audited (no raw SQL found in any):**
+- `CartController`, `CheckoutController`, `HomeController`, `OrderController`
+- `ProfileController`, `ProductController`, `Admin/*Controller`
+- Zero `DB::statement`, `DB::select`, `DB::insert`, `DB::update`, `DB::delete` calls
+- Zero `$_GET`, `$_POST`, `$_REQUEST` superglobal accesses
+
+**Models audited:**
+
+| Model         | Has `$fillable` | Guarded open (`['*']`) |
+|---------------|-----------------|------------------------|
+| `User`        | ✅ Yes          | ❌ No                  |
+| `Product`     | ✅ Yes          | ❌ No                  |
+| `Order`       | ✅ Yes          | ❌ No                  |
+| `OrderItem`   | ✅ Yes          | ❌ No                  |
+| `UserAddress` | ✅ Yes          | ❌ No                  |
+| `Category`    | ✅ Yes          | ❌ No                  |
+
+**Query binding verification (`Product.php`):**
+- `scopeSearch`: uses `where('name', 'like', '%'.$term.'%')` — PDO binds `%term%` as a bound parameter, never raw interpolation.
+- `scopeFilter`: casts `category_id` to `(int)`, price/rating bounds to `(float)` before binding — additional type safety layer.
+
+**Verdict:** Codebase was already fully compliant. No production code changes required.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC     | Test Name                                                        | Type    | Result |
+|--------|------------------------------------------------------------------|---------|--------|
+| TC-01  | `nf002 user model has fillable not open guarded`                 | Audit   | ✅ PASS |
+| TC-02  | `nf002 product model has fillable not open guarded`              | Audit   | ✅ PASS |
+| TC-03  | `nf002 order model has fillable not open guarded`                | Audit   | ✅ PASS |
+| TC-04  | `nf002 sql injection in search query returns 200 not 500`        | SQLi    | ✅ PASS |
+| TC-05  | `nf002 sql injection in search does not return all products`     | SQLi    | ✅ PASS |
+| TC-06  | `nf002 sql injection in category filter returns 200`             | SQLi    | ✅ PASS |
+| TC-07  | `nf002 sql injection in min price filter returns 200`            | SQLi    | ✅ PASS |
+| TC-08  | `nf002 xss in product name is escaped on listing page`           | XSS     | ✅ PASS |
+| TC-09  | `nf002 xss in search query is escaped in response`               | XSS     | ✅ PASS |
+| TC-10  | `nf002 register rejects excessively long name`                   | Input   | ✅ PASS |
+| TC-11  | `nf002 cart add rejects non numeric product id`                  | Input   | ✅ PASS |
+| TC-12  | `nf002 product search uses pdo bindings not raw interpolation`   | Binding | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.11s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 314 / 314 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/NF-002 -m "merge: NF-002 input sanitization audit -- 314/314 tests pass, 0 regressions"
+git tag v1.0-NF-002-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-003 (Password Policy / Secure Auth)** — enforce password complexity, bcrypt hashing, account lockout
+
+<!-- EVAL-NF-002 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1744,6 +1831,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 | 2026-04-16 | NF-004 (Sprint 1)     | 278         | 278    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-005 (Sprint 1)     | 290         | 290    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-006 (Sprint 1)     | 302         | 302    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-002 (Sprint 3)     | 314         | 314    | 0      | 0            | Agent  |
 
 ---
 
