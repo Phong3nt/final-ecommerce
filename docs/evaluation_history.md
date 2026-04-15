@@ -1320,13 +1320,13 @@
 
 **New / modified files:**
 
-| File                                              | Change                                                                                                                                              |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/Http/Controllers/CheckoutController.php`     | Added `showSuccess()` — reads `?payment_intent` + `?redirect_status` from Stripe redirect; scopes order lookup to `auth()->id()`; clears checkout session on success |
-| `routes/web.php`                                  | Replaced `checkout.success` placeholder closure with `[CheckoutController::class, 'showSuccess']`                                                   |
-| `resources/views/checkout/success.blade.php`      | NEW — shows order number, item list, subtotal/shipping/total, estimated delivery, shipping address                                                  |
-| `resources/views/checkout/failed.blade.php`       | NEW — shows failure reason (`$status`), retry CTA linking back to `checkout.review`                                                                 |
-| `tests/Feature/CheckoutSuccessTest.php`           | NEW — 12 tests                                                                                                                                      |
+| File                                          | Change                                                                                                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/Http/Controllers/CheckoutController.php` | Added `showSuccess()` — reads `?payment_intent` + `?redirect_status` from Stripe redirect; scopes order lookup to `auth()->id()`; clears checkout session on success |
+| `routes/web.php`                              | Replaced `checkout.success` placeholder closure with `[CheckoutController::class, 'showSuccess']`                                                                    |
+| `resources/views/checkout/success.blade.php`  | NEW — shows order number, item list, subtotal/shipping/total, estimated delivery, shipping address                                                                   |
+| `resources/views/checkout/failed.blade.php`   | NEW — shows failure reason (`$status`), retry CTA linking back to `checkout.review`                                                                                  |
+| `tests/Feature/CheckoutSuccessTest.php`       | NEW — 12 tests                                                                                                                                                       |
 
 **Key implementation decisions:**
 
@@ -1338,32 +1338,32 @@
 
 ### STEP 2 — Tests (CheckoutSuccessTest.php — 12/12 PASS)
 
-| #     | Test                                                                                      | Result  |
-| ----- | ----------------------------------------------------------------------------------------- | ------- |
-| TC-01 | `cp005 success page returns 200 when redirect status is succeeded`                        | ✅ PASS |
-| TC-02 | `cp005 success page shows order id`                                                       | ✅ PASS |
-| TC-03 | `cp005 success page shows order items`                                                    | ✅ PASS |
-| TC-04 | `cp005 success page shows order total`                                                    | ✅ PASS |
-| TC-05 | `cp005 success page clears checkout session`                                              | ✅ PASS |
-| TC-06 | `cp005 failed page returns 200 when redirect status is requires payment method`           | ✅ PASS |
-| TC-07 | `cp005 failed page shows retry link`                                                      | ✅ PASS |
-| TC-08 | `cp005 failed page shows reason`                                                          | ✅ PASS |
-| TC-09 | `cp005 missing payment intent redirects to address`                                       | ✅ PASS |
-| TC-10 | `cp005 payment intent for wrong user redirects to address`                                | ✅ PASS |
-| TC-11 | `cp005 guest is redirected to login`                                                      | ✅ PASS |
-| TC-12 | `cp005 unknown order intent redirects to address`                                         | ✅ PASS |
+| #     | Test                                                                            | Result  |
+| ----- | ------------------------------------------------------------------------------- | ------- |
+| TC-01 | `cp005 success page returns 200 when redirect status is succeeded`              | ✅ PASS |
+| TC-02 | `cp005 success page shows order id`                                             | ✅ PASS |
+| TC-03 | `cp005 success page shows order items`                                          | ✅ PASS |
+| TC-04 | `cp005 success page shows order total`                                          | ✅ PASS |
+| TC-05 | `cp005 success page clears checkout session`                                    | ✅ PASS |
+| TC-06 | `cp005 failed page returns 200 when redirect status is requires payment method` | ✅ PASS |
+| TC-07 | `cp005 failed page shows retry link`                                            | ✅ PASS |
+| TC-08 | `cp005 failed page shows reason`                                                | ✅ PASS |
+| TC-09 | `cp005 missing payment intent redirects to address`                             | ✅ PASS |
+| TC-10 | `cp005 payment intent for wrong user redirects to address`                      | ✅ PASS |
+| TC-11 | `cp005 guest is redirected to login`                                            | ✅ PASS |
+| TC-12 | `cp005 unknown order intent redirects to address`                               | ✅ PASS |
 
 **Regression:** All 242 previous tests still PASS ✅ · Total suite: 254/254 · 0 failures
 
 ### STEP 3 — Evaluation
 
-| Criterion        | Score | Notes                                                                                                                              |
-| ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Correctness      | 5     | Success page shows order summary; failure page shows reason + retry link; session cleared only on success                         |
-| Test Coverage    | 5     | 200/redirect for each outcome branch, session clear, IDOR guard, guest guard, missing/unknown intent                               |
-| Security         | 5     | Order scoped to `auth()->id()` (IDOR prevention); no info leak on missing intent; relies on Stripe-signed `payment_intent` param   |
-| Code Clarity     | 5     | `showSuccess()` is 20 lines; single conditional branch for success vs failure; no extra state                                      |
-| Architecture Fit | 5     | Reuses existing `Order` model; checkout session namespace correctly cleared; follows established controller pattern                |
+| Criterion        | Score | Notes                                                                                                                            |
+| ---------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Correctness      | 5     | Success page shows order summary; failure page shows reason + retry link; session cleared only on success                        |
+| Test Coverage    | 5     | 200/redirect for each outcome branch, session clear, IDOR guard, guest guard, missing/unknown intent                             |
+| Security         | 5     | Order scoped to `auth()->id()` (IDOR prevention); no info leak on missing intent; relies on Stripe-signed `payment_intent` param |
+| Code Clarity     | 5     | `showSuccess()` is 20 lines; single conditional branch for success vs failure; no extra state                                    |
+| Architecture Fit | 5     | Reuses existing `Order` model; checkout session namespace correctly cleared; follows established controller pattern              |
 
 **Score: 12/12 — All acceptance criteria met**
 
@@ -1376,6 +1376,7 @@
 ---
 
 <!-- EVAL-NF-001 START -->
+
 <a id="eval-nf-001--csrf-protection-audit"></a>
 
 ## EVAL-NF-001 — CSRF Protection Audit
@@ -1389,13 +1390,13 @@
 
 ### STEP 1 — Backlog Item
 
-| Field | Value |
-|---|---|
-| ID | NF-001 |
-| Epic | Non-Functional Requirements |
-| Story | All forms protected against CSRF (Laravel built-in `@csrf`) |
-| Priority | 1 — Critical |
-| Sprint | 1 — Foundation & Auth |
+| Field    | Value                                                       |
+| -------- | ----------------------------------------------------------- |
+| ID       | NF-001                                                      |
+| Epic     | Non-Functional Requirements                                 |
+| Story    | All forms protected against CSRF (Laravel built-in `@csrf`) |
+| Priority | 1 — Critical                                                |
+| Sprint   | 1 — Foundation & Auth                                       |
 
 ---
 
@@ -1407,21 +1408,21 @@
 
 **Note on test strategy:** Laravel's `VerifyCsrfToken::handle()` calls `runningUnitTests()` which returns `true` when `APP_ENV=testing`, meaning CSRF is bypassed in the test environment. Direct 419 response testing is not viable via this path. The audit relies on view-level assertion (`assertSee('name="_token"', false)`) to confirm `@csrf` renders correctly.
 
-| View | Form Type | Has `@csrf` |
-|---|---|---|
-| `auth/login.blade.php` | POST login | ✅ |
-| `auth/register.blade.php` | POST register | ✅ |
-| `auth/forgot-password.blade.php` | POST forgot password | ✅ |
-| `auth/reset-password.blade.php` | POST reset password | ✅ |
-| `profile/show.blade.php` | POST profile update | ✅ |
-| `checkout/address.blade.php` | POST address submit | ✅ |
-| `checkout/shipping.blade.php` | POST shipping select | ✅ |
-| `checkout/review.blade.php` | AJAX POST (X-CSRF-TOKEN header) | ✅ |
-| `cart/index.blade.php` | POST update + remove forms | ✅ |
-| `products/show.blade.php` | POST add-to-cart | ✅ |
-| `dashboard.blade.php` | POST logout + email verify | ✅ |
-| `products/index.blade.php` | GET filter form | ✅ (no `@csrf` needed) |
-| `products/search.blade.php` | GET search form | ✅ (no `@csrf` needed) |
+| View                             | Form Type                       | Has `@csrf`            |
+| -------------------------------- | ------------------------------- | ---------------------- |
+| `auth/login.blade.php`           | POST login                      | ✅                     |
+| `auth/register.blade.php`        | POST register                   | ✅                     |
+| `auth/forgot-password.blade.php` | POST forgot password            | ✅                     |
+| `auth/reset-password.blade.php`  | POST reset password             | ✅                     |
+| `profile/show.blade.php`         | POST profile update             | ✅                     |
+| `checkout/address.blade.php`     | POST address submit             | ✅                     |
+| `checkout/shipping.blade.php`    | POST shipping select            | ✅                     |
+| `checkout/review.blade.php`      | AJAX POST (X-CSRF-TOKEN header) | ✅                     |
+| `cart/index.blade.php`           | POST update + remove forms      | ✅                     |
+| `products/show.blade.php`        | POST add-to-cart                | ✅                     |
+| `dashboard.blade.php`            | POST logout + email verify      | ✅                     |
+| `products/index.blade.php`       | GET filter form                 | ✅ (no `@csrf` needed) |
+| `products/search.blade.php`      | GET search form                 | ✅ (no `@csrf` needed) |
 
 ---
 
@@ -1430,20 +1431,20 @@
 **File:** `ecommerce/tests/Feature/CsrfProtectionTest.php`
 **Tests:** 12 / 12 passed
 
-| TC | Test Name | Result |
-|---|---|---|
+| TC    | Test Name                                            | Result  |
+| ----- | ---------------------------------------------------- | ------- |
 | TC-01 | `nf001 verify csrf token middleware is in web group` | ✅ PASS |
-| TC-02 | `nf001 csrf except list is empty` | ✅ PASS |
-| TC-03 | `nf001 webhook route excludes csrf middleware` | ✅ PASS |
-| TC-04 | `nf001 login form contains csrf field` | ✅ PASS |
-| TC-05 | `nf001 register form contains csrf field` | ✅ PASS |
-| TC-06 | `nf001 forgot password form contains csrf field` | ✅ PASS |
-| TC-07 | `nf001 reset password form contains csrf field` | ✅ PASS |
-| TC-08 | `nf001 profile form contains csrf field` | ✅ PASS |
-| TC-09 | `nf001 checkout address form contains csrf field` | ✅ PASS |
-| TC-10 | `nf001 checkout shipping form contains csrf field` | ✅ PASS |
-| TC-11 | `nf001 cart forms contain csrf field` | ✅ PASS |
-| TC-12 | `nf001 add to cart form contains csrf field` | ✅ PASS |
+| TC-02 | `nf001 csrf except list is empty`                    | ✅ PASS |
+| TC-03 | `nf001 webhook route excludes csrf middleware`       | ✅ PASS |
+| TC-04 | `nf001 login form contains csrf field`               | ✅ PASS |
+| TC-05 | `nf001 register form contains csrf field`            | ✅ PASS |
+| TC-06 | `nf001 forgot password form contains csrf field`     | ✅ PASS |
+| TC-07 | `nf001 reset password form contains csrf field`      | ✅ PASS |
+| TC-08 | `nf001 profile form contains csrf field`             | ✅ PASS |
+| TC-09 | `nf001 checkout address form contains csrf field`    | ✅ PASS |
+| TC-10 | `nf001 checkout shipping form contains csrf field`   | ✅ PASS |
+| TC-11 | `nf001 cart forms contain csrf field`                | ✅ PASS |
+| TC-12 | `nf001 add to cart form contains csrf field`         | ✅ PASS |
 
 ---
 
@@ -1458,6 +1459,90 @@
 - **NF-002 / NF-003 (Security Headers / Rate Limiting)** — OWASP-recommended HTTP security headers and rate limiting on auth routes
 
 <!-- EVAL-NF-001 END -->
+
+---
+
+<!-- EVAL-NF-004 START -->
+<a id="eval-nf-004--https-enforcement"></a>
+
+## EVAL-NF-004 — HTTPS Enforcement
+
+**Date:** 2026-04-16
+**Branch:** `feature/NF-004` → merged to `master`
+**Tag:** `v1.0-NF-004-stable`
+**Tester:** Agent
+
+---
+
+### STEP 1 — Backlog Item
+
+| Field | Value |
+|---|---|
+| ID | NF-004 |
+| Epic | Non-Functional Requirements |
+| Story | HTTPS enforced in production (`AppServiceProvider::forceScheme`) |
+| Priority | 1 — Critical |
+| Sprint | 1 — Foundation & Auth |
+
+---
+
+### STEP 2 — Implementation
+
+**File modified:** `ecommerce/app/Providers/AppServiceProvider.php`
+
+Added `URL::forceScheme('https')` inside `boot()`, gated on `$this->app->environment('production')`:
+
+```php
+use Illuminate\Support\Facades\URL;
+
+public function boot(): void
+{
+    if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
+}
+```
+
+This ensures:
+- All URL generation (named routes, `URL::to()`, `asset()`, redirect URLs) uses `https://` in production
+- Local, staging, and testing environments are unaffected (no scheme override)
+- Zero changes to routes, controllers, or views — purely a provider-level concern
+
+---
+
+### STEP 3 — Test Suite
+
+**File:** `ecommerce/tests/Feature/HttpsEnforcementTest.php`
+**Tests:** 12 / 12 passed
+
+| TC | Test Name | Result |
+|---|---|---|
+| TC-01 | `nf004 app environment is not production in test suite` | ✅ PASS |
+| TC-02 | `nf004 https is NOT forced in testing environment` | ✅ PASS |
+| TC-03 | `nf004 https IS forced when app environment is production` | ✅ PASS |
+| TC-04 | `nf004 https IS forced for root url in production` | ✅ PASS |
+| TC-05 | `nf004 https IS forced for asset urls in production` | ✅ PASS |
+| TC-06 | `nf004 url forceScheme changes generated url scheme to https` | ✅ PASS |
+| TC-07 | `nf004 url forceScheme null reverts scheme to http` | ✅ PASS |
+| TC-08 | `nf004 url forceScheme applies to named routes` | ✅ PASS |
+| TC-09 | `nf004 provider boot in staging env does not force https` | ✅ PASS |
+| TC-10 | `nf004 provider boot in local env does not force https` | ✅ PASS |
+| TC-11 | `nf004 multiple url calls in production all use https` | ✅ PASS |
+| TC-12 | `nf004 app service provider boot completes within one second` | ✅ PASS |
+
+---
+
+### STEP 4 — Regression
+
+**Full suite result:** 278 / 278 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-005 (Authenticated Routes Redirect)** — Unauthenticated access to protected routes redirects to login
+
+<!-- EVAL-NF-004 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1493,6 +1578,7 @@
 | 2026-04-15 | CP-004 (Sprint 3)     | 242         | 242    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-005 (Sprint 3)     | 254         | 254    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-001 (Sprint 1)     | 266         | 266    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-004 (Sprint 1)     | 278         | 278    | 0      | 0            | Agent  |
 
 ---
 
