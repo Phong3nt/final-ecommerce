@@ -27,6 +27,9 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name
 // SC-001: Add to cart — session-based, guest + auth allowed
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 
+// SC-002: View cart — session-based, guest + auth allowed
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
