@@ -449,20 +449,20 @@
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Duration | Notes |
-| --- | --- | --- | --- | --- | --- |
-| TC-AU006-01 | Admin accesses `/admin/dashboard` → 200 OK | Happy | PASS ✅ | 0.43s | |
-| TC-AU006-02 | Regular user accesses `/admin/dashboard` → 403 | Security | PASS ✅ | 0.16s | `role:admin` middleware enforced |
-| TC-AU006-03 | Guest accesses `/admin/dashboard` → redirect to `/login` | Security | PASS ✅ | 0.04s | `auth` middleware runs first |
-| TC-AU006-04 | Admin user has `admin` role | Happy | PASS ✅ | 0.03s | `hasRole('admin')` confirmed |
-| TC-AU006-05 | Regular user has `user` role, not `admin` | Happy | PASS ✅ | 0.03s | |
-| TC-AU006-06 | Regular user can still access `/dashboard` → 200 | Edge | PASS ✅ | 0.06s | No regression on user routes |
-| TC-AU006-07 | Admin can also access `/dashboard` → 200 | Edge | PASS ✅ | 0.03s | |
-| TC-AU006-08 | User with no role is blocked from admin → 403 | Security | PASS ✅ | 0.03s | |
-| TC-AU006-09 | Both `user` and `admin` roles exist in DB | Edge | PASS ✅ | 0.03s | RoleSeeder verified |
-| TC-AU006-10 | `role` middleware alias registered in Kernel | Security | PASS ✅ | 0.05s | `RoleMiddleware::class` confirmed |
-| TC-AU006-11 | `admin.dashboard` route name resolves to `/admin/dashboard` | Edge | PASS ✅ | 0.04s | |
-| TC-AU006-12 | Admin dashboard responds within 2s | Perf | PASS ✅ | 0.03s | |
+| Test Case ID | Scenario                                                    | Type     | Result  | Duration | Notes                             |
+| ------------ | ----------------------------------------------------------- | -------- | ------- | -------- | --------------------------------- |
+| TC-AU006-01  | Admin accesses `/admin/dashboard` → 200 OK                  | Happy    | PASS ✅ | 0.43s    |                                   |
+| TC-AU006-02  | Regular user accesses `/admin/dashboard` → 403              | Security | PASS ✅ | 0.16s    | `role:admin` middleware enforced  |
+| TC-AU006-03  | Guest accesses `/admin/dashboard` → redirect to `/login`    | Security | PASS ✅ | 0.04s    | `auth` middleware runs first      |
+| TC-AU006-04  | Admin user has `admin` role                                 | Happy    | PASS ✅ | 0.03s    | `hasRole('admin')` confirmed      |
+| TC-AU006-05  | Regular user has `user` role, not `admin`                   | Happy    | PASS ✅ | 0.03s    |                                   |
+| TC-AU006-06  | Regular user can still access `/dashboard` → 200            | Edge     | PASS ✅ | 0.06s    | No regression on user routes      |
+| TC-AU006-07  | Admin can also access `/dashboard` → 200                    | Edge     | PASS ✅ | 0.03s    |                                   |
+| TC-AU006-08  | User with no role is blocked from admin → 403               | Security | PASS ✅ | 0.03s    |                                   |
+| TC-AU006-09  | Both `user` and `admin` roles exist in DB                   | Edge     | PASS ✅ | 0.03s    | RoleSeeder verified               |
+| TC-AU006-10  | `role` middleware alias registered in Kernel                | Security | PASS ✅ | 0.05s    | `RoleMiddleware::class` confirmed |
+| TC-AU006-11  | `admin.dashboard` route name resolves to `/admin/dashboard` | Edge     | PASS ✅ | 0.04s    |                                   |
+| TC-AU006-12  | Admin dashboard responds within 2s                          | Perf     | PASS ✅ | 0.03s    |                                   |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped · 16 Assertions  
 **Test Duration:** 1.19s (AU-006 alone) · 4.85s (full 74-test suite)  
@@ -472,20 +472,20 @@
 
 ### Quality Scores
 
-| Dimension | Score | Comment |
-| --- | --- | --- |
-| Simplicity | 5/5 | 3 middleware aliases in Kernel + route group + controller — minimal code |
-| Security | 5/5 | `auth` + `role:admin` double guard, 403 for wrong role, redirect for guest |
-| Performance | 5/5 | 0.03s response, well under 2s |
-| Test Coverage | 5/5 | 12 cases — 3× happy, 4× security, 3× edge, 1× performance |
+| Dimension     | Score | Comment                                                                    |
+| ------------- | ----- | -------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | 3 middleware aliases in Kernel + route group + controller — minimal code   |
+| Security      | 5/5   | `auth` + `role:admin` double guard, 403 for wrong role, redirect for guest |
+| Performance   | 5/5   | 0.03s response, well under 2s                                              |
+| Test Coverage | 5/5   | 12 cases — 3× happy, 4× security, 3× edge, 1× performance                  |
 
 ---
 
 ### Bugs / Side Effects Found
 
-| Bug ID | Description | Severity | Status |
-| --- | --- | --- | --- |
-| — | No bugs — all 12 tests passed on first run | — | — |
+| Bug ID | Description                                | Severity | Status |
+| ------ | ------------------------------------------ | -------- | ------ |
+| —      | No bugs — all 12 tests passed on first run | —        | —      |
 
 ---
 
@@ -502,11 +502,11 @@
 
 ### Improvement Proposals
 
-| Proposal ID | Description | Benefit | Complexity |
-| --- | --- | --- | --- |
-| AU-006.1 | Add granular permissions (e.g., `edit-products`, `view-orders`) beyond role-only checks | Fine-grained access control for future admin features | Medium — define permissions in seeder + use `permission:` middleware |
-| AU-006.2 | Create a dedicated 403 error view (`errors/403.blade.php`) with a friendly message | Better UX than default Laravel 403 page | Low — one Blade file |
-| AU-006.3 | Log unauthorized access attempts to `audit_logs` (user_id, route, timestamp) | Security monitoring | Medium — requires `audit_logs` table |
+| Proposal ID | Description                                                                             | Benefit                                               | Complexity                                                           |
+| ----------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
+| AU-006.1    | Add granular permissions (e.g., `edit-products`, `view-orders`) beyond role-only checks | Fine-grained access control for future admin features | Medium — define permissions in seeder + use `permission:` middleware |
+| AU-006.2    | Create a dedicated 403 error view (`errors/403.blade.php`) with a friendly message      | Better UX than default Laravel 403 page               | Low — one Blade file                                                 |
+| AU-006.3    | Log unauthorized access attempts to `audit_logs` (user_id, route, timestamp)            | Security monitoring                                   | Medium — requires `audit_logs` table                                 |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
