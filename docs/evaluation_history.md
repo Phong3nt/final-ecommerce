@@ -838,33 +838,33 @@
 
 ### Test Results
 
-| TC   | Scenario                                          | Type       | Result  |
-| ---- | ------------------------------------------------- | ---------- | ------- |
-| TC-01 | Guest adds product to session cart               | Happy Path | PASS ✅ |
-| TC-02 | Authenticated user adds product to cart          | Happy Path | PASS ✅ |
-| TC-03 | Cart stores the correct quantity                 | Happy Path | PASS ✅ |
-| TC-04 | Adding same product twice merges quantities      | Edge       | PASS ✅ |
-| TC-05 | Out-of-stock product returns 422 JSON error      | Negative   | PASS ✅ |
-| TC-06 | Nonexistent product_id fails validation          | Negative   | PASS ✅ |
-| TC-07 | Zero quantity fails validation                   | Negative   | PASS ✅ |
-| TC-08 | Negative quantity fails validation               | Negative   | PASS ✅ |
-| TC-09 | Quantity exceeding stock is capped at stock      | Edge       | PASS ✅ |
-| TC-10 | AJAX request returns JSON with cart_count        | Happy Path | PASS ✅ |
-| TC-11 | Session item contains correct data keys          | Happy Path | PASS ✅ |
-| TC-12 | Add to cart completes within 1 second            | Perf       | PASS ✅ |
+| TC    | Scenario                                    | Type       | Result  |
+| ----- | ------------------------------------------- | ---------- | ------- |
+| TC-01 | Guest adds product to session cart          | Happy Path | PASS ✅ |
+| TC-02 | Authenticated user adds product to cart     | Happy Path | PASS ✅ |
+| TC-03 | Cart stores the correct quantity            | Happy Path | PASS ✅ |
+| TC-04 | Adding same product twice merges quantities | Edge       | PASS ✅ |
+| TC-05 | Out-of-stock product returns 422 JSON error | Negative   | PASS ✅ |
+| TC-06 | Nonexistent product_id fails validation     | Negative   | PASS ✅ |
+| TC-07 | Zero quantity fails validation              | Negative   | PASS ✅ |
+| TC-08 | Negative quantity fails validation          | Negative   | PASS ✅ |
+| TC-09 | Quantity exceeding stock is capped at stock | Edge       | PASS ✅ |
+| TC-10 | AJAX request returns JSON with cart_count   | Happy Path | PASS ✅ |
+| TC-11 | Session item contains correct data keys     | Happy Path | PASS ✅ |
+| TC-12 | Add to cart completes within 1 second       | Perf       | PASS ✅ |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Regression:** All 146 previous tests still PASS ✅ · Total suite: 158/158 · 323 assertions
 
 ### Quality Scores (1–5)
 
-| Dimension          | Score | Notes                                               |
-| ------------------ | ----- | --------------------------------------------------- |
-| Correctness        | 5     | All AC satisfied; qty cap, merge, out-of-stock guard |
-| Test Coverage      | 5     | 12 tests cover happy, negative, edge, perf          |
-| Security           | 5     | CSRF active, `exists:products,id` validation, no mass-assignment |
-| Code Clarity       | 5     | Controller single-responsibility, clear intent      |
-| Architecture Fit   | 4     | Session-based fits SC-001 scope; DB persistence deferred to SC-005 |
+| Dimension        | Score | Notes                                                              |
+| ---------------- | ----- | ------------------------------------------------------------------ |
+| Correctness      | 5     | All AC satisfied; qty cap, merge, out-of-stock guard               |
+| Test Coverage    | 5     | 12 tests cover happy, negative, edge, perf                         |
+| Security         | 5     | CSRF active, `exists:products,id` validation, no mass-assignment   |
+| Code Clarity     | 5     | Controller single-responsibility, clear intent                     |
+| Architecture Fit | 4     | Session-based fits SC-001 scope; DB persistence deferred to SC-005 |
 
 **Score: 12/12 — All acceptance criteria met**
 

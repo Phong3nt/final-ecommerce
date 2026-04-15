@@ -67,7 +67,8 @@
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <label for="quantity">Qty:</label>
-                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ $product->stock }}" class="qty-input">
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ $product->stock }}"
+                        class="qty-input">
                     <button type="submit" class="add-to-cart">Add to Cart</button>
                 </form>
                 <span id="cart-badge" class="cart-badge"></span>
@@ -100,35 +101,35 @@
             </div>
         </section>
     @endif
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var form = document.getElementById('add-to-cart-form');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var token = form.querySelector('[name="_token"]').value;
-        var productId = parseInt(form.querySelector('[name="product_id"]').value);
-        var quantity  = parseInt(form.querySelector('[name="quantity"]').value);
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': token,
-            },
-            body: JSON.stringify({ product_id: productId, quantity: quantity }),
-        })
-        .then(function (res) { return res.json(); })
-        .then(function (json) {
-            var badge = document.getElementById('cart-badge');
-            if (badge && json.cart_count !== undefined) {
-                badge.textContent = json.cart_count + ' item(s) in cart';
-            }
-        })
-        .catch(function () {});
-    });
-});
-</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('add-to-cart-form');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var token = form.querySelector('[name="_token"]').value;
+                var productId = parseInt(form.querySelector('[name="product_id"]').value);
+                var quantity = parseInt(form.querySelector('[name="quantity"]').value);
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                    },
+                    body: JSON.stringify({ product_id: productId, quantity: quantity }),
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (json) {
+                        var badge = document.getElementById('cart-badge');
+                        if (badge && json.cart_count !== undefined) {
+                            badge.textContent = json.cart_count + ' item(s) in cart';
+                        }
+                    })
+                    .catch(function () { });
+            });
+        });
+    </script>
 </body>
 
 </html>
