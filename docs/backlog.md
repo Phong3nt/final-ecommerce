@@ -233,7 +233,7 @@
 | AU-001  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-001](evaluation_history.md#eval-au-001--user-registration-email--password) | `v1.0-AU-001-stable` |       |
 | AU-002  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-002](evaluation_history.md#eval-au-002--user-login-email--password)        | `v1.0-AU-002-stable` |       |
 | AU-003  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-003](evaluation_history.md#eval-au-003--google-oauth-login)                | v1.0-AU-003-stable   |       |
-| AU-004  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
+| AU-004  | Authentication & Authorization | Done        | 1      | v1.0-AU-004-stable | [EVAL-AU-004](evaluation_history.md#eval-au-004--user-logout) | 2026-04-15           |       |
 | AU-005  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
 | AU-006  | Authentication & Authorization | Not Started | 1      | —           | —                                                                                   | —                    |       |
 | UP-001  | User Profile                   | Not Started | 3      | —           | —                                                                                   | —                    |       |
