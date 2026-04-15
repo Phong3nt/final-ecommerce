@@ -295,8 +295,77 @@
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-AU-003 END -->
-<!-- EVAL-AU-003 will appear here after AU-003 is completed -->
-<!-- EVAL-AU-004 will appear here after AU-004 is completed -->
+
+## EVAL-AU-004 · User Logout
+
+**Version:** A  
+**Date:** 2026-04-15  
+**Status in Backlog:** Done  
+**Linked Task:** [AU-004](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Duration | Notes |
+| --- | --- | --- | --- | --- | --- |
+| TC-AU004-01 | POST /logout while authenticated → 302 redirect to `/` | Happy | PASS ✅ | 0.41s | Redirects to home, not `/login` |
+| TC-AU004-02 | After logout, user is not authenticated | Happy | PASS ✅ | 0.03s | `assertGuest()` confirmed |
+| TC-AU004-03 | Session ID changes after logout (invalidated) | Edge | PASS ✅ | 0.03s | Session fixation prevention |
+| TC-AU004-04 | CSRF token regenerated after logout | Edge | PASS ✅ | 0.03s | `session()->token()` changed |
+| TC-AU004-05 | VerifyCsrfToken middleware is in `web` group | Security | PASS ✅ | 0.07s | CSRF enforced on logout route |
+| TC-AU004-06 | `/dashboard` inaccessible after logout → redirect to `/login` | Security | PASS ✅ | 0.04s | Auth middleware working |
+| TC-AU004-07 | GET /logout returns 405 Method Not Allowed | Security | PASS ✅ | 0.31s | Only POST accepted |
+| TC-AU004-08 | Guest POST /logout → redirected to `/login` (auth middleware) | Negative | PASS ✅ | 0.03s | No crash or 500 |
+| TC-AU004-09 | PUT /logout returns 405 | Edge | PASS ✅ | 0.27s | Method constraint confirmed |
+| TC-AU004-10 | Auth session data cleared from session after logout | Edge | PASS ✅ | 0.03s | Session key null |
+| TC-AU004-11 | Consecutive logouts (guest POST) do not crash | Edge | PASS ✅ | 0.03s | Idempotent |
+| TC-AU004-12 | Logout completes within 2s threshold | Perf | PASS ✅ | 0.03s | Well under threshold |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 17 Assertions  
+**Test Duration:** 1.52s (AU-004 alone) · 8.14s (full 50-test suite)  
+**Regression:** AU-001 12/12 ✅ · AU-002 12/12 ✅ · AU-003 12/12 ✅ · No regression detected.
+
+---
+
+### Quality Scores
+
+| Dimension | Score | Comment |
+| --- | --- | --- |
+| Simplicity | 5/5 | 4-line method — logout + invalidate + regenerateToken + redirect |
+| Security | 5/5 | Session invalidated, CSRF token regenerated, auth middleware enforced |
+| Performance | 5/5 | 0.03s logout, well under 2s threshold |
+| Test Coverage | 5/5 | 12 cases — 2× happy, 4× edge, 3× security, 1× negative, 1× performance |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description | Severity | Status |
+| --- | --- | --- | --- |
+| BUG-AU004-01 | `destroy()` redirected to `/login` instead of home page `/` — contradicts AC "Redirects to home page" | Low | Fixed — changed `redirect()->route('login')` to `redirect('/')` |
+
+---
+
+### Technical Notes
+
+- **Redirect target fix** — The pre-existing `destroy()` method redirected to `/login`. AC requires home (`/`). A one-line change to `redirect('/')` fixed it. No other files changed.
+- **CSRF test pattern** — Same as AU-001/AU-002: confirms `VerifyCsrfToken` is registered in the `web` middleware group. Actual 419 is not triggered in unit tests because Laravel's `VerifyCsrfToken::runningUnitTests()` returns `true` — this is a PHP testing environment constraint, not a code defect.
+- **Session invalidation** — `$request->session()->invalidate()` + `regenerateToken()` ensures both the session ID and CSRF token are rotated, preventing session fixation after logout.
+- **Mocked Dependencies:** None.
+- **Architectural Impact:** None. Logout tightens the security boundary — does not conflict with AU-001 (register), AU-002 (login), or AU-003 (Google OAuth). All three login paths are properly terminated by this route.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description | Benefit | Complexity |
+| --- | --- | --- | --- |
+| AU-004.1 | Flash a "You have been logged out successfully" message on the home page after logout | Improved UX feedback | Low — one `session()->flash()` call |
+| AU-004.2 | Add audit log entry on logout (timestamp, IP, user_id) | Security monitoring | Medium — requires `audit_logs` table (also in AU-002.4, AU-003.4) |
+| AU-004.3 | Implement "logout all devices" that rotates `remember_token` in DB and invalidates all sessions | Protects stolen session tokens | Medium — requires session driver that supports per-user invalidation |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-AU-004 END -->
 <!-- EVAL-AU-005 will appear here after AU-005 is completed -->
 <!-- EVAL-AU-006 will appear here after AU-006 is completed -->
 
@@ -319,8 +388,9 @@
 | Run Date   | Trigger (Task/Sprint) | Total Tests | Passed | Failed | Regressions  | Run By |
 | ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ | --- | ---------- | ----------------- | --- | --- | --- | --- | ----- | --- | -------- | --------------------- | ----------- | ------ | ------ | ----------- | ------ |
 | 2026-04-09 | AU-001 (Sprint 1)     | 12          | 12     | 0      | 0 (baseline) | Agent  |
-| 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |     | 2026-04-09 | AU-003 (Sprint 1) | 36  | 36  | 0   | 0   | Agent |     | -------- | --------------------- | ----------- | ------ | ------ | ----------- | ------ |
-| —          | —                     | —           | —      | —      | —            | —      |
+| 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |
+| 2026-04-09 | AU-003 (Sprint 1)     | 36          | 36     | 0      | 0            | Agent  |
+| 2026-04-15 | AU-004 (Sprint 1)     | 50          | 50     | 0      | 0            | Agent  |
 
 ---
 
