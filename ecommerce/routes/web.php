@@ -20,6 +20,9 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 // PC-002: Product search — no auth required
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
+// PC-005: Product detail page — SEO-friendly slug, no auth required
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
