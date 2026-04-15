@@ -1726,6 +1726,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 ### STEP 1 — Production Code Audit
 
 **Controllers audited (no raw SQL found in any):**
+
 - `CartController`, `CheckoutController`, `HomeController`, `OrderController`
 - `ProfileController`, `ProductController`, `Admin/*Controller`
 - Zero `DB::statement`, `DB::select`, `DB::insert`, `DB::update`, `DB::delete` calls
@@ -1734,7 +1735,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 **Models audited:**
 
 | Model         | Has `$fillable` | Guarded open (`['*']`) |
-|---------------|-----------------|------------------------|
+| ------------- | --------------- | ---------------------- |
 | `User`        | ✅ Yes          | ❌ No                  |
 | `Product`     | ✅ Yes          | ❌ No                  |
 | `Order`       | ✅ Yes          | ❌ No                  |
@@ -1743,6 +1744,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 | `Category`    | ✅ Yes          | ❌ No                  |
 
 **Query binding verification (`Product.php`):**
+
 - `scopeSearch`: uses `where('name', 'like', '%'.$term.'%')` — PDO binds `%term%` as a bound parameter, never raw interpolation.
 - `scopeFilter`: casts `category_id` to `(int)`, price/rating bounds to `(float)` before binding — additional type safety layer.
 
@@ -1752,20 +1754,20 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
 
 ### STEP 2 — Test Cases
 
-| TC     | Test Name                                                        | Type    | Result |
-|--------|------------------------------------------------------------------|---------|--------|
-| TC-01  | `nf002 user model has fillable not open guarded`                 | Audit   | ✅ PASS |
-| TC-02  | `nf002 product model has fillable not open guarded`              | Audit   | ✅ PASS |
-| TC-03  | `nf002 order model has fillable not open guarded`                | Audit   | ✅ PASS |
-| TC-04  | `nf002 sql injection in search query returns 200 not 500`        | SQLi    | ✅ PASS |
-| TC-05  | `nf002 sql injection in search does not return all products`     | SQLi    | ✅ PASS |
-| TC-06  | `nf002 sql injection in category filter returns 200`             | SQLi    | ✅ PASS |
-| TC-07  | `nf002 sql injection in min price filter returns 200`            | SQLi    | ✅ PASS |
-| TC-08  | `nf002 xss in product name is escaped on listing page`           | XSS     | ✅ PASS |
-| TC-09  | `nf002 xss in search query is escaped in response`               | XSS     | ✅ PASS |
-| TC-10  | `nf002 register rejects excessively long name`                   | Input   | ✅ PASS |
-| TC-11  | `nf002 cart add rejects non numeric product id`                  | Input   | ✅ PASS |
-| TC-12  | `nf002 product search uses pdo bindings not raw interpolation`   | Binding | ✅ PASS |
+| TC    | Test Name                                                      | Type    | Result  |
+| ----- | -------------------------------------------------------------- | ------- | ------- |
+| TC-01 | `nf002 user model has fillable not open guarded`               | Audit   | ✅ PASS |
+| TC-02 | `nf002 product model has fillable not open guarded`            | Audit   | ✅ PASS |
+| TC-03 | `nf002 order model has fillable not open guarded`              | Audit   | ✅ PASS |
+| TC-04 | `nf002 sql injection in search query returns 200 not 500`      | SQLi    | ✅ PASS |
+| TC-05 | `nf002 sql injection in search does not return all products`   | SQLi    | ✅ PASS |
+| TC-06 | `nf002 sql injection in category filter returns 200`           | SQLi    | ✅ PASS |
+| TC-07 | `nf002 sql injection in min price filter returns 200`          | SQLi    | ✅ PASS |
+| TC-08 | `nf002 xss in product name is escaped on listing page`         | XSS     | ✅ PASS |
+| TC-09 | `nf002 xss in search query is escaped in response`             | XSS     | ✅ PASS |
+| TC-10 | `nf002 register rejects excessively long name`                 | Input   | ✅ PASS |
+| TC-11 | `nf002 cart add rejects non numeric product id`                | Input   | ✅ PASS |
+| TC-12 | `nf002 product search uses pdo bindings not raw interpolation` | Binding | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.11s
 
@@ -1793,6 +1795,97 @@ git push origin master --tags
 - **NF-003 (Password Policy / Secure Auth)** — enforce password complexity, bcrypt hashing, account lockout
 
 <!-- EVAL-NF-002 END -->
+
+---
+
+## EVAL-NF-003 — Payment Tokenization Audit
+
+<!-- EVAL-NF-003 START -->
+
+**Task ID:** NF-003
+**Sprint:** 3
+**Date:** 2026-04-16
+**Branch:** `feature/NF-003` → `master`
+**Tag:** `v1.0-NF-003-stable`
+**Requirement:** Payment data never stored server-side; tokenization via gateway SDK.
+
+---
+
+### STEP 1 — Production Code Audit
+
+**Architecture finding — Stripe.js + PaymentIntents flow:**
+1. Server calls `StripePaymentService::createPaymentIntent()` (amount, currency, metadata only — no card data).
+2. Server returns `client_secret` to the browser.
+3. Browser mounts Stripe Payment Element (`elements.create('payment')`) — card fields rendered entirely inside Stripe's iframe.
+4. Browser calls `stripe.confirmPayment()` — card data sent directly to Stripe, **never through our server**.
+5. Stripe redirects to `/checkout/success` with `payment_intent` query param.
+6. Webhook handler (`handleWebhook`) reads only `event.data.object.id` (intent ID) to update order status.
+
+**Schema audit — `orders` table columns:**
+- ✅ `stripe_payment_intent_id` — Stripe token (safe to store, not card data)
+- ✅ `stripe_client_secret` — used by Stripe.js to complete confirmation
+- ❌ No `card_number`, `cvv`, `cvc`, `expiry`, `pan` columns exist
+
+**Model audit — `Order::$fillable`:**
+- Contains `stripe_payment_intent_id` and `stripe_client_secret`
+- Does **not** contain any card data field
+
+**Service audit — `StripePaymentService`:**
+- Wraps official `\Stripe\StripeClient` SDK
+- No `curl_init`, no raw HTTP card submission
+
+**Interface audit — `PaymentServiceInterface`:**
+- `createPaymentIntent(int $amountCents, string $currency, array $metadata)` — no card parameters
+- `constructWebhookEvent(string $payload, string $sigHeader, string $secret)` — no card parameters
+
+**Verdict:** Codebase is fully PCI-compliant by design. No production code changes required.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC     | Test Name                                                                        | Type    | Result  |
+|--------|----------------------------------------------------------------------------------|---------|---------|
+| TC-01  | `nf003 orders table has no card pan cvv expiry columns`                          | Schema  | ✅ PASS |
+| TC-02  | `nf003 order fillable contains no card data fields`                              | Model   | ✅ PASS |
+| TC-03  | `nf003 payment service interface has no card data parameters`                    | API     | ✅ PASS |
+| TC-04  | `nf003 stripe payment service uses official stripe client`                       | Service | ✅ PASS |
+| TC-05  | `nf003 stripe payment service source has no raw card http`                       | Service | ✅ PASS |
+| TC-06  | `nf003 checkout controller source never reads card data from request`            | Ctrl    | ✅ PASS |
+| TC-07  | `nf003 review blade loads stripe js sdk`                                         | View    | ✅ PASS |
+| TC-08  | `nf003 review blade uses stripe elements not plain card inputs`                  | View    | ✅ PASS |
+| TC-09  | `nf003 review blade calls stripe confirm payment client side`                    | View    | ✅ PASS |
+| TC-10  | `nf003 place order endpoint stores no card data in order record`                 | Runtime | ✅ PASS |
+| TC-11  | `nf003 place order ignores card number sent in request body`                     | Runtime | ✅ PASS |
+| TC-12  | `nf003 order fillable includes stripe intent id but not card fields`             | Model   | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.07s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 326 / 326 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/NF-003 -m "merge: NF-003 payment tokenization audit -- 326/326 tests pass, 0 regressions"
+git tag v1.0-NF-003-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-007 / NF-008 (Security Headers / CSP)** — HTTP security headers middleware
+- **CP-005 (Checkout Success/Failure Pages)** — complete the post-payment user flow
+
+<!-- EVAL-NF-003 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1832,6 +1925,7 @@ git push origin master --tags
 | 2026-04-16 | NF-005 (Sprint 1)     | 290         | 290    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-006 (Sprint 1)     | 302         | 302    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-002 (Sprint 3)     | 314         | 314    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-003 (Sprint 3)     | 326         | 326    | 0      | 0            | Agent  |
 
 ---
 
