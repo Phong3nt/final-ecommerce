@@ -2164,20 +2164,20 @@ git push origin master --tags
 
 ### STEP 2 — Test Cases
 
-| TC    | Test Name                                                         | Result  |
-| ----- | ----------------------------------------------------------------- | ------- |
-| TC-01 | `oh004 guest is redirected to login`                              | ✅ PASS |
-| TC-02 | `oh004 owner can cancel pending order`                            | ✅ PASS |
-| TC-03 | `oh004 non owner gets 403`                                        | ✅ PASS |
-| TC-04 | `oh004 cannot cancel paid order`                                  | ✅ PASS |
-| TC-05 | `oh004 cannot cancel processing order`                            | ✅ PASS |
-| TC-06 | `oh004 cannot cancel already cancelled order`                     | ✅ PASS |
-| TC-07 | `oh004 stock is restored on cancellation`                         | ✅ PASS |
-| TC-08 | `oh004 stripe payment intent is cancelled`                        | ✅ PASS |
-| TC-09 | `oh004 payment intent not cancelled when null`                    | ✅ PASS |
-| TC-10 | `oh004 cancel button visible for pending orders`                  | ✅ PASS |
-| TC-11 | `oh004 cancel button not shown for non pending orders`            | ✅ PASS |
-| TC-12 | `oh004 cancel endpoint responds within two seconds`               | ✅ PASS |
+| TC    | Test Name                                              | Result  |
+| ----- | ------------------------------------------------------ | ------- |
+| TC-01 | `oh004 guest is redirected to login`                   | ✅ PASS |
+| TC-02 | `oh004 owner can cancel pending order`                 | ✅ PASS |
+| TC-03 | `oh004 non owner gets 403`                             | ✅ PASS |
+| TC-04 | `oh004 cannot cancel paid order`                       | ✅ PASS |
+| TC-05 | `oh004 cannot cancel processing order`                 | ✅ PASS |
+| TC-06 | `oh004 cannot cancel already cancelled order`          | ✅ PASS |
+| TC-07 | `oh004 stock is restored on cancellation`              | ✅ PASS |
+| TC-08 | `oh004 stripe payment intent is cancelled`             | ✅ PASS |
+| TC-09 | `oh004 payment intent not cancelled when null`         | ✅ PASS |
+| TC-10 | `oh004 cancel button visible for pending orders`       | ✅ PASS |
+| TC-11 | `oh004 cancel button not shown for non pending orders` | ✅ PASS |
+| TC-12 | `oh004 cancel endpoint responds within two seconds`    | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.46s
 
@@ -2205,6 +2205,69 @@ git push origin master --tags
 - **RV-001 (Product Reviews)** — allow users to leave a rating and review on a purchased product
 
 <!-- EVAL-OH-004 END -->
+
+---
+
+## EVAL-AD-001 — Admin Dashboard KPI Cards
+
+<!-- EVAL-AD-001 START -->
+
+**Version:** A  
+**Date:** 2026-04-16  
+**Status in Backlog:** Done  
+**Linked Task:** [AD-001](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Notes |
+|---|---|---|---|---|
+| TC-01 | Guest redirected to login | Auth | PASS | 302 → /login |
+| TC-02 | Non-admin gets 403 | Auth | PASS | role:admin enforced |
+| TC-03 | Admin can access dashboard (200) + auto-refresh meta | Auth/UI | PASS | `content="300"` present |
+| TC-04 | "Total Revenue" label visible | UI | PASS | |
+| TC-05 | "Orders Today" label visible | UI | PASS | |
+| TC-06 | "New Users Today" label visible | UI | PASS | |
+| TC-07 | "Low-Stock Products" label visible | UI | PASS | |
+| TC-08 | Revenue sums paid + processing + shipped + delivered | Data | PASS | 2×100 + 50 = 250.00 |
+| TC-09 | Revenue excludes pending, cancelled, failed | Data | PASS | shows 0.00 |
+| TC-10 | Orders today excludes past days | Data | PASS | 11 today vs 3 yesterday |
+| TC-11 | New users today excludes past days | Data | PASS | 3 today vs 4 yesterday |
+| TC-12 | Low-stock count (stock ≤ 5) is accurate | Data | PASS | 6 low, 4 normal |
+
+**Isolated:** 12/12 passed (14 assertions) in 1.12s  
+**Full Regression:** 386/386 passed (766 assertions) in 19.52s  
+**Regressions:** 0
+
+### STEP 2 — Code Quality
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Correctness | 5/5 | All 4 KPIs computed correctly with proper status filtering |
+| Security | 5/5 | Admin-only via role:admin middleware; no raw query exposure |
+| Maintainability | 5/5 | Constants for threshold + revenue statuses; clean compact() |
+| Test Coverage | 5/5 | Auth, label, data accuracy, and boundary tests all covered |
+
+### STEP 3 — Bugs Found
+
+None.
+
+### STEP 4 — Git
+
+```
+git checkout -b feature/AD-001
+git commit -m "feat(AD-001): admin dashboard KPI cards -- total revenue, orders today, new users today, low-stock products, 5-min auto-refresh -- 12/12 tests pass"
+git checkout master
+git merge --no-ff feature/AD-001 -m "merge: AD-001 admin KPI dashboard -- total revenue, orders today, new users today, low-stock -- 386/386 tests pass, 0 regressions"
+git tag v1.0-AD-001-stable
+git push origin master --tags
+```
+
+### STEP 5 — Proposals for Next Task
+
+- **AD-002 (Revenue Chart)** — line/bar chart of daily/weekly/monthly revenue using Chart.js
+- **RV-001 (Product Reviews)** — allow users to leave a rating and review on a purchased product
+
+<!-- EVAL-AD-001 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2249,6 +2312,7 @@ git push origin master --tags
 | 2026-04-16 | OH-002 (Sprint 4)     | 350         | 350    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-003 (Sprint 4)     | 362         | 362    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-004 (Sprint 4)     | 374         | 374    | 0      | 0            | Agent  |
+| 2026-04-16 | AD-001 (Sprint 4)     | 386         | 386    | 0      | 0            | Agent  |
 
 ---
 
