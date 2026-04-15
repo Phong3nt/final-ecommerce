@@ -12,17 +12,61 @@ class CartController extends Controller
 {
     /**
      * SC-002: Display the session cart contents.
-     * Accessible to guests and authenticated users alike.
      */
     public function index(): View
     {
-        $cart = session()->get('cart', []);
+        $cart  = session()->get('cart', []);
         $total = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
             $cart
         ));
 
         return view('cart.index', compact('cart', 'total'));
+    }
+
+    /**
+     * SC-003: Update the quantity of a cart item.
+     * Accepts AJAX/JSON (returns JSON) or regular form POST with _method=PATCH.
+     * Quantity is bounded 1–stock; exceeding stock is silently capped.
+     */
+    public function update(Request $request, int $productId): JsonResponse|RedirectResponse
+    {
+        $data = $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (!isset($cart[$productId])) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Item not found in cart.'], 404);
+            }
+            return redirect()->route('cart.index')->withErrors(['cart' => 'Item not found in cart.']);
+        }
+
+        $product = Product::find($productId);
+        $maxQty  = $product ? $product->stock : PHP_INT_MAX;
+        $qty     = min((int) $data['quantity'], $maxQty);
+
+        $cart[$productId]['quantity'] = $qty;
+        session()->put('cart', $cart);
+
+        $newSubtotal = $cart[$productId]['price'] * $qty;
+        $newTotal    = array_sum(array_map(
+            fn($item) => $item['price'] * $item['quantity'],
+            $cart
+        ));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message'     => 'Cart updated.',
+                'quantity'    => $qty,
+                'subtotal'    => number_format($newSubtotal, 2),
+                'order_total' => number_format($newTotal, 2),
+            ]);
+        }
+
+        return redirect()->route('cart.index')->with('success', 'Cart updated.');
     }
 
     /**

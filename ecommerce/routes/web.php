@@ -30,6 +30,9 @@ Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 // SC-002: View cart — session-based, guest + auth allowed
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
+// SC-003: Update cart item quantity — PATCH + form method spoofing
+Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('cart.update');
+
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
