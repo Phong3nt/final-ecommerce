@@ -1910,11 +1910,13 @@ git push origin master --tags
 ### STEP 1 — Implementation
 
 **New files:**
+
 - `app/Http/Controllers/OrderController.php` — `index()` queries `auth()->user()->orders()->latest()->paginate(10)`
 - `resources/views/orders/index.blade.php` — table with Order #, Date, Total, Status badge; empty state; `$orders->links()` pagination
 - `database/factories/OrderFactory.php` — factory for test data generation
 
 **Modified files:**
+
 - `app/Models/User.php` — added `orders(): HasMany` relationship
 - `app/Models/Order.php` — added `HasFactory` trait
 - `routes/web.php` — added `GET /orders` → `OrderController@index` (name: `orders.index`) inside `auth` middleware group
@@ -1925,20 +1927,20 @@ git push origin master --tags
 
 ### STEP 2 — Test Cases
 
-| TC     | Test Name                                                              | Result  |
-|--------|------------------------------------------------------------------------|---------|
-| TC-01  | `oh001 guest is redirected to login`                                   | ✅ PASS |
-| TC-02  | `oh001 auth user sees order history page`                              | ✅ PASS |
-| TC-03  | `oh001 empty state shown when no orders`                               | ✅ PASS |
-| TC-04  | `oh001 user orders appear in listing`                                  | ✅ PASS |
-| TC-05  | `oh001 order status visible in listing`                                | ✅ PASS |
-| TC-06  | `oh001 order total visible in listing`                                 | ✅ PASS |
-| TC-07  | `oh001 orders listed newest first`                                     | ✅ PASS |
-| TC-08  | `oh001 user cannot see another users orders`                           | ✅ PASS |
-| TC-09  | `oh001 pagination limits to 10 orders per page`                        | ✅ PASS |
-| TC-10  | `oh001 pagination links present when more than 10 orders`              | ✅ PASS |
-| TC-11  | `oh001 second page is accessible and shows overflow orders`            | ✅ PASS |
-| TC-12  | `oh001 order history page responds within two seconds`                 | ✅ PASS |
+| TC    | Test Name                                                   | Result  |
+| ----- | ----------------------------------------------------------- | ------- |
+| TC-01 | `oh001 guest is redirected to login`                        | ✅ PASS |
+| TC-02 | `oh001 auth user sees order history page`                   | ✅ PASS |
+| TC-03 | `oh001 empty state shown when no orders`                    | ✅ PASS |
+| TC-04 | `oh001 user orders appear in listing`                       | ✅ PASS |
+| TC-05 | `oh001 order status visible in listing`                     | ✅ PASS |
+| TC-06 | `oh001 order total visible in listing`                      | ✅ PASS |
+| TC-07 | `oh001 orders listed newest first`                          | ✅ PASS |
+| TC-08 | `oh001 user cannot see another users orders`                | ✅ PASS |
+| TC-09 | `oh001 pagination limits to 10 orders per page`             | ✅ PASS |
+| TC-10 | `oh001 pagination links present when more than 10 orders`   | ✅ PASS |
+| TC-11 | `oh001 second page is accessible and shows overflow orders` | ✅ PASS |
+| TC-12 | `oh001 order history page responds within two seconds`      | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.21s
 
@@ -1966,6 +1968,84 @@ git push origin master --tags
 - **OH-002 (Order Detail)** — view items, quantities, prices, shipping address, payment status for a single order
 
 <!-- EVAL-OH-001 END -->
+
+---
+
+## EVAL-OH-002 — Order Detail Page
+
+<!-- EVAL-OH-002 START -->
+
+**Task ID:** OH-002
+**Sprint:** 4
+**Date:** 2026-04-16
+**Branch:** `feature/OH-002` → `master`
+**Tag:** `v1.0-OH-002-stable`
+**Requirement:** As a user, I want to view the detail of a past order so I can see exactly what was bought. Shows items, quantities, prices, shipping address, payment method, status timeline.
+
+---
+
+### STEP 1 — Implementation
+
+**New files:**
+
+- `resources/views/orders/show.blade.php` — items table (product name, qty, unit price, subtotal), order summary (subtotal / shipping / total), shipping address (from JSON `address` cast), payment method (Stripe — PaymentIntent + intent ID), status badge + updated_at
+- `database/factories/OrderItemFactory.php` — factory for `OrderItem` test data
+- `tests/Feature/OrderDetailTest.php` — 12 tests
+
+**Modified files:**
+
+- `app/Http/Controllers/OrderController.php` — added `show(Order $order)`: 403 guard for non-owners, `$order->load('items')`, returns `orders.show` view
+- `app/Models/OrderItem.php` — added `HasFactory` trait
+- `routes/web.php` — added `GET /orders/{order}` → `OrderController@show` (name: `orders.show`) inside `auth` middleware group
+- `resources/views/orders/index.blade.php` — order ID cell now links to `route('orders.show', $order)`
+
+**Security:** Route is inside the `auth` middleware group — guests are redirected to login. `show()` checks `$order->user_id !== auth()->id()` and calls `abort(403)` for non-owners — users can never view another user's order.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC    | Test Name                                                    | Result  |
+| ----- | ------------------------------------------------------------ | ------- |
+| TC-01 | `oh002 guest is redirected to login`                         | ✅ PASS |
+| TC-02 | `oh002 owner can view order detail`                          | ✅ PASS |
+| TC-03 | `oh002 other user gets 403`                                  | ✅ PASS |
+| TC-04 | `oh002 order id shown on detail page`                        | ✅ PASS |
+| TC-05 | `oh002 item product names shown`                             | ✅ PASS |
+| TC-06 | `oh002 item quantity shown`                                  | ✅ PASS |
+| TC-07 | `oh002 item unit price shown`                                | ✅ PASS |
+| TC-08 | `oh002 order total shown`                                    | ✅ PASS |
+| TC-09 | `oh002 shipping address shown`                               | ✅ PASS |
+| TC-10 | `oh002 payment method section shown`                         | ✅ PASS |
+| TC-11 | `oh002 order status shown on detail page`                    | ✅ PASS |
+| TC-12 | `oh002 order detail page responds within two seconds`        | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.30s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 350 / 350 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/OH-002 -m "merge: OH-002 order detail -- 350/350 tests pass, 0 regressions"
+git tag v1.0-OH-002-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **OH-003 (Order Status Tracking)** — Pending → Processing → Shipped → Delivered timeline with timestamps and email notification on status change
+
+<!-- EVAL-OH-002 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2007,6 +2087,7 @@ git push origin master --tags
 | 2026-04-16 | NF-002 (Sprint 3)     | 314         | 314    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-003 (Sprint 3)     | 326         | 326    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-001 (Sprint 4)     | 338         | 338    | 0      | 0            | Agent  |
+| 2026-04-16 | OH-002 (Sprint 4)     | 350         | 350    | 0      | 0            | Agent  |
 
 ---
 
