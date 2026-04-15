@@ -1463,6 +1463,7 @@
 ---
 
 <!-- EVAL-NF-004 START -->
+
 <a id="eval-nf-004--https-enforcement"></a>
 
 ## EVAL-NF-004 — HTTPS Enforcement
@@ -1476,13 +1477,13 @@
 
 ### STEP 1 — Backlog Item
 
-| Field | Value |
-|---|---|
-| ID | NF-004 |
-| Epic | Non-Functional Requirements |
-| Story | HTTPS enforced in production (`AppServiceProvider::forceScheme`) |
-| Priority | 1 — Critical |
-| Sprint | 1 — Foundation & Auth |
+| Field    | Value                                                            |
+| -------- | ---------------------------------------------------------------- |
+| ID       | NF-004                                                           |
+| Epic     | Non-Functional Requirements                                      |
+| Story    | HTTPS enforced in production (`AppServiceProvider::forceScheme`) |
+| Priority | 1 — Critical                                                     |
+| Sprint   | 1 — Foundation & Auth                                            |
 
 ---
 
@@ -1504,6 +1505,7 @@ public function boot(): void
 ```
 
 This ensures:
+
 - All URL generation (named routes, `URL::to()`, `asset()`, redirect URLs) uses `https://` in production
 - Local, staging, and testing environments are unaffected (no scheme override)
 - Zero changes to routes, controllers, or views — purely a provider-level concern
@@ -1515,19 +1517,19 @@ This ensures:
 **File:** `ecommerce/tests/Feature/HttpsEnforcementTest.php`
 **Tests:** 12 / 12 passed
 
-| TC | Test Name | Result |
-|---|---|---|
-| TC-01 | `nf004 app environment is not production in test suite` | ✅ PASS |
-| TC-02 | `nf004 https is NOT forced in testing environment` | ✅ PASS |
-| TC-03 | `nf004 https IS forced when app environment is production` | ✅ PASS |
-| TC-04 | `nf004 https IS forced for root url in production` | ✅ PASS |
-| TC-05 | `nf004 https IS forced for asset urls in production` | ✅ PASS |
+| TC    | Test Name                                                     | Result  |
+| ----- | ------------------------------------------------------------- | ------- |
+| TC-01 | `nf004 app environment is not production in test suite`       | ✅ PASS |
+| TC-02 | `nf004 https is NOT forced in testing environment`            | ✅ PASS |
+| TC-03 | `nf004 https IS forced when app environment is production`    | ✅ PASS |
+| TC-04 | `nf004 https IS forced for root url in production`            | ✅ PASS |
+| TC-05 | `nf004 https IS forced for asset urls in production`          | ✅ PASS |
 | TC-06 | `nf004 url forceScheme changes generated url scheme to https` | ✅ PASS |
-| TC-07 | `nf004 url forceScheme null reverts scheme to http` | ✅ PASS |
-| TC-08 | `nf004 url forceScheme applies to named routes` | ✅ PASS |
-| TC-09 | `nf004 provider boot in staging env does not force https` | ✅ PASS |
-| TC-10 | `nf004 provider boot in local env does not force https` | ✅ PASS |
-| TC-11 | `nf004 multiple url calls in production all use https` | ✅ PASS |
+| TC-07 | `nf004 url forceScheme null reverts scheme to http`           | ✅ PASS |
+| TC-08 | `nf004 url forceScheme applies to named routes`               | ✅ PASS |
+| TC-09 | `nf004 provider boot in staging env does not force https`     | ✅ PASS |
+| TC-10 | `nf004 provider boot in local env does not force https`       | ✅ PASS |
+| TC-11 | `nf004 multiple url calls in production all use https`        | ✅ PASS |
 | TC-12 | `nf004 app service provider boot completes within one second` | ✅ PASS |
 
 ---
@@ -1543,6 +1545,83 @@ This ensures:
 - **NF-005 (Authenticated Routes Redirect)** — Unauthenticated access to protected routes redirects to login
 
 <!-- EVAL-NF-004 END -->
+
+---
+
+<!-- EVAL-NF-005 START -->
+<a id="eval-nf-005--admin-route-middleware-audit"></a>
+
+## EVAL-NF-005 — Admin Route Middleware Audit
+
+**Date:** 2026-04-16
+**Branch:** `feature/NF-005` → merged to `master`
+**Tag:** `v1.0-NF-005-stable`
+**Tester:** Agent
+
+---
+
+### STEP 1 — Backlog Item
+
+| Field | Value |
+|---|---|
+| ID | NF-005 |
+| Epic | Non-Functional Requirements |
+| Story | Role & permission middleware on every admin route |
+| Priority | 1 — Critical |
+| Sprint | 1 — Foundation & Auth |
+
+---
+
+### STEP 2 — Audit Findings
+
+**Approach:** Two-angle verification — (1) Kernel alias registration for all three Spatie middleware, (2) route-level audit that every route under the `admin/` prefix carries both `auth` and `role:admin` middleware, plus HTTP-level 200/403/redirect assertions.
+
+**Finding:** All admin routes correctly have `['auth', 'role:admin']` applied via a shared group in `routes/web.php`. The Spatie `role`, `permission`, and `role_or_permission` aliases are all registered in `app/Http/Kernel.php`. No admin route was found missing either middleware.
+
+| Check | Finding |
+|---|---|
+| `role` alias registered | ✅ → `Spatie\Permission\Middleware\RoleMiddleware` |
+| `permission` alias registered | ✅ → `Spatie\Permission\Middleware\PermissionMiddleware` |
+| `role_or_permission` alias registered | ✅ → `Spatie\Permission\Middleware\RoleOrPermissionMiddleware` |
+| All `admin/*` routes have `auth` | ✅ |
+| All `admin/*` routes have `role:admin` | ✅ |
+| All `admin/*` routes use `admin.` name prefix | ✅ |
+
+---
+
+### STEP 3 — Test Suite
+
+**File:** `ecommerce/tests/Feature/AdminMiddlewareAuditTest.php`
+**Tests:** 12 / 12 passed
+
+| TC | Test Name | Result |
+|---|---|---|
+| TC-01 | `nf005 role middleware alias is registered in kernel` | ✅ PASS |
+| TC-02 | `nf005 permission middleware alias is registered in kernel` | ✅ PASS |
+| TC-03 | `nf005 role or permission middleware alias is registered in kernel` | ✅ PASS |
+| TC-04 | `nf005 at least one admin route is registered` | ✅ PASS |
+| TC-05 | `nf005 every admin route has auth middleware` | ✅ PASS |
+| TC-06 | `nf005 every admin route has role admin middleware` | ✅ PASS |
+| TC-07 | `nf005 admin can access admin dashboard` | ✅ PASS |
+| TC-08 | `nf005 regular user is blocked from admin dashboard with 403` | ✅ PASS |
+| TC-09 | `nf005 guest is redirected to login for admin dashboard` | ✅ PASS |
+| TC-10 | `nf005 user with no role is blocked from admin dashboard` | ✅ PASS |
+| TC-11 | `nf005 all admin routes use admin name prefix` | ✅ PASS |
+| TC-12 | `nf005 admin dashboard access check completes within one second` | ✅ PASS |
+
+---
+
+### STEP 4 — Regression
+
+**Full suite result:** 290 / 290 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-006 (Input Sanitisation / XSS)** — All user-supplied input is escaped in Blade views via `{{ }}` syntax
+
+<!-- EVAL-NF-005 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1579,6 +1658,7 @@ This ensures:
 | 2026-04-15 | CP-005 (Sprint 3)     | 254         | 254    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-001 (Sprint 1)     | 266         | 266    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-004 (Sprint 1)     | 278         | 278    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-005 (Sprint 1)     | 290         | 290    | 0      | 0            | Agent  |
 
 ---
 
