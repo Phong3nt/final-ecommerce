@@ -70,6 +70,38 @@ class CartController extends Controller
     }
 
     /**
+     * SC-004: Remove a product from the session cart.
+     * Accepts AJAX/JSON (returns JSON) or regular form POST with _method=DELETE.
+     */
+    public function destroy(Request $request, int $productId): JsonResponse|RedirectResponse
+    {
+        $cart = session()->get('cart', []);
+
+        if (!isset($cart[$productId])) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Item not found in cart.'], 404);
+            }
+            return redirect()->route('cart.index')->withErrors(['cart' => 'Item not found in cart.']);
+        }
+
+        unset($cart[$productId]);
+        session()->put('cart', $cart);
+
+        $cartCount = array_sum(array_column($cart, 'quantity'));
+        $newTotal  = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message'     => 'Item removed from cart.',
+                'cart_count'  => $cartCount,
+                'order_total' => number_format($newTotal, 2),
+            ]);
+        }
+
+        return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
+    }
+
+    /**
      * SC-001: Add a product to the session cart.
      * Accepts regular form POST (redirects back) or AJAX/JSON (returns JSON).
      * Guest carts persist in session and survive login (session is regenerated,
