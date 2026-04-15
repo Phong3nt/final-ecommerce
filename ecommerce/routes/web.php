@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +70,15 @@ Route::middleware(['auth'])->group(function () {
     // UP-001: User profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // CP-001: Checkout — shipping address
+    Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
+    Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
+
+    // CP-002 placeholder (shipping method — implemented in CP-002)
+    Route::get('/checkout/shipping', function () {
+        return response('Shipping step coming soon.', 200);
+    })->name('checkout.shipping');
 });
 
 // AU-006: Admin routes — auth + role:admin required
