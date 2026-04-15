@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -9,11 +10,14 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $products = Product::latest()->paginate(12);
+        $filters = $request->only(['category', 'min_price', 'max_price', 'min_rating']);
+        $categories = Category::orderBy('name')->get();
 
-        return view('products.index', compact('products'));
+        $products = Product::filter($filters)->latest()->paginate(12)->withQueryString();
+
+        return view('products.index', compact('products', 'filters', 'categories'));
     }
 
     public function search(Request $request): View|RedirectResponse
