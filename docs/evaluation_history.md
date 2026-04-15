@@ -1107,6 +1107,68 @@
 
 <!-- EVAL-CP-002 -->
 
+---
+
+## EVAL-CP-002 — Checkout Shipping Method (Standard/Express, cost in session)
+
+**Story:** CP-002 · Sprint 3 · Checkout & Payment Epic
+
+### STEP 1 — Code
+
+**New / modified files:**
+
+| File | Change |
+| ---- | ------ |
+| `app/Http/Controllers/CheckoutController.php` | Added `SHIPPING_OPTIONS` const, `showShipping()`, `storeShipping()` |
+| `routes/web.php` | Replaced placeholder `GET /checkout/shipping` with real routes; added `POST /checkout/shipping`; added `GET /checkout/review` placeholder |
+| `resources/views/checkout/shipping.blade.php` | NEW — radio option list, order subtotal + shipping cost + grand total display, live JS totals |
+| `tests/Feature/CheckoutShippingTest.php` | NEW — 12 tests |
+
+**Key implementation decisions:**
+- Shipping options defined as `private const SHIPPING_OPTIONS` on the controller — avoids a DB table for two static options
+- `showShipping()` guards the session: no `checkout.address` → redirect back to address step
+- `storeShipping()` validates `method` against `array_keys(SHIPPING_OPTIONS)` — adding a third option only requires one edit
+- Session key: `checkout.shipping` stores `{method, label, cost}`
+- Live JS in the view updates shipping cost + grand total on radio change; no server round-trip needed
+
+### STEP 2 — Tests (CheckoutShippingTest.php — 12/12 PASS)
+
+| #     | Test                                                              | Result  |
+| ----- | ----------------------------------------------------------------- | ------- |
+| TC-01 | `cp002 shipping page returns 200 for auth user`                   | ✅ PASS |
+| TC-02 | `cp002 guest is redirected to login`                              | ✅ PASS |
+| TC-03 | `cp002 both shipping options visible`                             | ✅ PASS |
+| TC-04 | `cp002 standard selection stored in session`                      | ✅ PASS |
+| TC-05 | `cp002 express selection stored in session`                       | ✅ PASS |
+| TC-06 | `cp002 invalid method fails validation`                           | ✅ PASS |
+| TC-07 | `cp002 missing method fails validation`                           | ✅ PASS |
+| TC-08 | `cp002 session includes method label and cost`                    | ✅ PASS |
+| TC-09 | `cp002 redirects to checkout review on success`                   | ✅ PASS |
+| TC-10 | `cp002 get redirects to address if no address in session`         | ✅ PASS |
+| TC-11 | `cp002 standard cost is less than express cost`                   | ✅ PASS |
+| TC-12 | `cp002 shipping step responds within one second`                  | ✅ PASS |
+
+**Regression:** All 206 previous tests still PASS ✅ · Total suite: 218/218 · 449 assertions
+
+### STEP 3 — Evaluation
+
+| Criterion        | Score | Notes |
+| ---------------- | ----- | ----- |
+| Correctness      | 5     | 2 shipping options, costs stored in session, order total + shipping = grand total |
+| Test Coverage    | 5     | Auth/guest, both options, invalid/missing method, session keys, redirect flow, guard for missing address |
+| Security         | 5     | Auth guard enforced, method validated to whitelist (`in:standard,express`), CSRF on form |
+| Code Clarity     | 5     | `showShipping()` 10 lines, `storeShipping()` 12 lines; const keeps options in one place |
+| Architecture Fit | 5     | `checkout.shipping` session key consistent with `checkout.*` namespace established in CP-001 |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- **CP-003 (Payment Gateway)** — `GET/POST /checkout/review` → show order summary (address + shipping + cart); integrate Stripe or Midtrans for payment; create `orders` and `order_items` tables on success
+- Replace the `checkout.review` placeholder route with the full CP-003 implementation
+
+<!-- EVAL-CP-002 END -->
+
 <!-- ============================================================
      More sprints follow the same pattern...
      ============================================================ -->
@@ -1136,6 +1198,7 @@
 | 2026-04-15 | SC-003 (Sprint 2)     | 182         | 182    | 0      | 0            | Agent  |
 | 2026-04-15 | SC-004 (Sprint 2)     | 194         | 194    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-001 (Sprint 3)     | 206         | 206    | 0      | 0            | Agent  |
+| 2026-04-15 | CP-002 (Sprint 3)     | 218         | 218    | 0      | 0            | Agent  |
 
 ---
 
