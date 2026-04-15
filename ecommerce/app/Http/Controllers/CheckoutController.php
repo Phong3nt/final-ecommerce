@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\UserAddress;
+use App\Services\PaymentServiceInterface;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class CheckoutController extends Controller
 {
@@ -16,6 +20,10 @@ class CheckoutController extends Controller
         'standard' => ['label' => 'Standard Shipping', 'cost' => 5.00, 'days' => '5–7 business days'],
         'express' => ['label' => 'Express Shipping', 'cost' => 15.00, 'days' => '1–2 business days'],
     ];
+
+    public function __construct(private PaymentServiceInterface $paymentService)
+    {
+    }
 
     /**
      * CP-001: Show the checkout address step.
@@ -113,5 +121,130 @@ class CheckoutController extends Controller
         ]);
 
         return redirect()->route('checkout.review');
+    }
+
+    /**
+     * CP-003: Show the order review page.
+     * Requires both checkout.address and checkout.shipping in session.
+     */
+    public function showReview(): View|RedirectResponse
+    {
+        if (!session()->has('checkout.address')) {
+            return redirect()->route('checkout.address')
+                ->with('error', 'Please provide a shipping address first.');
+        }
+
+        if (!session()->has('checkout.shipping')) {
+            return redirect()->route('checkout.shipping')
+                ->with('error', 'Please choose a shipping method first.');
+        }
+
+        $cart = session('cart', []);
+        $address = session('checkout.address');
+        $shipping = session('checkout.shipping');
+
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $total = $subtotal + $shipping['cost'];
+
+        return view('checkout.review', compact('cart', 'address', 'shipping', 'subtotal', 'total'));
+    }
+
+    /**
+     * CP-003: Place the order and create a Stripe PaymentIntent.
+     * Creates Order + OrderItems (status=pending), returns JSON {client_secret, order_id}.
+     * Card data is never sent to this server — tokenization happens via Stripe.js on the frontend.
+     */
+    public function placeOrder(Request $request): JsonResponse|RedirectResponse
+    {
+        if (!session()->has('checkout.address') || !session()->has('checkout.shipping')) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Checkout session expired.'], 422);
+            }
+            return redirect()->route('checkout.address');
+        }
+
+        $cart = session('cart', []);
+        $address = session('checkout.address');
+        $shipping = session('checkout.shipping');
+        $user = auth()->user();
+
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $total = $subtotal + $shipping['cost'];
+
+        // Create the order record (pending — awaiting payment confirmation)
+        $order = Order::create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'subtotal' => $subtotal,
+            'shipping_cost' => $shipping['cost'],
+            'total' => $total,
+            'shipping_method' => $shipping['method'],
+            'shipping_label' => $shipping['label'],
+            'address' => $address,
+        ]);
+
+        // Persist order line items (snapshot of cart at time of order)
+        foreach ($cart as $productId => $item) {
+            $order->items()->create([
+                'product_id' => $productId,
+                'product_name' => $item['name'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['price'],
+                'subtotal' => $item['price'] * $item['quantity'],
+            ]);
+        }
+
+        // Create Stripe PaymentIntent server-side (card never touches our server)
+        $amountCents = (int) round($total * 100);
+        $intent = $this->paymentService->createPaymentIntent($amountCents, 'usd', [
+            'order_id' => (string) $order->id,
+            'user_id' => (string) $user->id,
+        ]);
+
+        // Persist the intent ID + client_secret (client_secret is needed by Stripe.js)
+        $order->update([
+            'stripe_payment_intent_id' => $intent['id'],
+            'stripe_client_secret' => $intent['client_secret'],
+        ]);
+
+        return response()->json([
+            'client_secret' => $intent['client_secret'],
+            'order_id' => $order->id,
+        ]);
+    }
+
+    /**
+     * CP-003: Handle Stripe webhook events.
+     * Verifies the webhook signature, then processes payment_intent.succeeded
+     * and payment_intent.payment_failed to update order status.
+     * Card data is never stored here — only event metadata.
+     */
+    public function handleWebhook(Request $request): Response
+    {
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature', '');
+        $secret = config('services.stripe.webhook_secret');
+
+        try {
+            $event = $this->paymentService->constructWebhookEvent($payload, $sigHeader, $secret);
+        } catch (\UnexpectedValueException | \Stripe\Exception\SignatureVerificationException $e) {
+            return response('Invalid payload or signature.', 400);
+        }
+
+        $intentId = $event->data->object->id ?? null;
+
+        if ($intentId) {
+            $order = Order::where('stripe_payment_intent_id', $intentId)->first();
+
+            if ($order) {
+                if ($event->type === 'payment_intent.succeeded') {
+                    $order->update(['status' => 'paid']);
+                } elseif ($event->type === 'payment_intent.payment_failed') {
+                    $order->update(['status' => 'failed']);
+                }
+            }
+        }
+
+        return response('OK', 200);
     }
 }
