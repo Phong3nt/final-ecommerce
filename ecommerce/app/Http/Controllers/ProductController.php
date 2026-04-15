@@ -21,6 +21,12 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'filters', 'categories'));
     }
 
+    public function show(Product $product): View
+    {
+        $related = $product->relatedProducts(4);
+        return view('products.show', compact('product', 'related'));
+    }
+
     public function search(Request $request): View|RedirectResponse
     {
         $q = trim($request->input('q', ''));

@@ -9,7 +9,7 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'price', 'stock', 'image', 'category_id', 'rating'];
+    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'image', 'category_id', 'rating'];
 
     protected $casts = [
         'price' => 'decimal:2',
@@ -18,9 +18,26 @@ class Product extends Model
         'category_id' => 'integer',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function relatedProducts(int $limit = 4)
+    {
+        if (!$this->category_id) {
+            return collect();
+        }
+        return static::where('category_id', $this->category_id)
+            ->where('id', '!=', $this->id)
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 
     public function scopeSearch($query, string $term)

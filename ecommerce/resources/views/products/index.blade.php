@@ -67,7 +67,13 @@
                     @if ($product->image)
                         <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
                     @endif
-                    <h2>{{ $product->name }}</h2>
+                    <h2>
+                        @if ($product->slug)
+                            <a href="{{ route('products.show', $product->slug) }}">{{ $product->name }}</a>
+                        @else
+                            {{ $product->name }}
+                        @endif
+                    </h2>
                     <p class="price">${{ number_format($product->price, 2) }}</p>
                     @if ($product->category)
                         <p class="category">{{ $product->category->name }}</p>
