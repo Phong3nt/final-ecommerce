@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -98,6 +99,9 @@ Route::middleware(['auth'])->group(function () {
 // AU-006: Admin routes — auth + role:admin required
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // OH-003: Admin order status update
+    Route::patch('/orders/{order}/status', [OrderStatusController::class, 'update'])->name('orders.status');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)

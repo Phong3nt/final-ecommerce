@@ -115,6 +115,26 @@
             padding: .75rem 1rem;
             display: inline-block;
         }
+
+        .timeline-step {
+            padding: .5rem 0 .5rem 1.5rem;
+            border-left: 3px solid #e5e7eb;
+            margin-bottom: .25rem;
+        }
+
+        .timeline-step--done {
+            border-left-color: #10b981;
+        }
+
+        .timeline-step--pending {
+            color: #9ca3af;
+        }
+
+        .timeline-ts {
+            margin-left: .75rem;
+            font-size: .85rem;
+            color: #6b7280;
+        }
     </style>
 </head>
 
@@ -181,10 +201,30 @@
 
     {{-- Status timeline --}}
     <h2>Status</h2>
-    <p>
-        <span class="status-{{ $order->status }}">{{ ucfirst($order->status) }}</span>
-        &mdash; last updated {{ $order->updated_at->format('d M Y, H:i') }}
-    </p>
+    <ol class="timeline" style="list-style:none;padding:0;margin:0">
+        <li class="timeline-step timeline-step--done">
+            <strong>Placed</strong>
+            <span class="timeline-ts">{{ $order->created_at->format('d M Y, H:i') }}</span>
+        </li>
+        <li class="timeline-step {{ $order->processing_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+            <strong>Processing</strong>
+            @if ($order->processing_at)
+                <span class="timeline-ts">{{ $order->processing_at->format('d M Y, H:i') }}</span>
+            @endif
+        </li>
+        <li class="timeline-step {{ $order->shipped_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+            <strong>Shipped</strong>
+            @if ($order->shipped_at)
+                <span class="timeline-ts">{{ $order->shipped_at->format('d M Y, H:i') }}</span>
+            @endif
+        </li>
+        <li class="timeline-step {{ $order->delivered_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+            <strong>Delivered</strong>
+            @if ($order->delivered_at)
+                <span class="timeline-ts">{{ $order->delivered_at->format('d M Y, H:i') }}</span>
+            @endif
+        </li>
+    </ol>
 
     <p style="margin-top:2rem"><a href="{{ route('orders.index') }}">&larr; Back to Order History</a></p>
 

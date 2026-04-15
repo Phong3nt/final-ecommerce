@@ -46,4 +46,28 @@ class OrderFactory extends Factory
     {
         return $this->state(['status' => 'pending']);
     }
+
+    public function processing(): static
+    {
+        return $this->state(['status' => 'processing', 'processing_at' => now()]);
+    }
+
+    public function shipped(): static
+    {
+        return $this->state([
+            'status' => 'shipped',
+            'processing_at' => now()->subDay(),
+            'shipped_at' => now(),
+        ]);
+    }
+
+    public function delivered(): static
+    {
+        return $this->state([
+            'status' => 'delivered',
+            'processing_at' => now()->subDays(3),
+            'shipped_at' => now()->subDays(2),
+            'delivered_at' => now()->subDay(),
+        ]);
+    }
 }

@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['pending', 'paid', 'failed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'paid', 'failed', 'cancelled', 'processing', 'shipped', 'delivered'])->default('pending');
             $table->decimal('subtotal', 10, 2);
             $table->decimal('shipping_cost', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
