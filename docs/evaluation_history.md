@@ -828,7 +828,62 @@
 
 <!-- EVAL-PC-005 END -->
 
-<!-- EVAL-SC-001 through SC-004 -->
+## EVAL-SC-001 · Add to Cart (Session-Based, Guest+Auth, AJAX)
+
+**Version:** A  
+**Date:** 2026-04-15  
+**Status in Backlog:** Done  
+**Linked Task:** [SC-001](backlog.md)  
+**Git Tag:** `v1.0-SC-001-stable`
+
+### Test Results
+
+| TC   | Scenario                                          | Type       | Result  |
+| ---- | ------------------------------------------------- | ---------- | ------- |
+| TC-01 | Guest adds product to session cart               | Happy Path | PASS ✅ |
+| TC-02 | Authenticated user adds product to cart          | Happy Path | PASS ✅ |
+| TC-03 | Cart stores the correct quantity                 | Happy Path | PASS ✅ |
+| TC-04 | Adding same product twice merges quantities      | Edge       | PASS ✅ |
+| TC-05 | Out-of-stock product returns 422 JSON error      | Negative   | PASS ✅ |
+| TC-06 | Nonexistent product_id fails validation          | Negative   | PASS ✅ |
+| TC-07 | Zero quantity fails validation                   | Negative   | PASS ✅ |
+| TC-08 | Negative quantity fails validation               | Negative   | PASS ✅ |
+| TC-09 | Quantity exceeding stock is capped at stock      | Edge       | PASS ✅ |
+| TC-10 | AJAX request returns JSON with cart_count        | Happy Path | PASS ✅ |
+| TC-11 | Session item contains correct data keys          | Happy Path | PASS ✅ |
+| TC-12 | Add to cart completes within 1 second            | Perf       | PASS ✅ |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Regression:** All 146 previous tests still PASS ✅ · Total suite: 158/158 · 323 assertions
+
+### Quality Scores (1–5)
+
+| Dimension          | Score | Notes                                               |
+| ------------------ | ----- | --------------------------------------------------- |
+| Correctness        | 5     | All AC satisfied; qty cap, merge, out-of-stock guard |
+| Test Coverage      | 5     | 12 tests cover happy, negative, edge, perf          |
+| Security           | 5     | CSRF active, `exists:products,id` validation, no mass-assignment |
+| Code Clarity       | 5     | Controller single-responsibility, clear intent      |
+| Architecture Fit   | 4     | Session-based fits SC-001 scope; DB persistence deferred to SC-005 |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### Architecture Notes
+
+- Cart stored as `session('cart')` keyed by `product_id` (integer): `['product_id', 'name', 'price', 'quantity', 'slug']`
+- Session survives login: Laravel's `session()->regenerate()` preserves data, so guest cart is automatically available after auth (AC satisfied)
+- `CartController::store()` returns `JsonResponse` when `$request->expectsJson()`, `RedirectResponse` otherwise — dual-mode, no duplication
+- Quantity merges on re-add; total capped at current stock
+
+### STEP 4 — Proposals for Next Task
+
+- **SC-002 (View Cart)** — `GET /cart` → `CartController::index()` returning `cart.index` view; list items with image, name, qty, unit price, subtotal, order total; empty-cart state
+- Consider extracting a `CartService` when SC-002/SC-003 are built (currently thin enough to stay in controller)
+- Cart badge in a shared layout/nav (currently local to product detail page) should be addressed in SC-002 sprint
+
+<!-- EVAL-SC-001 END -->
+
+<!-- EVAL-SC-002 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -854,6 +909,8 @@
 | 2026-04-15 | PC-003 (Sprint 2)     | 122         | 122    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-004 (Sprint 2)     | 134         | 134    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-005 (Sprint 2)     | 146         | 146    | 0      | 0            | Agent  |
+| 2026-04-15 | SC-001 (Sprint 2)     | 158         | 158    | 0      | 0            | Agent  |
+| 2026-04-15 | SC-001 (Sprint 2)     | 158         | 158    | 0      | 0            | Agent  |
 
 ---
 
