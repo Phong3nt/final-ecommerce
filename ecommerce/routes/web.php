@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
@@ -70,6 +71,9 @@ Route::middleware(['auth'])->group(function () {
     // UP-001: User profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // OH-001: Order history
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
     // CP-001: Checkout — shipping address
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
