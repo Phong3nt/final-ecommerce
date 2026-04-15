@@ -775,7 +775,60 @@
 
 <!-- EVAL-PC-004 END -->
 
-<!-- EVAL-PC-005, SC-001 through SC-004 -->
+## EVAL-PC-005 · Product Detail Page with Slug, SKU, Related Products
+
+- **Task:** PC-005
+- **Sprint:** 2
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-PC-005-stable`
+- **Branch:** `feature/PC-005` → merged to `master`
+
+### STEP 1 — Architecture Review
+
+- Migration `add_slug_sku_to_products_table`: adds `slug` (unique, nullable) and `sku` (unique, nullable) to `products`
+- `Product` model: `slug` + `sku` added to `$fillable`; `getRouteKeyName()` returns `'slug'` for SEO-friendly URLs; `relatedProducts(int $limit)` method queries same category, excludes self, limits to 4
+- `ProductFactory`: `name` made unique with `fake()->unique()->words(3, true)`; `slug = Str::slug($name)`, `sku = strtoupper(fake()->bothify('???-####'))`
+- Route `GET /products/{product:slug}` → `products.show` (public, no auth)
+- `ProductController::show(Product $product)` — route model binding by slug, loads related products
+- `products/show.blade.php` — image, name, SKU, price, category, rating, stock status, description, related products grid, "Add to Cart" placeholder (disabled), `<meta description>` for SEO
+- `products/index.blade.php` — product name in listing now links to `products.show`
+
+### STEP 2 — Security Checklist
+
+- [x] Route model binding — invalid slug auto-returns 404 (no information disclosure)
+- [x] All product fields rendered with `{{ }}` auto-escaping (XSS safe)
+- [x] `<meta description>` uses `Str::limit()` — description truncated, never raw user input in meta length
+- [x] No auth required per AC (visitor feature)
+- [x] SKU/slug uniqueness enforced at DB level
+
+### STEP 3 — Test Results
+
+| TC    | Description                                                | Type             | Result |
+| ----- | ---------------------------------------------------------- | ---------------- | ------ |
+| TC-01 | Detail page returns 200 for valid slug                     | Happy            | PASS   |
+| TC-02 | Product name shown on detail page                          | Happy            | PASS   |
+| TC-03 | Product description shown on detail page                   | Happy            | PASS   |
+| TC-04 | Product price shown on detail page                         | Happy            | PASS   |
+| TC-05 | In Stock status shown when stock > 0                       | Happy            | PASS   |
+| TC-06 | Out of Stock status shown when stock = 0                   | Edge             | PASS   |
+| TC-07 | SKU shown on detail page                                   | Happy            | PASS   |
+| TC-08 | Category name shown on detail page                         | Happy            | PASS   |
+| TC-09 | Rating shown on detail page                                | Happy            | PASS   |
+| TC-10 | Related products section shown with same-category products | Happy            | PASS   |
+| TC-11 | Non-existent slug returns 404                              | Edge             | PASS   |
+| TC-12 | Detail page accessible without login and responds < 2s     | Security/Perf    | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- SC-001 (Add to Cart) — "Add to Cart" button is already present on detail page (disabled placeholder); next sprint can wire it up
+- Consider auto-generating slug from name on product creation (Observer or `boot()` hook) before admin CRUD is built
+- Image gallery (multiple images) is an upgrade path; current implementation supports single image
+
+<!-- EVAL-PC-005 END -->
+
+<!-- EVAL-SC-001 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -800,6 +853,7 @@
 | 2026-04-15 | PC-002 (Sprint 2)     | 110         | 110    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-003 (Sprint 2)     | 122         | 122    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-004 (Sprint 2)     | 134         | 134    | 0      | 0            | Agent  |
+| 2026-04-15 | PC-005 (Sprint 2)     | 146         | 146    | 0      | 0            | Agent  |
 
 ---
 
