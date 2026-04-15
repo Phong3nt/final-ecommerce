@@ -439,6 +439,78 @@
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-AU-005 END -->
+
+## EVAL-AU-006 · Role-Based Access Control
+
+**Version:** A  
+**Date:** 2026-04-15  
+**Status in Backlog:** Done  
+**Linked Task:** [AU-006](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Duration | Notes |
+| --- | --- | --- | --- | --- | --- |
+| TC-AU006-01 | Admin accesses `/admin/dashboard` → 200 OK | Happy | PASS ✅ | 0.43s | |
+| TC-AU006-02 | Regular user accesses `/admin/dashboard` → 403 | Security | PASS ✅ | 0.16s | `role:admin` middleware enforced |
+| TC-AU006-03 | Guest accesses `/admin/dashboard` → redirect to `/login` | Security | PASS ✅ | 0.04s | `auth` middleware runs first |
+| TC-AU006-04 | Admin user has `admin` role | Happy | PASS ✅ | 0.03s | `hasRole('admin')` confirmed |
+| TC-AU006-05 | Regular user has `user` role, not `admin` | Happy | PASS ✅ | 0.03s | |
+| TC-AU006-06 | Regular user can still access `/dashboard` → 200 | Edge | PASS ✅ | 0.06s | No regression on user routes |
+| TC-AU006-07 | Admin can also access `/dashboard` → 200 | Edge | PASS ✅ | 0.03s | |
+| TC-AU006-08 | User with no role is blocked from admin → 403 | Security | PASS ✅ | 0.03s | |
+| TC-AU006-09 | Both `user` and `admin` roles exist in DB | Edge | PASS ✅ | 0.03s | RoleSeeder verified |
+| TC-AU006-10 | `role` middleware alias registered in Kernel | Security | PASS ✅ | 0.05s | `RoleMiddleware::class` confirmed |
+| TC-AU006-11 | `admin.dashboard` route name resolves to `/admin/dashboard` | Edge | PASS ✅ | 0.04s | |
+| TC-AU006-12 | Admin dashboard responds within 2s | Perf | PASS ✅ | 0.03s | |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 16 Assertions  
+**Test Duration:** 1.19s (AU-006 alone) · 4.85s (full 74-test suite)  
+**Regression:** AU-001–005 all 62/62 PASS ✅ · No regression.
+
+---
+
+### Quality Scores
+
+| Dimension | Score | Comment |
+| --- | --- | --- |
+| Simplicity | 5/5 | 3 middleware aliases in Kernel + route group + controller — minimal code |
+| Security | 5/5 | `auth` + `role:admin` double guard, 403 for wrong role, redirect for guest |
+| Performance | 5/5 | 0.03s response, well under 2s |
+| Test Coverage | 5/5 | 12 cases — 3× happy, 4× security, 3× edge, 1× performance |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description | Severity | Status |
+| --- | --- | --- | --- |
+| — | No bugs — all 12 tests passed on first run | — | — |
+
+---
+
+### Technical Notes
+
+- **Middleware registration** — Spatie v6 uses `Spatie\Permission\Middleware\RoleMiddleware` (path is `src/Middleware/`, not `src/Middlewares/`). Added `role`, `permission`, `role_or_permission` all to `Kernel::$middlewareAliases`.
+- **Route group** — `/admin/*` routes use `['auth', 'role:admin']` middleware stack. `auth` resolves first, so a guest gets a 302 redirect to login rather than a 403 (correct UX).
+- **Admin seeder** — `RoleSeeder` was already created in a prior task. `DatabaseSeeder` now calls it, so `php artisan db:seed` will create both roles.
+- **No privilege escalation risk** — a `role:user` user cannot elevate to `admin` without explicit `assignRole('admin')` — Spatie enforces this at the DB and middleware level.
+- **Architectural Impact** — AU-006 adds the `role:admin` middleware guard. This must be applied to all future admin routes (AD-001–004, PM-001–006, UM-001–004, RM-001–003). All existing user routes (AU-001–005) are unaffected.
+- **Mocked Dependencies:** None.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description | Benefit | Complexity |
+| --- | --- | --- | --- |
+| AU-006.1 | Add granular permissions (e.g., `edit-products`, `view-orders`) beyond role-only checks | Fine-grained access control for future admin features | Medium — define permissions in seeder + use `permission:` middleware |
+| AU-006.2 | Create a dedicated 403 error view (`errors/403.blade.php`) with a friendly message | Better UX than default Laravel 403 page | Low — one Blade file |
+| AU-006.3 | Log unauthorized access attempts to `audit_logs` (user_id, route, timestamp) | Security monitoring | Medium — requires `audit_logs` table |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-AU-006 END -->
 <!-- EVAL-AU-005 will appear here after AU-005 is completed -->
 <!-- EVAL-AU-006 will appear here after AU-006 is completed -->
 
@@ -465,6 +537,7 @@
 | 2026-04-09 | AU-003 (Sprint 1)     | 36          | 36     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-004 (Sprint 1)     | 50          | 50     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-005 (Sprint 1)     | 62          | 62     | 0      | 0            | Agent  |
+| 2026-04-15 | AU-006 (Sprint 1)     | 74          | 74     | 0      | 0            | Agent  |
 
 ---
 
