@@ -627,7 +627,52 @@
 
 <!-- EVAL-PC-001 END -->
 
-<!-- EVAL-PC-002 through PC-005, SC-001 through SC-004 -->
+## EVAL-PC-002 · Product Search by Name and Description
+
+- **Task:** PC-002
+- **Sprint:** 2
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-PC-002-stable`
+- **Branch:** `feature/PC-002` → merged to `master`
+
+### STEP 1 — Architecture Review
+- `scopeSearch($query, string $term)` added to `Product` model — `LIKE %term%` on `name` OR `description`
+- `ProductController::search()` — validates blank query (redirects to index), paginates 12/page with `withQueryString()`
+- Route `GET /products/search` added as public (no auth)
+- New view `products/search.blade.php` — search form, result count, product grid, "No products found" state, pagination
+
+### STEP 2 — Security Checklist
+- [x] XSS: `{{ $q }}` auto-escaped; product fields rendered with `{{ }}`
+- [x] SQL injection: Eloquent `LIKE` binding — never raw interpolation
+- [x] No auth required — public route per AC
+- [x] Query string preserved via `withQueryString()` — no sensitive data leak
+
+### STEP 3 — Test Results
+| TC    | Description                                     | Type        | Result |
+|-------|-------------------------------------------------|-------------|--------|
+| TC-01 | Search by name keyword returns matching product | Happy       | PASS   |
+| TC-02 | Search by description keyword returns match     | Happy       | PASS   |
+| TC-03 | Search results paginated at 12/page             | Happy       | PASS   |
+| TC-04 | Search is case-insensitive                      | Happy       | PASS   |
+| TC-05 | No match shows "No products found" message      | Edge        | PASS   |
+| TC-06 | Empty query redirects to /products              | Edge        | PASS   |
+| TC-07 | Search accessible without login                 | Security    | PASS   |
+| TC-08 | XSS in query param is escaped                   | Security    | PASS   |
+| TC-09 | Search term preserved in input field            | Happy       | PASS   |
+| TC-10 | Non-matching products not returned              | Negative    | PASS   |
+| TC-11 | Partial keyword match works                     | Edge        | PASS   |
+| TC-12 | Search completes within 1 second                | Performance | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+- PC-003 (filter by category/price/rating) can add `scopeFilter()` on Product; category requires its own model
+- Consider debounced JS search-as-you-type for UX improvement (post-MVP)
+- Search index (MySQL FULLTEXT) recommended before production for scale
+
+<!-- EVAL-PC-002 END -->
+
+<!-- EVAL-PC-003 through PC-005, SC-001 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -649,6 +694,7 @@
 | 2026-04-15 | AU-006 (Sprint 1)     | 74          | 74     | 0      | 0            | Agent  |
 | 2026-04-15 | UP-001 (Sprint 3)     | 86          | 86     | 0      | 0            | Agent  |
 | 2026-04-15 | PC-001 (Sprint 2)     | 98          | 98     | 0      | 0            | Agent  |
+| 2026-04-15 | PC-002 (Sprint 2)     | 110         | 110    | 0      | 0            | Agent  |
 
 ---
 
