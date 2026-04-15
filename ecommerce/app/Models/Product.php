@@ -15,4 +15,12 @@ class Product extends Model
         'price' => 'decimal:2',
         'stock' => 'integer',
     ];
+
+    public function scopeSearch($query, string $term)
+    {
+        return $query->where(function ($q) use ($term) {
+            $q->where('name', 'like', '%' . $term . '%')
+              ->orWhere('description', 'like', '%' . $term . '%');
+        });
+    }
 }
