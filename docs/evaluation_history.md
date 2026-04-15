@@ -515,6 +515,60 @@
 <!-- EVAL-AU-006 will appear here after AU-006 is completed -->
 
 <!-- ============================================================
+     SPRINT 3 — User Profile
+     ============================================================ -->
+
+## EVAL-UP-001 · User Profile View/Edit with Avatar
+
+- **Task:** UP-001
+- **Sprint:** 3
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-UP-001-stable`
+- **Branch:** `feature/UP-001` → merged to `master`
+
+### STEP 1 — Architecture Review
+- Added `avatar` column (nullable string) via migration `add_avatar_to_users_table`
+- `User::$fillable` extended with `'avatar'`
+- New `ProfileController` (show/update) in `app/Http/Controllers/`
+- New `UpdateProfileRequest` with `image|mimes:jpg,jpeg,png|max:2048` rule + `Rule::unique` ignore self
+- Two routes (`GET /profile`, `PUT /profile`) added to `auth` middleware group
+- New Blade view `resources/views/profile/show.blade.php`
+- Avatar files stored in `storage/app/public/avatars/` via `Storage::disk('public')`
+
+### STEP 2 — Security Checklist
+- [x] CSRF: `@csrf` + `@method('PUT')` in form, middleware active on route
+- [x] XSS: Blade `{{ }}` auto-escapes all output
+- [x] Auth: both routes inside `auth` middleware group; guest → redirect to login
+- [x] File Upload: `mimes:jpg,jpeg,png`, `max:2048`, `image` rule — no arbitrary file upload
+- [x] SQLi: Eloquent ORM + FormRequest validation — no raw queries
+- [x] Email unique: `Rule::unique()->ignore($user->id)` prevents false conflict on own email
+
+### STEP 3 — Test Results
+| TC   | Description                              | Type        | Result |
+|------|------------------------------------------|-------------|--------|
+| TC-01 | GET /profile returns 200 + pre-filled data | Happy     | PASS   |
+| TC-02 | PUT /profile valid name/email → DB updated + flash | Happy | PASS |
+| TC-03 | Avatar jpg upload stores file + DB updated | Happy     | PASS   |
+| TC-04 | Same email → no unique conflict          | Edge        | PASS   |
+| TC-05 | Guest GET /profile → redirect login      | Security    | PASS   |
+| TC-06 | Guest PUT /profile → redirect login      | Security    | PASS   |
+| TC-07 | CSRF middleware registered on route      | Security    | PASS   |
+| TC-08 | Avatar >2MB → validation error           | Negative    | PASS   |
+| TC-09 | Non-image (pdf) avatar → validation error| Negative    | PASS   |
+| TC-10 | Empty name → validation error            | Negative    | PASS   |
+| TC-11 | Duplicate email (other user) → error     | Negative    | PASS   |
+| TC-12 | Profile update within 2s                 | Performance | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+- Consider adding a `change_password` form to the profile page (UP-002 or separate task)
+- Avatar deletion feature (remove current avatar) could be a quick win
+- Image resizing/thumbnail generation before storage (reduce disk usage)
+
+<!-- EVAL-UP-001 END -->
+
+<!-- ============================================================
      SPRINT 2 — Product Catalog & Cart
      ============================================================ -->
 
@@ -538,6 +592,7 @@
 | 2026-04-15 | AU-004 (Sprint 1)     | 50          | 50     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-005 (Sprint 1)     | 62          | 62     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-006 (Sprint 1)     | 74          | 74     | 0      | 0            | Agent  |
+| 2026-04-15 | UP-001 (Sprint 3)     | 86          | 86     | 0      | 0            | Agent  |
 
 ---
 

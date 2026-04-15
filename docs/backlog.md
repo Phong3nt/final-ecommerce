@@ -236,7 +236,7 @@
 | AU-004  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-004](evaluation_history.md#eval-au-004--user-logout)                       | `v1.0-AU-004-stable` |       |
 | AU-005  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-005](evaluation_history.md#eval-au-005--password-reset-via-email)          | `v1.0-AU-005-stable` |       |
 | AU-006  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-006](evaluation_history.md#eval-au-006--role-based-access-control)         | `v1.0-AU-006-stable` |       |
-| UP-001  | User Profile                   | Not Started | 3      | —           | —                                                                                   | —                    |       |
+| UP-001  | User Profile                   | Done        | 3      | Agent       | [EVAL-UP-001](evaluation_history.md#eval-up-001--user-profile-viewedit-with-avatar) | `v1.0-UP-001-stable` |       |
 | UP-002  | User Profile                   | Not Started | 7      | —           | —                                                                                   | —                    |       |
 | PC-001  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |
 | PC-002  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |
