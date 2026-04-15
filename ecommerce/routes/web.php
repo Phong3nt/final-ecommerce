@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,9 @@ Route::get('/products/search', [ProductController::class, 'search'])->name('prod
 
 // PC-005: Product detail page — SEO-friendly slug, no auth required
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+// SC-001: Add to cart — session-based, guest + auth allowed
+Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {

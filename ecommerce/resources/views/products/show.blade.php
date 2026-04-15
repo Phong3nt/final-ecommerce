@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $product->name }}</title>
     <meta name="description" content="{{ Str::limit($product->description, 160) }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -52,8 +53,27 @@
                 <p>{{ $product->description }}</p>
             </div>
 
-            {{-- Add to cart placeholder (SC-001) --}}
-            <button class="add-to-cart" disabled>Add to Cart</button>
+            {{-- SC-001: Add to Cart --}}
+            @if (session('success'))
+                <p class="alert-success">{{ session('success') }}</p>
+            @endif
+
+            @if ($errors->has('quantity'))
+                <p class="alert-error">{{ $errors->first('quantity') }}</p>
+            @endif
+
+            @if ($product->stock > 0)
+                <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <label for="quantity">Qty:</label>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ $product->stock }}" class="qty-input">
+                    <button type="submit" class="add-to-cart">Add to Cart</button>
+                </form>
+                <span id="cart-badge" class="cart-badge"></span>
+            @else
+                <button class="add-to-cart" disabled>Add to Cart</button>
+            @endif
         </div>
     </article>
 
@@ -80,6 +100,35 @@
             </div>
         </section>
     @endif
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('add-to-cart-form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var token = form.querySelector('[name="_token"]').value;
+        var productId = parseInt(form.querySelector('[name="product_id"]').value);
+        var quantity  = parseInt(form.querySelector('[name="quantity"]').value);
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+            },
+            body: JSON.stringify({ product_id: productId, quantity: quantity }),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (json) {
+            var badge = document.getElementById('cart-badge');
+            if (badge && json.cart_count !== undefined) {
+                badge.textContent = json.cart_count + ' item(s) in cart';
+            }
+        })
+        .catch(function () {});
+    });
+});
+</script>
 </body>
 
 </html>
