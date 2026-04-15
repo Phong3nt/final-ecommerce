@@ -83,10 +83,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/review', [CheckoutController::class, 'showReview'])->name('checkout.review');
     Route::post('/checkout/review', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
 
-    // CP-004 placeholder (success page — implemented in CP-004/CP-005)
-    Route::get('/checkout/success', function () {
-        return response('Order placed!', 200);
-    })->name('checkout.success');
+    // CP-005: Checkout — success / failure page (Stripe redirects here after confirmPayment)
+    Route::get('/checkout/success', [CheckoutController::class, 'showSuccess'])->name('checkout.success');
 
 });
 

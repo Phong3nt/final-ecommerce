@@ -249,4 +249,36 @@ class CheckoutController extends Controller
 
         return response('OK', 200);
     }
+
+    /**
+     * CP-005: Show the payment success or failure page.
+     * Stripe redirects here with ?payment_intent=pi_...&redirect_status=succeeded|failed|...
+     * We look up the order by intent ID (scoped to the authenticated user) and render
+     * the appropriate view. The checkout session is cleared on success.
+     */
+    public function showSuccess(Request $request): View|RedirectResponse
+    {
+        $intentId     = $request->query('payment_intent');
+        $redirectStatus = $request->query('redirect_status', '');
+
+        if (!$intentId) {
+            return redirect()->route('checkout.address');
+        }
+
+        $order = Order::where('stripe_payment_intent_id', $intentId)
+            ->where('user_id', auth()->id())
+            ->with('items')
+            ->first();
+
+        if (!$order) {
+            return redirect()->route('checkout.address');
+        }
+
+        if ($redirectStatus === 'succeeded') {
+            session()->forget(['checkout.address', 'checkout.shipping', 'cart']);
+            return view('checkout.success', compact('order'));
+        }
+
+        return view('checkout.failed', ['order' => $order, 'status' => $redirectStatus]);
+    }
 }
