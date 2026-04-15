@@ -17,6 +17,9 @@ Route::get('/', function () {
 // PC-001: Public product browsing — no auth required
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
+// PC-002: Product search — no auth required
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
