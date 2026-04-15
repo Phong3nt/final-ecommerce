@@ -13,8 +13,8 @@ class CheckoutController extends Controller
      * Available shipping methods with cost and estimated delivery.
      */
     private const SHIPPING_OPTIONS = [
-        'standard' => ['label' => 'Standard Shipping', 'cost' => 5.00,  'days' => '5–7 business days'],
-        'express'  => ['label' => 'Express Shipping',  'cost' => 15.00, 'days' => '1–2 business days'],
+        'standard' => ['label' => 'Standard Shipping', 'cost' => 5.00, 'days' => '5–7 business days'],
+        'express' => ['label' => 'Express Shipping', 'cost' => 15.00, 'days' => '1–2 business days'],
     ];
 
     /**
@@ -46,27 +46,27 @@ class CheckoutController extends Controller
         } else {
             // Validate and create a new address
             $data = $request->validate([
-                'name'          => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'address_line1' => 'required|string|max:255',
                 'address_line2' => 'nullable|string|max:255',
-                'city'          => 'required|string|max:100',
-                'state'         => 'required|string|max:100',
-                'postal_code'   => 'required|string|max:20',
-                'country'       => 'required|string|max:100',
+                'city' => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+                'postal_code' => 'required|string|max:20',
+                'country' => 'required|string|max:100',
             ]);
 
             $address = $user->addresses()->create($data);
         }
 
         session()->put('checkout.address', [
-            'id'            => $address->id,
-            'name'          => $address->name,
+            'id' => $address->id,
+            'name' => $address->name,
             'address_line1' => $address->address_line1,
             'address_line2' => $address->address_line2,
-            'city'          => $address->city,
-            'state'         => $address->state,
-            'postal_code'   => $address->postal_code,
-            'country'       => $address->country,
+            'city' => $address->city,
+            'state' => $address->state,
+            'postal_code' => $address->postal_code,
+            'country' => $address->country,
         ]);
 
         return redirect()->route('checkout.shipping');
@@ -78,18 +78,18 @@ class CheckoutController extends Controller
      */
     public function showShipping(): View|RedirectResponse
     {
-        if (! session()->has('checkout.address')) {
+        if (!session()->has('checkout.address')) {
             return redirect()->route('checkout.address')
                 ->with('error', 'Please provide a shipping address first.');
         }
 
         $cart = session('cart', []);
-        $orderTotal = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $orderTotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
         return view('checkout.shipping', [
             'shippingOptions' => self::SHIPPING_OPTIONS,
-            'orderTotal'      => $orderTotal,
-            'selected'        => session('checkout.shipping.method'),
+            'orderTotal' => $orderTotal,
+            'selected' => session('checkout.shipping.method'),
         ]);
     }
 
@@ -103,13 +103,13 @@ class CheckoutController extends Controller
             'method' => ['required', 'in:' . implode(',', array_keys(self::SHIPPING_OPTIONS))],
         ]);
 
-        $method  = $request->input('method');
-        $option  = self::SHIPPING_OPTIONS[$method];
+        $method = $request->input('method');
+        $option = self::SHIPPING_OPTIONS[$method];
 
         session()->put('checkout.shipping', [
             'method' => $method,
-            'label'  => $option['label'],
-            'cost'   => $option['cost'],
+            'label' => $option['label'],
+            'cost' => $option['cost'],
         ]);
 
         return redirect()->route('checkout.review');
