@@ -727,7 +727,55 @@
 
 <!-- EVAL-PC-003 END -->
 
-<!-- EVAL-PC-004 through PC-005, SC-001 through SC-004 -->
+## EVAL-PC-004 · Product Sort by Newest, Oldest, Price, Rating
+
+- **Task:** PC-004
+- **Sprint:** 2
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-PC-004-stable`
+- **Branch:** `feature/PC-004` → merged to `master`
+
+### STEP 1 — Architecture Review
+
+- `scopeSort($query, string $sort)` added to `Product` model — uses `match` expression; options: `newest` (default), `oldest`, `price_asc`, `price_desc`, `rating`; unknown values fall back to `newest`
+- `ProductController::index()` updated: `sort` added to `$request->only([...])`, `$sort` extracted with `?? 'newest'` default; `->latest()` replaced with `->sort($sort)`
+- Sort `<select>` dropdown added to filter form in `products/index.blade.php`; selected state persisted from `$filters['sort']`; 5 options rendered
+
+### STEP 2 — Security Checklist
+
+- [x] Unknown sort values fall back to `newest` via `match` default — no raw SQL injection possible
+- [x] Sort param rendered in `<select>` via server-side comparison only — no unescaped output
+- [x] `withQueryString()` preserves sort across pagination pages
+- [x] No auth required — public route per AC
+
+### STEP 3 — Test Results
+
+| TC    | Description                                               | Type        | Result |
+| ----- | --------------------------------------------------------- | ----------- | ------ |
+| TC-01 | Default sort (no param) returns products newest first     | Happy       | PASS   |
+| TC-02 | sort=newest returns products newest first                 | Happy       | PASS   |
+| TC-03 | sort=oldest returns products oldest first                 | Happy       | PASS   |
+| TC-04 | sort=price_asc returns cheapest product first             | Happy       | PASS   |
+| TC-05 | sort=price_desc returns most expensive product first      | Happy       | PASS   |
+| TC-06 | sort=rating returns highest-rated product first           | Happy       | PASS   |
+| TC-07 | Sort dropdown has at least 5 options rendered             | Happy       | PASS   |
+| TC-08 | Sort selection persisted in dropdown after applying       | Happy       | PASS   |
+| TC-09 | Sort works combined with category filter                  | Happy       | PASS   |
+| TC-10 | Unknown sort value falls back to newest                   | Edge        | PASS   |
+| TC-11 | Sort param persists in pagination links (withQueryString) | Happy       | PASS   |
+| TC-12 | Sorted listing responds within 2 seconds                  | Performance | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- PC-005 (product detail page) should display category, rating, and allow adding to cart
+- Consider persisting default sort preference in session/cookie for returning users (post-MVP)
+- A relevance/sales-based sort could be added once order data exists (post-MVP)
+
+<!-- EVAL-PC-004 END -->
+
+<!-- EVAL-PC-005, SC-001 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -751,6 +799,7 @@
 | 2026-04-15 | PC-001 (Sprint 2)     | 98          | 98     | 0      | 0            | Agent  |
 | 2026-04-15 | PC-002 (Sprint 2)     | 110         | 110    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-003 (Sprint 2)     | 122         | 122    | 0      | 0            | Agent  |
+| 2026-04-15 | PC-004 (Sprint 2)     | 134         | 134    | 0      | 0            | Agent  |
 
 ---
 
