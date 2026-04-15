@@ -1256,13 +1256,13 @@
 
 **New / modified files:**
 
-| File                                                    | Change                                                                                                          |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `app/Mail/OrderConfirmation.php`                        | NEW — `Mailable`; subject `Order Confirmation #<id>`; renders `mail.order-confirmation` with order + delivery   |
-| `app/Jobs/SendOrderConfirmationEmail.php`               | NEW — `ShouldQueue` job; eager-loads `user` + `items`; dispatches `OrderConfirmation` mailable                  |
-| `resources/views/mail/order-confirmation.blade.php`     | NEW — HTML email: user greeting, order ID, items table, subtotal/shipping/total, estimated delivery, address    |
-| `app/Http/Controllers/CheckoutController.php`           | Modified `handleWebhook()` — after status=paid, dispatches `SendOrderConfirmationEmail::dispatch($order)`       |
-| `tests/Feature/OrderConfirmationEmailTest.php`          | NEW — 12 tests                                                                                                  |
+| File                                                | Change                                                                                                        |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `app/Mail/OrderConfirmation.php`                    | NEW — `Mailable`; subject `Order Confirmation #<id>`; renders `mail.order-confirmation` with order + delivery |
+| `app/Jobs/SendOrderConfirmationEmail.php`           | NEW — `ShouldQueue` job; eager-loads `user` + `items`; dispatches `OrderConfirmation` mailable                |
+| `resources/views/mail/order-confirmation.blade.php` | NEW — HTML email: user greeting, order ID, items table, subtotal/shipping/total, estimated delivery, address  |
+| `app/Http/Controllers/CheckoutController.php`       | Modified `handleWebhook()` — after status=paid, dispatches `SendOrderConfirmationEmail::dispatch($order)`     |
+| `tests/Feature/OrderConfirmationEmailTest.php`      | NEW — 12 tests                                                                                                |
 
 **Key implementation decisions:**
 
@@ -1273,20 +1273,20 @@
 
 ### STEP 2 — Tests (OrderConfirmationEmailTest.php — 12/12 PASS)
 
-| #     | Test                                                                        | Result  |
-| ----- | --------------------------------------------------------------------------- | ------- |
-| TC-01 | `cp004 webhook payment succeeded dispatches confirmation job`               | ✅ PASS |
-| TC-02 | `cp004 webhook payment failed does not dispatch confirmation job`           | ✅ PASS |
-| TC-03 | `cp004 webhook unknown intent does not dispatch job`                        | ✅ PASS |
-| TC-04 | `cp004 mailable has correct subject`                                        | ✅ PASS |
-| TC-05 | `cp004 mailable is addressed to order user`                                 | ✅ PASS |
-| TC-06 | `cp004 email contains order id`                                             | ✅ PASS |
-| TC-07 | `cp004 email contains item product name`                                    | ✅ PASS |
-| TC-08 | `cp004 email contains order total`                                          | ✅ PASS |
-| TC-09 | `cp004 email shows standard estimated delivery`                             | ✅ PASS |
-| TC-10 | `cp004 email shows express estimated delivery`                              | ✅ PASS |
-| TC-11 | `cp004 job implements should queue`                                         | ✅ PASS |
-| TC-12 | `cp004 job handle sends order confirmation mail`                            | ✅ PASS |
+| #     | Test                                                              | Result  |
+| ----- | ----------------------------------------------------------------- | ------- |
+| TC-01 | `cp004 webhook payment succeeded dispatches confirmation job`     | ✅ PASS |
+| TC-02 | `cp004 webhook payment failed does not dispatch confirmation job` | ✅ PASS |
+| TC-03 | `cp004 webhook unknown intent does not dispatch job`              | ✅ PASS |
+| TC-04 | `cp004 mailable has correct subject`                              | ✅ PASS |
+| TC-05 | `cp004 mailable is addressed to order user`                       | ✅ PASS |
+| TC-06 | `cp004 email contains order id`                                   | ✅ PASS |
+| TC-07 | `cp004 email contains item product name`                          | ✅ PASS |
+| TC-08 | `cp004 email contains order total`                                | ✅ PASS |
+| TC-09 | `cp004 email shows standard estimated delivery`                   | ✅ PASS |
+| TC-10 | `cp004 email shows express estimated delivery`                    | ✅ PASS |
+| TC-11 | `cp004 job implements should queue`                               | ✅ PASS |
+| TC-12 | `cp004 job handle sends order confirmation mail`                  | ✅ PASS |
 
 **Regression:** All 230 previous tests still PASS ✅ · Total suite: 242/242 · 492 assertions
 
@@ -1294,9 +1294,9 @@
 
 | Criterion        | Score | Notes                                                                                                                              |
 | ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Correctness      | 5     | Email dispatched on `payment_intent.succeeded` only; not on `payment_failed` or unknown intent; correct subject, content, address   |
+| Correctness      | 5     | Email dispatched on `payment_intent.succeeded` only; not on `payment_failed` or unknown intent; correct subject, content, address  |
 | Test Coverage    | 5     | Dispatch/no-dispatch webhook branches, mailable subject/recipient/content, job `ShouldQueue` contract, `handle()` sends mail       |
-| Security         | 5     | No sensitive data (card details) in email; mailable only reads from DB model; user email taken from authenticated model, not input  |
+| Security         | 5     | No sensitive data (card details) in email; mailable only reads from DB model; user email taken from authenticated model, not input |
 | Code Clarity     | 5     | Job is 10 lines; Mailable is 25 lines; logic separation is clean (job orchestrates, mailable presents)                             |
 | Architecture Fit | 5     | `ShouldQueue` satisfies “sent within 1 minute” AC; `SerializesModels` ensures safe queue serialization; fits Laravel queue pattern |
 
@@ -1307,6 +1307,71 @@
 - **CP-005 (Success/Failure Page)** — After Stripe redirects to `/checkout/success?payment_intent=...`, query the PaymentIntent status server-side and render either a success page (order summary) or a failure page with retry CTA
 
 <!-- EVAL-CP-004 END -->
+
+<!-- EVAL-CP-005 -->
+
+---
+
+## EVAL-CP-005 — Success/Failure Page (Stripe redirect, order summary, retry)
+
+**Story:** CP-005 · Sprint 3 · Checkout & Payment Epic
+
+### STEP 1 — Code
+
+**New / modified files:**
+
+| File                                              | Change                                                                                                                                              |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/Http/Controllers/CheckoutController.php`     | Added `showSuccess()` — reads `?payment_intent` + `?redirect_status` from Stripe redirect; scopes order lookup to `auth()->id()`; clears checkout session on success |
+| `routes/web.php`                                  | Replaced `checkout.success` placeholder closure with `[CheckoutController::class, 'showSuccess']`                                                   |
+| `resources/views/checkout/success.blade.php`      | NEW — shows order number, item list, subtotal/shipping/total, estimated delivery, shipping address                                                  |
+| `resources/views/checkout/failed.blade.php`       | NEW — shows failure reason (`$status`), retry CTA linking back to `checkout.review`                                                                 |
+| `tests/Feature/CheckoutSuccessTest.php`           | NEW — 12 tests                                                                                                                                      |
+
+**Key implementation decisions:**
+
+- `showSuccess()` uses `?payment_intent` from Stripe’s return URL rather than trusting session — the PaymentIntent ID is the authoritative record
+- Order lookup is scoped `->where('user_id', auth()->id())` to prevent IDOR: one user cannot view another user’s order summary by guessing an intent ID
+- Checkout session (`checkout.address`, `checkout.shipping`, `cart`) is cleared only on `redirect_status === 'succeeded'` — left intact on failure so the user can retry without re-entering details
+- A missing or unknown `payment_intent` silently redirects to `checkout.address` (no information leakage)
+- Failed page receives `$status` from Stripe (e.g. `requires_payment_method`) and displays a human-readable reason with a retry link
+
+### STEP 2 — Tests (CheckoutSuccessTest.php — 12/12 PASS)
+
+| #     | Test                                                                                      | Result  |
+| ----- | ----------------------------------------------------------------------------------------- | ------- |
+| TC-01 | `cp005 success page returns 200 when redirect status is succeeded`                        | ✅ PASS |
+| TC-02 | `cp005 success page shows order id`                                                       | ✅ PASS |
+| TC-03 | `cp005 success page shows order items`                                                    | ✅ PASS |
+| TC-04 | `cp005 success page shows order total`                                                    | ✅ PASS |
+| TC-05 | `cp005 success page clears checkout session`                                              | ✅ PASS |
+| TC-06 | `cp005 failed page returns 200 when redirect status is requires payment method`           | ✅ PASS |
+| TC-07 | `cp005 failed page shows retry link`                                                      | ✅ PASS |
+| TC-08 | `cp005 failed page shows reason`                                                          | ✅ PASS |
+| TC-09 | `cp005 missing payment intent redirects to address`                                       | ✅ PASS |
+| TC-10 | `cp005 payment intent for wrong user redirects to address`                                | ✅ PASS |
+| TC-11 | `cp005 guest is redirected to login`                                                      | ✅ PASS |
+| TC-12 | `cp005 unknown order intent redirects to address`                                         | ✅ PASS |
+
+**Regression:** All 242 previous tests still PASS ✅ · Total suite: 254/254 · 0 failures
+
+### STEP 3 — Evaluation
+
+| Criterion        | Score | Notes                                                                                                                              |
+| ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Correctness      | 5     | Success page shows order summary; failure page shows reason + retry link; session cleared only on success                         |
+| Test Coverage    | 5     | 200/redirect for each outcome branch, session clear, IDOR guard, guest guard, missing/unknown intent                               |
+| Security         | 5     | Order scoped to `auth()->id()` (IDOR prevention); no info leak on missing intent; relies on Stripe-signed `payment_intent` param   |
+| Code Clarity     | 5     | `showSuccess()` is 20 lines; single conditional branch for success vs failure; no extra state                                      |
+| Architecture Fit | 5     | Reuses existing `Order` model; checkout session namespace correctly cleared; follows established controller pattern                |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- **CP-006 / OH-001 (Order History)** — Authenticated users can view a paginated list of their past orders with status badges and a detail view
+
+<!-- EVAL-CP-005 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1340,6 +1405,7 @@
 | 2026-04-15 | CP-002 (Sprint 3)     | 218         | 218    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-003 (Sprint 3)     | 230         | 230    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-004 (Sprint 3)     | 242         | 242    | 0      | 0            | Agent  |
+| 2026-04-15 | CP-005 (Sprint 3)     | 254         | 254    | 0      | 0            | Agent  |
 
 ---
 
