@@ -75,10 +75,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
 
-    // CP-002 placeholder (shipping method — implemented in CP-002)
-    Route::get('/checkout/shipping', function () {
-        return response('Shipping step coming soon.', 200);
-    })->name('checkout.shipping');
+    // CP-002: Checkout — shipping method
+    Route::get('/checkout/shipping', [CheckoutController::class, 'showShipping'])->name('checkout.shipping');
+    Route::post('/checkout/shipping', [CheckoutController::class, 'storeShipping'])->name('checkout.shipping.store');
+
+    // CP-003 placeholder (review step — implemented in CP-003)
+    Route::get('/checkout/review', function () {
+        return response('Review step coming soon.', 200);
+    })->name('checkout.review');
 });
 
 // AU-006: Admin routes — auth + role:admin required

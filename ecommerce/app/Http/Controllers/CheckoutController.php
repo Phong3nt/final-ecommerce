@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 class CheckoutController extends Controller
 {
     /**
+     * Available shipping methods with cost and estimated delivery.
+     */
+    private const SHIPPING_OPTIONS = [
+        'standard' => ['label' => 'Standard Shipping', 'cost' => 5.00,  'days' => '5–7 business days'],
+        'express'  => ['label' => 'Express Shipping',  'cost' => 15.00, 'days' => '1–2 business days'],
+    ];
+
+    /**
      * CP-001: Show the checkout address step.
      * Auth users see their saved addresses + a new address form.
      */
@@ -62,5 +70,48 @@ class CheckoutController extends Controller
         ]);
 
         return redirect()->route('checkout.shipping');
+    }
+
+    /**
+     * CP-002: Show the checkout shipping method step.
+     * Requires checkout.address in session; otherwise redirect back.
+     */
+    public function showShipping(): View|RedirectResponse
+    {
+        if (! session()->has('checkout.address')) {
+            return redirect()->route('checkout.address')
+                ->with('error', 'Please provide a shipping address first.');
+        }
+
+        $cart = session('cart', []);
+        $orderTotal = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
+
+        return view('checkout.shipping', [
+            'shippingOptions' => self::SHIPPING_OPTIONS,
+            'orderTotal'      => $orderTotal,
+            'selected'        => session('checkout.shipping.method'),
+        ]);
+    }
+
+    /**
+     * CP-002: Store the chosen shipping method in session.
+     * Stores method, label, and cost, then proceeds to checkout review.
+     */
+    public function storeShipping(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'method' => ['required', 'in:' . implode(',', array_keys(self::SHIPPING_OPTIONS))],
+        ]);
+
+        $method  = $request->input('method');
+        $option  = self::SHIPPING_OPTIONS[$method];
+
+        session()->put('checkout.shipping', [
+            'method' => $method,
+            'label'  => $option['label'],
+            'cost'   => $option['cost'],
+        ]);
+
+        return redirect()->route('checkout.review');
     }
 }
