@@ -6,12 +6,16 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// PC-001: Public product browsing — no auth required
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
