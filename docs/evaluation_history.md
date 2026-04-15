@@ -676,7 +676,58 @@
 
 <!-- EVAL-PC-002 END -->
 
-<!-- EVAL-PC-003 through PC-005, SC-001 through SC-004 -->
+## EVAL-PC-003 · Product Filters by Category, Price Range, Rating
+
+- **Task:** PC-003
+- **Sprint:** 2
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-PC-003-stable`
+- **Branch:** `feature/PC-003` → merged to `master`
+
+### STEP 1 — Architecture Review
+
+- `Category` model + migration (`id`, `name` unique, timestamps) introduced; `CategoryFactory` added
+- `products` table migrated: `category_id` (nullable FK → nullOnDelete) + `rating` (decimal 3,2 nullable)
+- `scopeFilter($query, array $filters)` added to `Product` model — handles `category`, `min_price`, `max_price`, `min_rating`; each condition only applied when value is non-empty
+- `ProductController::index()` accepts filter params via `$request->only([...])`, loads `$categories`, applies `Product::filter($filters)->latest()->paginate(12)->withQueryString()`
+- Filter form in `products/index.blade.php` — `GET` to `products.index`, category `<select>`, min/max price and min_rating inputs, filter state persisted via `value=` attributes, "Clear Filters" link
+
+### STEP 2 — Security Checklist
+
+- [x] XSS: all filter outputs rendered with `{{ }}` auto-escaping; `<select>` option values from DB integer IDs
+- [x] SQL injection: Eloquent parameterised bindings — no raw interpolation in `scopeFilter`
+- [x] No auth required — public route per AC
+- [x] `withQueryString()` on paginator — filter params persist across pages
+- [x] Nullable FK with `nullOnDelete` — no orphan constraint violations when category deleted
+
+### STEP 3 — Test Results
+
+| TC    | Description                                              | Type        | Result |
+| ----- | -------------------------------------------------------- | ----------- | ------ |
+| TC-01 | Filter by category returns only matching products        | Happy       | PASS   |
+| TC-02 | Filter by min_price excludes cheaper products            | Happy       | PASS   |
+| TC-03 | Filter by max_price excludes expensive products          | Happy       | PASS   |
+| TC-04 | Filter by min_rating excludes lower-rated products       | Happy       | PASS   |
+| TC-05 | Combined category + price filter works correctly         | Happy       | PASS   |
+| TC-06 | All three filters combined work together                 | Happy       | PASS   |
+| TC-07 | No filters returns all products                          | Edge        | PASS   |
+| TC-08 | Filter state persists in pagination links (query string) | Happy       | PASS   |
+| TC-09 | Category dropdown rendered in filter form                | Happy       | PASS   |
+| TC-10 | Filter by non-existent category shows empty state        | Edge        | PASS   |
+| TC-11 | Filter accessible without login                          | Security    | PASS   |
+| TC-12 | Filtered listing responds within 2 seconds               | Performance | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- PC-004 (product detail page) should display `category.name` and `rating` now that both fields are available
+- Consider adding a rating widget (stars) on the detail and listing pages for visual clarity
+- Price range slider (JS) would improve UX over plain number inputs post-MVP
+
+<!-- EVAL-PC-003 END -->
+
+<!-- EVAL-PC-004 through PC-005, SC-001 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -699,6 +750,7 @@
 | 2026-04-15 | UP-001 (Sprint 3)     | 86          | 86     | 0      | 0            | Agent  |
 | 2026-04-15 | PC-001 (Sprint 2)     | 98          | 98     | 0      | 0            | Agent  |
 | 2026-04-15 | PC-002 (Sprint 2)     | 110         | 110    | 0      | 0            | Agent  |
+| 2026-04-15 | PC-003 (Sprint 2)     | 122         | 122    | 0      | 0            | Agent  |
 
 ---
 
