@@ -35,7 +35,7 @@ class PaymentTokenizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'user',  'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     }
 
@@ -54,7 +54,7 @@ class PaymentTokenizationTest extends TestCase
     public function nf003_orders_table_has_no_card_pan_cvv_expiry_columns(): void
     {
         $forbidden = ['card_number', 'card_pan', 'pan', 'cvv', 'cvc', 'expiry', 'expiration', 'card_expiry'];
-        $columns   = Schema::getColumnListing('orders');
+        $columns = Schema::getColumnListing('orders');
 
         foreach ($forbidden as $col) {
             $this->assertNotContains(
@@ -73,7 +73,7 @@ class PaymentTokenizationTest extends TestCase
     public function nf003_order_fillable_contains_no_card_data_fields(): void
     {
         $forbidden = ['card_number', 'card_pan', 'pan', 'cvv', 'cvc', 'expiry', 'expiration', 'card_expiry'];
-        $fillable  = (new Order())->getFillable();
+        $fillable = (new Order())->getFillable();
 
         foreach ($forbidden as $field) {
             $this->assertNotContains(
@@ -91,7 +91,7 @@ class PaymentTokenizationTest extends TestCase
     /** @test */
     public function nf003_payment_service_interface_has_no_card_data_parameters(): void
     {
-        $rc      = new ReflectionClass(PaymentServiceInterface::class);
+        $rc = new ReflectionClass(PaymentServiceInterface::class);
         $methods = $rc->getMethods();
 
         $forbidden = ['card_number', 'card_pan', 'cvv', 'cvc', 'expiry', 'expiration'];
@@ -114,7 +114,7 @@ class PaymentTokenizationTest extends TestCase
     /** @test */
     public function nf003_stripe_payment_service_uses_official_stripe_client(): void
     {
-        $rc         = new ReflectionClass(StripePaymentService::class);
+        $rc = new ReflectionClass(StripePaymentService::class);
         $properties = $rc->getProperties();
 
         $usesStripeClient = false;
@@ -140,7 +140,7 @@ class PaymentTokenizationTest extends TestCase
     /** @test */
     public function nf003_stripe_payment_service_source_has_no_raw_card_http(): void
     {
-        $rc     = new ReflectionClass(StripePaymentService::class);
+        $rc = new ReflectionClass(StripePaymentService::class);
         $source = file_get_contents($rc->getFileName());
 
         $forbidden = ['curl_init', 'file_get_contents(\'https://api.stripe', 'card_number', 'card_pan', 'cvv'];
@@ -161,7 +161,7 @@ class PaymentTokenizationTest extends TestCase
     /** @test */
     public function nf003_checkout_controller_source_never_reads_card_data_from_request(): void
     {
-        $path   = app_path('Http/Controllers/CheckoutController.php');
+        $path = app_path('Http/Controllers/CheckoutController.php');
         $source = file_get_contents($path);
 
         $forbidden = ['card_number', 'card_pan', 'cvv', 'cvc', "->input('expir", "->get('expir", '->card'];
@@ -242,7 +242,7 @@ class PaymentTokenizationTest extends TestCase
 
         // Create a product and seed the cart session
         $category = Category::factory()->create();
-        $product  = Product::factory()->create(['category_id' => $category->id, 'price' => 50.00]);
+        $product = Product::factory()->create(['category_id' => $category->id, 'price' => 50.00]);
 
         // Stub the PaymentService so no real Stripe call is made
         $this->instance(PaymentServiceInterface::class, new class implements PaymentServiceInterface {
@@ -255,6 +255,10 @@ class PaymentTokenizationTest extends TestCase
             {
                 return (object) [];
             }
+
+            public function cancelPaymentIntent(string $intentId): void
+            {
+            }
         });
 
         $this->actingAs($user)->withSession([
@@ -263,19 +267,19 @@ class PaymentTokenizationTest extends TestCase
             ],
             'checkout' => [
                 'address' => [
-                    'id'           => 1,
-                    'name'         => 'Test User',
-                    'address_line1'=> '123 Test St',
-                    'address_line2'=> null,
-                    'city'         => 'Testville',
-                    'state'        => 'TS',
-                    'postal_code'  => '00000',
-                    'country'      => 'US',
+                    'id' => 1,
+                    'name' => 'Test User',
+                    'address_line1' => '123 Test St',
+                    'address_line2' => null,
+                    'city' => 'Testville',
+                    'state' => 'TS',
+                    'postal_code' => '00000',
+                    'country' => 'US',
                 ],
                 'shipping' => [
                     'method' => 'standard',
-                    'label'  => 'Standard Shipping',
-                    'cost'   => 5.00,
+                    'label' => 'Standard Shipping',
+                    'cost' => 5.00,
                 ],
             ],
         ])->postJson('/checkout/review')
@@ -288,7 +292,12 @@ class PaymentTokenizationTest extends TestCase
 
         $columns = Schema::getColumnListing('orders');
         $cardColumns = array_filter($columns, fn($c) => in_array($c, [
-            'card_number', 'card_pan', 'cvv', 'cvc', 'expiry', 'expiration',
+            'card_number',
+            'card_pan',
+            'cvv',
+            'cvc',
+            'expiry',
+            'expiration',
         ]));
 
         foreach ($cardColumns as $col) {
@@ -310,7 +319,7 @@ class PaymentTokenizationTest extends TestCase
         $user = $this->makeUser();
 
         $category = Category::factory()->create();
-        $product  = Product::factory()->create(['category_id' => $category->id, 'price' => 30.00]);
+        $product = Product::factory()->create(['category_id' => $category->id, 'price' => 30.00]);
 
         $this->instance(PaymentServiceInterface::class, new class implements PaymentServiceInterface {
             public function createPaymentIntent(int $amountCents, string $currency, array $metadata): array
@@ -322,6 +331,10 @@ class PaymentTokenizationTest extends TestCase
             {
                 return (object) [];
             }
+
+            public function cancelPaymentIntent(string $intentId): void
+            {
+            }
         });
 
         $this->actingAs($user)->withSession([
@@ -330,27 +343,27 @@ class PaymentTokenizationTest extends TestCase
             ],
             'checkout' => [
                 'address' => [
-                    'id'           => 1,
-                    'name'         => 'Test User',
-                    'address_line1'=> '1 Attack Rd',
-                    'address_line2'=> null,
-                    'city'         => 'Hacktown',
-                    'state'        => 'HX',
-                    'postal_code'  => '99999',
-                    'country'      => 'US',
+                    'id' => 1,
+                    'name' => 'Test User',
+                    'address_line1' => '1 Attack Rd',
+                    'address_line2' => null,
+                    'city' => 'Hacktown',
+                    'state' => 'HX',
+                    'postal_code' => '99999',
+                    'country' => 'US',
                 ],
                 'shipping' => [
                     'method' => 'express',
-                    'label'  => 'Express Shipping',
-                    'cost'   => 15.00,
+                    'label' => 'Express Shipping',
+                    'cost' => 15.00,
                 ],
             ],
         ])->postJson('/checkout/review', [
-            // Attacker tries to send card data in the JSON body
-            'card_number' => '4242424242424242',
-            'cvv'         => '123',
-            'expiry'      => '12/99',
-        ])->assertStatus(200);
+                    // Attacker tries to send card data in the JSON body
+                    'card_number' => '4242424242424242',
+                    'cvv' => '123',
+                    'expiry' => '12/99',
+                ])->assertStatus(200);
 
         // Verify nothing card-related was persisted in the order or the raw JSON columns
         $order = Order::first();
@@ -382,8 +395,8 @@ class PaymentTokenizationTest extends TestCase
 
         // Must NOT store raw card numbers — these belong to Stripe's vault
         $this->assertNotContains('card_number', $fillable);
-        $this->assertNotContains('card_pan',    $fillable);
-        $this->assertNotContains('cvv',         $fillable);
-        $this->assertNotContains('cvc',         $fillable);
+        $this->assertNotContains('card_pan', $fillable);
+        $this->assertNotContains('cvv', $fillable);
+        $this->assertNotContains('cvc', $fillable);
     }
 }

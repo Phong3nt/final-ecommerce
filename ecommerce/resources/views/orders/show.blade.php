@@ -228,6 +228,21 @@
 
     <p style="margin-top:2rem"><a href="{{ route('orders.index') }}">&larr; Back to Order History</a></p>
 
+    @if ($order->status === 'pending')
+        <form method="POST" action="{{ route('orders.cancel', $order) }}" style="margin-top:1rem"
+            onsubmit="return confirm('Are you sure you want to cancel this order? This cannot be undone.')">
+            @csrf
+            <button type="submit"
+                style="background:#dc2626;color:#fff;padding:.5rem 1.25rem;border:none;border-radius:6px;cursor:pointer;font-size:1rem">
+                Cancel Order
+            </button>
+        </form>
+    @endif
+
+    @if (session('error'))
+        <p style="color:#dc2626;margin-top:1rem">{{ session('error') }}</p>
+    @endif
+
 </body>
 
 </html>
