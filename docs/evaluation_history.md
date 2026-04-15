@@ -1549,6 +1549,7 @@ This ensures:
 ---
 
 <!-- EVAL-NF-005 START -->
+
 <a id="eval-nf-005--admin-route-middleware-audit"></a>
 
 ## EVAL-NF-005 — Admin Route Middleware Audit
@@ -1562,13 +1563,13 @@ This ensures:
 
 ### STEP 1 — Backlog Item
 
-| Field | Value |
-|---|---|
-| ID | NF-005 |
-| Epic | Non-Functional Requirements |
-| Story | Role & permission middleware on every admin route |
-| Priority | 1 — Critical |
-| Sprint | 1 — Foundation & Auth |
+| Field    | Value                                             |
+| -------- | ------------------------------------------------- |
+| ID       | NF-005                                            |
+| Epic     | Non-Functional Requirements                       |
+| Story    | Role & permission middleware on every admin route |
+| Priority | 1 — Critical                                      |
+| Sprint   | 1 — Foundation & Auth                             |
 
 ---
 
@@ -1578,14 +1579,14 @@ This ensures:
 
 **Finding:** All admin routes correctly have `['auth', 'role:admin']` applied via a shared group in `routes/web.php`. The Spatie `role`, `permission`, and `role_or_permission` aliases are all registered in `app/Http/Kernel.php`. No admin route was found missing either middleware.
 
-| Check | Finding |
-|---|---|
-| `role` alias registered | ✅ → `Spatie\Permission\Middleware\RoleMiddleware` |
-| `permission` alias registered | ✅ → `Spatie\Permission\Middleware\PermissionMiddleware` |
-| `role_or_permission` alias registered | ✅ → `Spatie\Permission\Middleware\RoleOrPermissionMiddleware` |
-| All `admin/*` routes have `auth` | ✅ |
-| All `admin/*` routes have `role:admin` | ✅ |
-| All `admin/*` routes use `admin.` name prefix | ✅ |
+| Check                                         | Finding                                                        |
+| --------------------------------------------- | -------------------------------------------------------------- |
+| `role` alias registered                       | ✅ → `Spatie\Permission\Middleware\RoleMiddleware`             |
+| `permission` alias registered                 | ✅ → `Spatie\Permission\Middleware\PermissionMiddleware`       |
+| `role_or_permission` alias registered         | ✅ → `Spatie\Permission\Middleware\RoleOrPermissionMiddleware` |
+| All `admin/*` routes have `auth`              | ✅                                                             |
+| All `admin/*` routes have `role:admin`        | ✅                                                             |
+| All `admin/*` routes use `admin.` name prefix | ✅                                                             |
 
 ---
 
@@ -1594,20 +1595,20 @@ This ensures:
 **File:** `ecommerce/tests/Feature/AdminMiddlewareAuditTest.php`
 **Tests:** 12 / 12 passed
 
-| TC | Test Name | Result |
-|---|---|---|
-| TC-01 | `nf005 role middleware alias is registered in kernel` | ✅ PASS |
-| TC-02 | `nf005 permission middleware alias is registered in kernel` | ✅ PASS |
+| TC    | Test Name                                                           | Result  |
+| ----- | ------------------------------------------------------------------- | ------- |
+| TC-01 | `nf005 role middleware alias is registered in kernel`               | ✅ PASS |
+| TC-02 | `nf005 permission middleware alias is registered in kernel`         | ✅ PASS |
 | TC-03 | `nf005 role or permission middleware alias is registered in kernel` | ✅ PASS |
-| TC-04 | `nf005 at least one admin route is registered` | ✅ PASS |
-| TC-05 | `nf005 every admin route has auth middleware` | ✅ PASS |
-| TC-06 | `nf005 every admin route has role admin middleware` | ✅ PASS |
-| TC-07 | `nf005 admin can access admin dashboard` | ✅ PASS |
-| TC-08 | `nf005 regular user is blocked from admin dashboard with 403` | ✅ PASS |
-| TC-09 | `nf005 guest is redirected to login for admin dashboard` | ✅ PASS |
-| TC-10 | `nf005 user with no role is blocked from admin dashboard` | ✅ PASS |
-| TC-11 | `nf005 all admin routes use admin name prefix` | ✅ PASS |
-| TC-12 | `nf005 admin dashboard access check completes within one second` | ✅ PASS |
+| TC-04 | `nf005 at least one admin route is registered`                      | ✅ PASS |
+| TC-05 | `nf005 every admin route has auth middleware`                       | ✅ PASS |
+| TC-06 | `nf005 every admin route has role admin middleware`                 | ✅ PASS |
+| TC-07 | `nf005 admin can access admin dashboard`                            | ✅ PASS |
+| TC-08 | `nf005 regular user is blocked from admin dashboard with 403`       | ✅ PASS |
+| TC-09 | `nf005 guest is redirected to login for admin dashboard`            | ✅ PASS |
+| TC-10 | `nf005 user with no role is blocked from admin dashboard`           | ✅ PASS |
+| TC-11 | `nf005 all admin routes use admin name prefix`                      | ✅ PASS |
+| TC-12 | `nf005 admin dashboard access check completes within one second`    | ✅ PASS |
 
 ---
 
@@ -1622,6 +1623,89 @@ This ensures:
 - **NF-006 (Input Sanitisation / XSS)** — All user-supplied input is escaped in Blade views via `{{ }}` syntax
 
 <!-- EVAL-NF-005 END -->
+
+---
+
+<!-- EVAL-NF-006 START -->
+<a id="eval-nf-006--rate-limiting"></a>
+
+## EVAL-NF-006 — Rate Limiting on Login & Registration Endpoints
+
+**Date:** 2026-04-16
+**Branch:** `feature/NF-006` → merged to `master`
+**Tag:** `v1.0-NF-006-stable`
+**Tester:** Agent
+
+---
+
+### STEP 1 — Backlog Item
+
+| Field | Value |
+|---|---|
+| ID | NF-006 |
+| Epic | Non-Functional Requirements |
+| Story | Rate limiting on login and registration endpoints |
+| Priority | 1 — Critical |
+| Sprint | 1 — Foundation & Auth |
+
+---
+
+### STEP 2 — Implementation
+
+**File modified:** `ecommerce/routes/web.php`
+
+Added `->middleware('throttle:10,1')` to the three auth POST routes inside the `guest` middleware group:
+
+```php
+Route::post('/login', [LoginController::class, 'store'])
+    ->middleware('throttle:10,1')->name('login.store');
+
+Route::post('/register', [RegisterController::class, 'store'])
+    ->middleware('throttle:10,1')->name('register.store');
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
+    ->middleware('throttle:10,1')->name('password.email');
+```
+
+**Limit:** 10 attempts per minute per IP. After 10 requests the server returns HTTP 429 Too Many Requests automatically via Laravel’s `ThrottleRequests` middleware.
+
+**Scope:** Only POST routes are throttled. GET (show-form) routes are left untouched — they carry no sensitive mutation risk and must remain accessible for normal browsing.
+
+---
+
+### STEP 3 — Test Suite
+
+**File:** `ecommerce/tests/Feature/RateLimitingTest.php`
+**Tests:** 12 / 12 passed
+
+| TC | Test Name | Result |
+|---|---|---|
+| TC-01 | `nf006 login post route has throttle middleware` | ✅ PASS |
+| TC-02 | `nf006 register post route has throttle middleware` | ✅ PASS |
+| TC-03 | `nf006 forgot password post route has throttle middleware` | ✅ PASS |
+| TC-04 | `nf006 throttle middleware alias is registered in kernel` | ✅ PASS |
+| TC-05 | `nf006 login post returns non 429 within rate limit` | ✅ PASS |
+| TC-06 | `nf006 register post returns non 429 within rate limit` | ✅ PASS |
+| TC-07 | `nf006 forgot password post returns non 429 within rate limit` | ✅ PASS |
+| TC-08 | `nf006 login throttle limit is at most 10 per minute` | ✅ PASS |
+| TC-09 | `nf006 register throttle limit is at most 10 per minute` | ✅ PASS |
+| TC-10 | `nf006 login get route does not have throttle middleware` | ✅ PASS |
+| TC-11 | `nf006 register get route does not have throttle middleware` | ✅ PASS |
+| TC-12 | `nf006 login post with throttle responds within two seconds` | ✅ PASS |
+
+---
+
+### STEP 4 — Regression
+
+**Full suite result:** 302 / 302 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-007 / NF-008 (Security Headers / Content Security Policy)** — HTTP security headers via middleware
+
+<!-- EVAL-NF-006 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1659,6 +1743,7 @@ This ensures:
 | 2026-04-16 | NF-001 (Sprint 1)     | 266         | 266    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-004 (Sprint 1)     | 278         | 278    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-005 (Sprint 1)     | 290         | 290    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-006 (Sprint 1)     | 302         | 302    | 0      | 0            | Agent  |
 
 ---
 
