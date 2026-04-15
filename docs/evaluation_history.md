@@ -305,20 +305,20 @@
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Duration | Notes |
-| --- | --- | --- | --- | --- | --- |
-| TC-AU004-01 | POST /logout while authenticated → 302 redirect to `/` | Happy | PASS ✅ | 0.41s | Redirects to home, not `/login` |
-| TC-AU004-02 | After logout, user is not authenticated | Happy | PASS ✅ | 0.03s | `assertGuest()` confirmed |
-| TC-AU004-03 | Session ID changes after logout (invalidated) | Edge | PASS ✅ | 0.03s | Session fixation prevention |
-| TC-AU004-04 | CSRF token regenerated after logout | Edge | PASS ✅ | 0.03s | `session()->token()` changed |
-| TC-AU004-05 | VerifyCsrfToken middleware is in `web` group | Security | PASS ✅ | 0.07s | CSRF enforced on logout route |
-| TC-AU004-06 | `/dashboard` inaccessible after logout → redirect to `/login` | Security | PASS ✅ | 0.04s | Auth middleware working |
-| TC-AU004-07 | GET /logout returns 405 Method Not Allowed | Security | PASS ✅ | 0.31s | Only POST accepted |
-| TC-AU004-08 | Guest POST /logout → redirected to `/login` (auth middleware) | Negative | PASS ✅ | 0.03s | No crash or 500 |
-| TC-AU004-09 | PUT /logout returns 405 | Edge | PASS ✅ | 0.27s | Method constraint confirmed |
-| TC-AU004-10 | Auth session data cleared from session after logout | Edge | PASS ✅ | 0.03s | Session key null |
-| TC-AU004-11 | Consecutive logouts (guest POST) do not crash | Edge | PASS ✅ | 0.03s | Idempotent |
-| TC-AU004-12 | Logout completes within 2s threshold | Perf | PASS ✅ | 0.03s | Well under threshold |
+| Test Case ID | Scenario                                                      | Type     | Result  | Duration | Notes                           |
+| ------------ | ------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------- |
+| TC-AU004-01  | POST /logout while authenticated → 302 redirect to `/`        | Happy    | PASS ✅ | 0.41s    | Redirects to home, not `/login` |
+| TC-AU004-02  | After logout, user is not authenticated                       | Happy    | PASS ✅ | 0.03s    | `assertGuest()` confirmed       |
+| TC-AU004-03  | Session ID changes after logout (invalidated)                 | Edge     | PASS ✅ | 0.03s    | Session fixation prevention     |
+| TC-AU004-04  | CSRF token regenerated after logout                           | Edge     | PASS ✅ | 0.03s    | `session()->token()` changed    |
+| TC-AU004-05  | VerifyCsrfToken middleware is in `web` group                  | Security | PASS ✅ | 0.07s    | CSRF enforced on logout route   |
+| TC-AU004-06  | `/dashboard` inaccessible after logout → redirect to `/login` | Security | PASS ✅ | 0.04s    | Auth middleware working         |
+| TC-AU004-07  | GET /logout returns 405 Method Not Allowed                    | Security | PASS ✅ | 0.31s    | Only POST accepted              |
+| TC-AU004-08  | Guest POST /logout → redirected to `/login` (auth middleware) | Negative | PASS ✅ | 0.03s    | No crash or 500                 |
+| TC-AU004-09  | PUT /logout returns 405                                       | Edge     | PASS ✅ | 0.27s    | Method constraint confirmed     |
+| TC-AU004-10  | Auth session data cleared from session after logout           | Edge     | PASS ✅ | 0.03s    | Session key null                |
+| TC-AU004-11  | Consecutive logouts (guest POST) do not crash                 | Edge     | PASS ✅ | 0.03s    | Idempotent                      |
+| TC-AU004-12  | Logout completes within 2s threshold                          | Perf     | PASS ✅ | 0.03s    | Well under threshold            |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped · 17 Assertions  
 **Test Duration:** 1.52s (AU-004 alone) · 8.14s (full 50-test suite)  
@@ -328,20 +328,20 @@
 
 ### Quality Scores
 
-| Dimension | Score | Comment |
-| --- | --- | --- |
-| Simplicity | 5/5 | 4-line method — logout + invalidate + regenerateToken + redirect |
-| Security | 5/5 | Session invalidated, CSRF token regenerated, auth middleware enforced |
-| Performance | 5/5 | 0.03s logout, well under 2s threshold |
-| Test Coverage | 5/5 | 12 cases — 2× happy, 4× edge, 3× security, 1× negative, 1× performance |
+| Dimension     | Score | Comment                                                                |
+| ------------- | ----- | ---------------------------------------------------------------------- |
+| Simplicity    | 5/5   | 4-line method — logout + invalidate + regenerateToken + redirect       |
+| Security      | 5/5   | Session invalidated, CSRF token regenerated, auth middleware enforced  |
+| Performance   | 5/5   | 0.03s logout, well under 2s threshold                                  |
+| Test Coverage | 5/5   | 12 cases — 2× happy, 4× edge, 3× security, 1× negative, 1× performance |
 
 ---
 
 ### Bugs / Side Effects Found
 
-| Bug ID | Description | Severity | Status |
-| --- | --- | --- | --- |
-| BUG-AU004-01 | `destroy()` redirected to `/login` instead of home page `/` — contradicts AC "Redirects to home page" | Low | Fixed — changed `redirect()->route('login')` to `redirect('/')` |
+| Bug ID       | Description                                                                                           | Severity | Status                                                          |
+| ------------ | ----------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| BUG-AU004-01 | `destroy()` redirected to `/login` instead of home page `/` — contradicts AC "Redirects to home page" | Low      | Fixed — changed `redirect()->route('login')` to `redirect('/')` |
 
 ---
 
@@ -357,11 +357,11 @@
 
 ### Improvement Proposals
 
-| Proposal ID | Description | Benefit | Complexity |
-| --- | --- | --- | --- |
-| AU-004.1 | Flash a "You have been logged out successfully" message on the home page after logout | Improved UX feedback | Low — one `session()->flash()` call |
-| AU-004.2 | Add audit log entry on logout (timestamp, IP, user_id) | Security monitoring | Medium — requires `audit_logs` table (also in AU-002.4, AU-003.4) |
-| AU-004.3 | Implement "logout all devices" that rotates `remember_token` in DB and invalidates all sessions | Protects stolen session tokens | Medium — requires session driver that supports per-user invalidation |
+| Proposal ID | Description                                                                                     | Benefit                        | Complexity                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| AU-004.1    | Flash a "You have been logged out successfully" message on the home page after logout           | Improved UX feedback           | Low — one `session()->flash()` call                                  |
+| AU-004.2    | Add audit log entry on logout (timestamp, IP, user_id)                                          | Security monitoring            | Medium — requires `audit_logs` table (also in AU-002.4, AU-003.4)    |
+| AU-004.3    | Implement "logout all devices" that rotates `remember_token` in DB and invalidates all sessions | Protects stolen session tokens | Medium — requires session driver that supports per-user invalidation |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
@@ -386,7 +386,7 @@
 > Each time a new sprint or upgrade is deployed, the full regression result is recorded here.
 
 | Run Date   | Trigger (Task/Sprint) | Total Tests | Passed | Failed | Regressions  | Run By |
-| ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ | --- | ---------- | ----------------- | --- | --- | --- | --- | ----- | --- | -------- | --------------------- | ----------- | ------ | ------ | ----------- | ------ |
+| ---------- | --------------------- | ----------- | ------ | ------ | ------------ | ------ |
 | 2026-04-09 | AU-001 (Sprint 1)     | 12          | 12     | 0      | 0 (baseline) | Agent  |
 | 2026-04-09 | AU-002 (Sprint 1)     | 24          | 24     | 0      | 0            | Agent  |
 | 2026-04-09 | AU-003 (Sprint 1)     | 36          | 36     | 0      | 0            | Agent  |
