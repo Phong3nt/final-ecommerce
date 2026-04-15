@@ -238,7 +238,7 @@
 | AU-006  | Authentication & Authorization | Done        | 1      | Agent       | [EVAL-AU-006](evaluation_history.md#eval-au-006--role-based-access-control)         | `v1.0-AU-006-stable` |       |
 | UP-001  | User Profile                   | Done        | 3      | Agent       | [EVAL-UP-001](evaluation_history.md#eval-up-001--user-profile-viewedit-with-avatar) | `v1.0-UP-001-stable` |       |
 | UP-002  | User Profile                   | Not Started | 7      | —           | —                                                                                   | —                    |       |
-| PC-001  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |
+| PC-001  | Product Catalog                | Done        | 2      | Agent       | [EVAL-PC-001](evaluation_history.md#eval-pc-001--product-listing-page-with-pagination) | `v1.0-PC-001-stable` |       |
 | PC-002  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |
 | PC-003  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |
 | PC-004  | Product Catalog                | Not Started | 2      | —           | —                                                                                   | —                    |       |

@@ -576,7 +576,54 @@
      SPRINT 2 — Product Catalog & Cart
      ============================================================ -->
 
-<!-- EVAL-PC-001 through PC-005, SC-001 through SC-004 -->
+## EVAL-PC-001 · Product Listing Page with Pagination
+
+- **Task:** PC-001
+- **Sprint:** 2
+- **Date:** 2026-04-15
+- **Tag:** `v1.0-PC-001-stable`
+- **Branch:** `feature/PC-001` → merged to `master`
+
+### STEP 1 — Architecture Review
+- New `products` table migration: `id`, `name`, `description`, `price` (decimal 10,2), `stock` (uint), `image` (nullable), timestamps
+- `Product` model with `$fillable`, `$casts` (`price` → decimal:2, `stock` → integer)
+- `ProductFactory` with `outOfStock()` state helper
+- `ProductController::index()` — `Product::latest()->paginate(12)` → `products.index` view
+- `GET /products` route added as public (no auth middleware)
+- Blade view: grid loop with name, price, stock status badge; `{{ $products->links() }}` pagination
+
+### STEP 2 — Security Checklist
+- [x] XSS: Blade `{{ }}` escapes product name and all output
+- [x] No auth required — public route is intentional per AC
+- [x] No mass assignment risk — `$fillable` defined
+- [x] No raw SQL — Eloquent paginate()
+
+### STEP 3 — Test Results
+| TC    | Description                                      | Type        | Result |
+|-------|--------------------------------------------------|-------------|--------|
+| TC-01 | GET /products returns 200 without login          | Happy       | PASS   |
+| TC-02 | Name, price, stock status visible in listing     | Happy       | PASS   |
+| TC-03 | Out-of-stock product shows "Out of Stock"         | Happy       | PASS   |
+| TC-04 | Page 1 returns exactly 12 items                  | Happy       | PASS   |
+| TC-05 | Page 2 returns remaining items                   | Happy       | PASS   |
+| TC-06 | Empty catalog shows "No products available"      | Edge        | PASS   |
+| TC-07 | Products ordered newest first                    | Happy       | PASS   |
+| TC-08 | Pagination links present with >12 products       | Happy       | PASS   |
+| TC-09 | XSS in product name is escaped                   | Security    | PASS   |
+| TC-10 | Product with null image renders without error    | Edge        | PASS   |
+| TC-11 | Out-of-range page returns 200                    | Edge        | PASS   |
+| TC-12 | Listing responds within 2s                       | Performance | PASS   |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+- PC-002 (search) can reuse `ProductController` with a `search()` method or a query scope on `Product`
+- Consider adding a `Category` model (belongsToMany) before PC-003 filters
+- Image thumbnail generation on upload would improve page-load performance
+
+<!-- EVAL-PC-001 END -->
+
+<!-- EVAL-PC-002 through PC-005, SC-001 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -597,6 +644,7 @@
 | 2026-04-15 | AU-005 (Sprint 1)     | 62          | 62     | 0      | 0            | Agent  |
 | 2026-04-15 | AU-006 (Sprint 1)     | 74          | 74     | 0      | 0            | Agent  |
 | 2026-04-15 | UP-001 (Sprint 3)     | 86          | 86     | 0      | 0            | Agent  |
+| 2026-04-15 | PC-001 (Sprint 2)     | 98          | 98     | 0      | 0            | Agent  |
 
 ---
 
