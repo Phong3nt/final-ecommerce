@@ -994,45 +994,45 @@
 **Date:** 2026-04-15  
 **Branch:** `feature/SC-004` → merged `master` @ `v1.0-SC-004-stable`  
 **Baseline:** 182 tests · 363 assertions · 0 failures  
-**Result:** 194 tests · 395 assertions · 0 failures  
+**Result:** 194 tests · 395 assertions · 0 failures
 
 ### STEP 1 — Code
 
-| File | Change |
-|------|--------|
-| `CartController.php` | Added `destroy(Request $request, int $productId)` — removes item from session, dual JSON/redirect response |
-| `routes/web.php` | Added `Route::delete('/cart/{productId}', ...)` → `cart.destroy` |
-| `cart/index.blade.php` | Added Actions column header, Remove form per row with `@method('DELETE')`, AJAX JS for remove |
-| `CartRemoveTest.php` | NEW — 12 tests |
+| File                   | Change                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `CartController.php`   | Added `destroy(Request $request, int $productId)` — removes item from session, dual JSON/redirect response |
+| `routes/web.php`       | Added `Route::delete('/cart/{productId}', ...)` → `cart.destroy`                                           |
+| `cart/index.blade.php` | Added Actions column header, Remove form per row with `@method('DELETE')`, AJAX JS for remove              |
+| `CartRemoveTest.php`   | NEW — 12 tests                                                                                             |
 
 ### STEP 2 — Tests (CartRemoveTest.php — 12/12 PASS)
 
-| # | Test | Result |
-|---|------|--------|
-| TC-01 | `sc004 remove redirects to cart` | ✅ PASS |
-| TC-02 | `sc004 removes item from session` | ✅ PASS |
-| TC-03 | `sc004 order total recalculates after remove` | ✅ PASS |
+| #     | Test                                                      | Result  |
+| ----- | --------------------------------------------------------- | ------- |
+| TC-01 | `sc004 remove redirects to cart`                          | ✅ PASS |
+| TC-02 | `sc004 removes item from session`                         | ✅ PASS |
+| TC-03 | `sc004 order total recalculates after remove`             | ✅ PASS |
 | TC-04 | `sc004 ajax returns json with cart count and order total` | ✅ PASS |
-| TC-05 | `sc004 removing last item returns empty cart` | ✅ PASS |
-| TC-06 | `sc004 removing nonexistent item returns 404 json` | ✅ PASS |
-| TC-07 | `sc004 removing nonexistent item redirects with error` | ✅ PASS |
-| TC-08 | `sc004 guest can remove item from cart` | ✅ PASS |
-| TC-09 | `sc004 authenticated user can remove item from cart` | ✅ PASS |
-| TC-10 | `sc004 other items remain after remove` | ✅ PASS |
-| TC-11 | `sc004 successful remove flashes success message` | ✅ PASS |
-| TC-12 | `sc004 remove completes within one second` | ✅ PASS |
+| TC-05 | `sc004 removing last item returns empty cart`             | ✅ PASS |
+| TC-06 | `sc004 removing nonexistent item returns 404 json`        | ✅ PASS |
+| TC-07 | `sc004 removing nonexistent item redirects with error`    | ✅ PASS |
+| TC-08 | `sc004 guest can remove item from cart`                   | ✅ PASS |
+| TC-09 | `sc004 authenticated user can remove item from cart`      | ✅ PASS |
+| TC-10 | `sc004 other items remain after remove`                   | ✅ PASS |
+| TC-11 | `sc004 successful remove flashes success message`         | ✅ PASS |
+| TC-12 | `sc004 remove completes within one second`                | ✅ PASS |
 
 **Regression:** All 182 previous tests still PASS ✅ · Total suite: 194/194 · 395 assertions
 
 ### STEP 3 — Evaluation
 
-| Criterion        | Score | Notes |
-|------------------|-------|-------|
-| Correctness      | 5     | Item removed from session; `cart_count` and `order_total` accurate |
+| Criterion        | Score | Notes                                                                                          |
+| ---------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| Correctness      | 5     | Item removed from session; `cart_count` and `order_total` accurate                             |
 | Test Coverage    | 5     | 12 tests: redirect, session, recalc, AJAX shape, empty cart, 404, guest/auth, isolation, flash |
-| Security         | 5     | CSRF protected via form spoofing and `X-CSRF-TOKEN` header |
-| Code Clarity     | 5     | `destroy()` is 20 lines; mirrors `update()` dual-mode pattern |
-| Architecture Fit | 5     | Consistent session-cart pattern; response shape follows SC-001/SC-003 conventions |
+| Security         | 5     | CSRF protected via form spoofing and `X-CSRF-TOKEN` header                                     |
+| Code Clarity     | 5     | `destroy()` is 20 lines; mirrors `update()` dual-mode pattern                                  |
+| Architecture Fit | 5     | Consistent session-cart pattern; response shape follows SC-001/SC-003 conventions              |
 
 **Score: 12/12 — All acceptance criteria met**
 

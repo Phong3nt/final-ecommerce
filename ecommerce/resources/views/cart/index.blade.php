@@ -26,7 +26,9 @@
                     <th>Product</th>
                     <th>Unit Price</th>
                     <th>Qty</th>
-                    <th>Subtotal</th>                    <th>Actions</th>                </tr>
+                    <th>Subtotal</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
                 @foreach ($cart as $item)
@@ -41,26 +43,20 @@
                         <td class="unit-price">${{ number_format($item['price'], 2) }}</td>
                         <td class="item-qty">
                             {{-- SC-003: quantity update form (AJAX or regular submit) --}}
-                            <form class="qty-update-form"
-                                action="{{ route('cart.update', $item['product_id']) }}"
+                            <form class="qty-update-form" action="{{ route('cart.update', $item['product_id']) }}"
                                 method="POST">
                                 @csrf
                                 @method('PATCH')
-                                <input type="number"
-                                    name="quantity"
-                                    value="{{ $item['quantity'] }}"
-                                    min="1"
-                                    class="qty-input"
+                                <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="qty-input"
                                     data-product-id="{{ $item['product_id'] }}">
                                 <button type="submit" class="qty-update-btn">Update</button>
                             </form>
                         </td>
-                        <td class="item-subtotal" id="subtotal-{{ $item['product_id'] }}">${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                        <td class="item-subtotal" id="subtotal-{{ $item['product_id'] }}">
+                            ${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
                         <td class="item-actions">
                             {{-- SC-004: remove item form (AJAX or regular submit) --}}
-                            <form class="remove-form"
-                                action="{{ route('cart.destroy', $item['product_id']) }}"
-                                method="POST">
+                            <form class="remove-form" action="{{ route('cart.destroy', $item['product_id']) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="remove-btn">Remove</button>
@@ -106,9 +102,9 @@
                     e.preventDefault();
                     var input = form.querySelector('[name="quantity"]');
                     var productId = parseInt(input.getAttribute('data-product-id'));
-                    var quantity = parseInt(input.value);
+                    var quantity = parseInt(inpu t.value);
                     fetch(form.action, {
-                        method: 'PATCH',
+             method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',

@@ -15,7 +15,7 @@ class CartController extends Controller
      */
     public function index(): View
     {
-        $cart  = session()->get('cart', []);
+        $cart = session()->get('cart', []);
         $total = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
             $cart
@@ -45,23 +45,23 @@ class CartController extends Controller
         }
 
         $product = Product::find($productId);
-        $maxQty  = $product ? $product->stock : PHP_INT_MAX;
-        $qty     = min((int) $data['quantity'], $maxQty);
+        $maxQty = $product ? $product->stock : PHP_INT_MAX;
+        $qty = min((int) $data['quantity'], $maxQty);
 
         $cart[$productId]['quantity'] = $qty;
         session()->put('cart', $cart);
 
         $newSubtotal = $cart[$productId]['price'] * $qty;
-        $newTotal    = array_sum(array_map(
+        $newTotal = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
             $cart
         ));
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message'     => 'Cart updated.',
-                'quantity'    => $qty,
-                'subtotal'    => number_format($newSubtotal, 2),
+                'message' => 'Cart updated.',
+                'quantity' => $qty,
+                'subtotal' => number_format($newSubtotal, 2),
                 'order_total' => number_format($newTotal, 2),
             ]);
         }
@@ -88,12 +88,12 @@ class CartController extends Controller
         session()->put('cart', $cart);
 
         $cartCount = array_sum(array_column($cart, 'quantity'));
-        $newTotal  = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
+        $newTotal = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message'     => 'Item removed from cart.',
-                'cart_count'  => $cartCount,
+                'message' => 'Item removed from cart.',
+                'cart_count' => $cartCount,
                 'order_total' => number_format($newTotal, 2),
             ]);
         }
