@@ -79,6 +79,9 @@ Route::middleware(['auth'])->group(function () {
     // OH-002: Order detail
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
+    // OH-004: Cancel order
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
     // CP-001: Checkout — shipping address
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');

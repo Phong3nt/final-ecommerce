@@ -21,4 +21,11 @@ interface PaymentServiceInterface
      * @throws \Stripe\Exception\SignatureVerificationException  If the sig is invalid
      */
     public function constructWebhookEvent(string $payload, string $sigHeader, string $secret): object;
+
+    /**
+     * Cancel a PaymentIntent (e.g. when the order is cancelled before capture).
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function cancelPaymentIntent(string $intentId): void;
 }

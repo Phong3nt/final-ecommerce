@@ -33,4 +33,9 @@ class StripePaymentService implements PaymentServiceInterface
     {
         return Webhook::constructEvent($payload, $sigHeader, $secret);
     }
+
+    public function cancelPaymentIntent(string $intentId): void
+    {
+        $this->stripe->paymentIntents->cancel($intentId);
+    }
 }
