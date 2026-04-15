@@ -1373,6 +1373,92 @@
 
 <!-- EVAL-CP-005 END -->
 
+---
+
+<!-- EVAL-NF-001 START -->
+<a id="eval-nf-001--csrf-protection-audit"></a>
+
+## EVAL-NF-001 — CSRF Protection Audit
+
+**Date:** 2026-04-16
+**Branch:** `feature/NF-001` → merged to `master`
+**Tag:** `v1.0-NF-001-stable`
+**Tester:** Agent
+
+---
+
+### STEP 1 — Backlog Item
+
+| Field | Value |
+|---|---|
+| ID | NF-001 |
+| Epic | Non-Functional Requirements |
+| Story | All forms protected against CSRF (Laravel built-in `@csrf`) |
+| Priority | 1 — Critical |
+| Sprint | 1 — Foundation & Auth |
+
+---
+
+### STEP 2 — Audit Findings
+
+**Approach:** Three-angle verification — (1) middleware registration, (2) route-level exclusion policy, (3) view-level `@csrf` token rendering.
+
+**Finding:** All POST forms in the application already contained `@csrf` directives. No production code changes were required. Laravel's `VerifyCsrfToken` middleware is registered in the `web` group, the `$except` array is empty (only the Stripe webhook uses route-level `withoutMiddleware` exclusion, which is correct), and every form view renders a hidden `_token` field.
+
+**Note on test strategy:** Laravel's `VerifyCsrfToken::handle()` calls `runningUnitTests()` which returns `true` when `APP_ENV=testing`, meaning CSRF is bypassed in the test environment. Direct 419 response testing is not viable via this path. The audit relies on view-level assertion (`assertSee('name="_token"', false)`) to confirm `@csrf` renders correctly.
+
+| View | Form Type | Has `@csrf` |
+|---|---|---|
+| `auth/login.blade.php` | POST login | ✅ |
+| `auth/register.blade.php` | POST register | ✅ |
+| `auth/forgot-password.blade.php` | POST forgot password | ✅ |
+| `auth/reset-password.blade.php` | POST reset password | ✅ |
+| `profile/show.blade.php` | POST profile update | ✅ |
+| `checkout/address.blade.php` | POST address submit | ✅ |
+| `checkout/shipping.blade.php` | POST shipping select | ✅ |
+| `checkout/review.blade.php` | AJAX POST (X-CSRF-TOKEN header) | ✅ |
+| `cart/index.blade.php` | POST update + remove forms | ✅ |
+| `products/show.blade.php` | POST add-to-cart | ✅ |
+| `dashboard.blade.php` | POST logout + email verify | ✅ |
+| `products/index.blade.php` | GET filter form | ✅ (no `@csrf` needed) |
+| `products/search.blade.php` | GET search form | ✅ (no `@csrf` needed) |
+
+---
+
+### STEP 3 — Test Suite
+
+**File:** `ecommerce/tests/Feature/CsrfProtectionTest.php`
+**Tests:** 12 / 12 passed
+
+| TC | Test Name | Result |
+|---|---|---|
+| TC-01 | `nf001 verify csrf token middleware is in web group` | ✅ PASS |
+| TC-02 | `nf001 csrf except list is empty` | ✅ PASS |
+| TC-03 | `nf001 webhook route excludes csrf middleware` | ✅ PASS |
+| TC-04 | `nf001 login form contains csrf field` | ✅ PASS |
+| TC-05 | `nf001 register form contains csrf field` | ✅ PASS |
+| TC-06 | `nf001 forgot password form contains csrf field` | ✅ PASS |
+| TC-07 | `nf001 reset password form contains csrf field` | ✅ PASS |
+| TC-08 | `nf001 profile form contains csrf field` | ✅ PASS |
+| TC-09 | `nf001 checkout address form contains csrf field` | ✅ PASS |
+| TC-10 | `nf001 checkout shipping form contains csrf field` | ✅ PASS |
+| TC-11 | `nf001 cart forms contain csrf field` | ✅ PASS |
+| TC-12 | `nf001 add to cart form contains csrf field` | ✅ PASS |
+
+---
+
+### STEP 4 — Regression
+
+**Full suite result:** 266 / 266 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **NF-002 / NF-003 (Security Headers / Rate Limiting)** — OWASP-recommended HTTP security headers and rate limiting on auth routes
+
+<!-- EVAL-NF-001 END -->
+
 <!-- ============================================================
      More sprints follow the same pattern...
      ============================================================ -->
@@ -1406,6 +1492,7 @@
 | 2026-04-15 | CP-003 (Sprint 3)     | 230         | 230    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-004 (Sprint 3)     | 242         | 242    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-005 (Sprint 3)     | 254         | 254    | 0      | 0            | Agent  |
+| 2026-04-16 | NF-001 (Sprint 1)     | 266         | 266    | 0      | 0            | Agent  |
 
 ---
 
