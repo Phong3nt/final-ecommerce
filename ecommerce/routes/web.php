@@ -33,6 +33,9 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 // SC-003: Update cart item quantity — PATCH + form method spoofing
 Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('cart.update');
 
+// SC-004: Remove cart item — DELETE + form method spoofing
+Route::delete('/cart/{productId}', [CartController::class, 'destroy'])->name('cart.destroy');
+
 // Guest-only auth routes
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('register');

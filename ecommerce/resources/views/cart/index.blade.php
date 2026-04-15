@@ -26,8 +26,7 @@
                     <th>Product</th>
                     <th>Unit Price</th>
                     <th>Qty</th>
-                    <th>Subtotal</th>
-                </tr>
+                    <th>Subtotal</th>                    <th>Actions</th>                </tr>
             </thead>
             <tbody>
                 @foreach ($cart as $item)
@@ -57,6 +56,16 @@
                             </form>
                         </td>
                         <td class="item-subtotal" id="subtotal-{{ $item['product_id'] }}">${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                        <td class="item-actions">
+                            {{-- SC-004: remove item form (AJAX or regular submit) --}}
+                            <form class="remove-form"
+                                action="{{ route('cart.destroy', $item['product_id']) }}"
+                                method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="remove-btn">Remove</button>
+                            </form>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -68,6 +77,30 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            document.querySelectorAll('.remove-form').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var row = form.closest('tr.cart-item');
+                    fetch(form.action, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                        },
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (json) {
+                            if (row) row.remove();
+                            if (json.order_total !== undefined) {
+                                var tot = document.getElementById('order-total');
+                                if (tot) tot.textContent = json.order_total;
+                            }
+                        })
+                        .catch(function () {});
+                });
+            });
+
             document.querySelectorAll('.qty-update-form').forEach(function (form) {
                 form.addEventListener('submit', function (e) {
                     e.preventDefault();
