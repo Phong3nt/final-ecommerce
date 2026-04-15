@@ -16,7 +16,7 @@ class CartController extends Controller
      */
     public function index(): View
     {
-        $cart  = session()->get('cart', []);
+        $cart = session()->get('cart', []);
         $total = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
             $cart
@@ -35,7 +35,7 @@ class CartController extends Controller
     {
         $data = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
-            'quantity'   => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $product = Product::findOrFail($data['product_id']);
@@ -48,19 +48,19 @@ class CartController extends Controller
             return back()->withErrors(['quantity' => 'Product is out of stock.']);
         }
 
-        $qty  = min((int) $data['quantity'], $product->stock);
+        $qty = min((int) $data['quantity'], $product->stock);
         $cart = session()->get('cart', []);
-        $id   = $product->id;
+        $id = $product->id;
 
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] = min($cart[$id]['quantity'] + $qty, $product->stock);
         } else {
             $cart[$id] = [
                 'product_id' => $id,
-                'name'       => $product->name,
-                'price'      => (float) $product->price,
-                'quantity'   => $qty,
-                'slug'       => $product->slug,
+                'name' => $product->name,
+                'price' => (float) $product->price,
+                'quantity' => $qty,
+                'slug' => $product->slug,
             ];
         }
 
@@ -70,7 +70,7 @@ class CartController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message'    => 'Product added to cart.',
+                'message' => 'Product added to cart.',
                 'cart_count' => $cartCount,
             ]);
         }
