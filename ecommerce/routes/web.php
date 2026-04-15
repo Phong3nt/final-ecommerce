@@ -79,13 +79,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/shipping', [CheckoutController::class, 'showShipping'])->name('checkout.shipping');
     Route::post('/checkout/shipping', [CheckoutController::class, 'storeShipping'])->name('checkout.shipping.store');
 
-    // CP-003 placeholder (review step — implemented in CP-003)
-    Route::get('/checkout/review', function () {
-        return response('Review step coming soon.', 200);
-    })->name('checkout.review');
+    // CP-003: Checkout — order review & payment
+    Route::get('/checkout/review', [CheckoutController::class, 'showReview'])->name('checkout.review');
+    Route::post('/checkout/review', [CheckoutController::class, 'placeOrder'])->name('checkout.place-order');
+
+    // CP-004 placeholder (success page — implemented in CP-004/CP-005)
+    Route::get('/checkout/success', function () {
+        return response('Order placed!', 200);
+    })->name('checkout.success');
+
 });
 
 // AU-006: Admin routes — auth + role:admin required
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 });
+
+// CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)
+Route::post('/webhook/stripe', [CheckoutController::class, 'handleWebhook'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+    ->name('webhook.stripe');
+
