@@ -1170,6 +1170,80 @@
 
 <!-- EVAL-CP-002 END -->
 
+<!-- EVAL-CP-003 -->
+
+---
+
+## EVAL-CP-003 — Payment Gateway (Stripe PaymentIntent, webhook, tokenization)
+
+**Story:** CP-003 · Sprint 3 · Checkout & Payment Epic
+
+### STEP 1 — Code
+
+**New / modified files:**
+
+| File                                              | Change                                                                                                                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/Http/Controllers/CheckoutController.php`     | Added constructor injection of `PaymentServiceInterface`; added `showReview()`, `placeOrder()`, `handleWebhook()`                                                   |
+| `app/Models/Order.php`                            | NEW — `status` enum (pending/paid/failed/cancelled), JSON `address` cast, Stripe intent fields                                                                      |
+| `app/Models/OrderItem.php`                        | NEW — product snapshot (name, price, quantity), `belongsTo Order`                                                                                                   |
+| `app/Services/PaymentServiceInterface.php`        | NEW — `createPaymentIntent()` + `constructWebhookEvent()` contract                                                                                                  |
+| `app/Services/StripePaymentService.php`           | NEW — Stripe SDK v20 implementation; `StripeClient` injected via container                                                                                          |
+| `app/Providers/AppServiceProvider.php`            | Bound `PaymentServiceInterface` → `StripePaymentService`                                                                                                            |
+| `config/services.php`                             | Added `stripe` block (key/secret/webhook_secret from env)                                                                                                           |
+| `phpunit.xml`                                     | Added fake `STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET` env vars for test isolation                                                                       |
+| `database/migrations/…_create_orders_table`       | NEW — orders schema with Stripe intent fields                                                                                                                        |
+| `database/migrations/…_create_order_items_table`  | NEW — order items with product snapshot                                                                                                                              |
+| `resources/views/checkout/review.blade.php`       | NEW — order summary, Stripe.js v3, card tokenization, `confirmPayment()` AJAX flow                                                                                  |
+| `routes/web.php`                                  | Added `GET/POST /checkout/review`, `GET /checkout/success`, public `POST /webhook/stripe` (CSRF-exempt)                                                             |
+| `tests/Feature/CheckoutReviewTest.php`            | NEW — 12 tests                                                                                                                                                      |
+
+**Key implementation decisions:**
+
+- `PaymentServiceInterface` abstraction makes `StripePaymentService` fully mockable in tests — no real Stripe calls during CI
+- Card data never transmitted to Laravel server: Stripe.js tokenizes in-browser, only `PaymentMethod` ID reaches the server
+- Webhook route placed outside auth/CSRF middleware groups; signature verified via `Webhook::constructEvent()` before any DB write
+- `Order` status machine: `pending` → `paid` (on `payment_intent.succeeded`) or `failed` (on `payment_intent.payment_failed`)
+- `OrderItem` stores product snapshot (name + price at time of purchase) to survive future catalog changes
+
+### STEP 2 — Tests (CheckoutReviewTest.php — 12/12 PASS)
+
+| #     | Test                                                              | Result  |
+| ----- | ----------------------------------------------------------------- | ------- |
+| TC-01 | `cp003 review page returns 200 for auth user`                     | ✅ PASS |
+| TC-02 | `cp003 guest is redirected to login`                              | ✅ PASS |
+| TC-03 | `cp003 get redirects to address if no address in session`         | ✅ PASS |
+| TC-04 | `cp003 get redirects to shipping if no shipping in session`       | ✅ PASS |
+| TC-05 | `cp003 review page shows cart items`                              | ✅ PASS |
+| TC-06 | `cp003 review page shows shipping method and cost`                | ✅ PASS |
+| TC-07 | `cp003 place order creates order in database`                     | ✅ PASS |
+| TC-08 | `cp003 place order creates order items in database`               | ✅ PASS |
+| TC-09 | `cp003 place order returns client secret and order id`            | ✅ PASS |
+| TC-10 | `cp003 order status is pending after place order`                 | ✅ PASS |
+| TC-11 | `cp003 order total equals subtotal plus shipping`                 | ✅ PASS |
+| TC-12 | `cp003 webhook marks order paid on payment intent succeeded`      | ✅ PASS |
+
+**Regression:** All 218 previous tests still PASS ✅ · Total suite: 230/230 · 475 assertions
+
+### STEP 3 — Evaluation
+
+| Criterion        | Score | Notes                                                                                                                        |
+| ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Correctness      | 5     | PaymentIntent created server-side, client_secret returned to JS, webhook updates order status, orders + items persisted      |
+| Test Coverage    | 5     | Auth/guest guards, session guards, DB assertions, JSON response shape, order totals, webhook event handling                   |
+| Security         | 5     | No raw card data on server; webhook signature verified; CSRF exempt only for webhook; PaymentServiceInterface mockable        |
+| Code Clarity     | 5     | Service interface decouples Stripe SDK; controller methods each ≤ 30 lines; webhook handler is pure input/output             |
+| Architecture Fit | 5     | Follows `checkout.*` session namespace; `Order`/`OrderItem` models consistent with Laravel conventions; service binding in provider |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- **CP-004 (Order Confirmation Email)** — After `payment_intent.succeeded` webhook, send confirmation email to user with order summary
+- **CP-005 (Success/Failure Page)** — Stripe redirects to `/checkout/success?payment_intent=...`; query PaymentIntent status and show appropriate page
+
+<!-- EVAL-CP-003 END -->
+
 <!-- ============================================================
      More sprints follow the same pattern...
      ============================================================ -->
@@ -1200,6 +1274,7 @@
 | 2026-04-15 | SC-004 (Sprint 2)     | 194         | 194    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-001 (Sprint 3)     | 206         | 206    | 0      | 0            | Agent  |
 | 2026-04-15 | CP-002 (Sprint 3)     | 218         | 218    | 0      | 0            | Agent  |
+| 2026-04-15 | CP-003 (Sprint 3)     | 230         | 230    | 0      | 0            | Agent  |
 
 ---
 
