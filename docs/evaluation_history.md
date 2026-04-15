@@ -585,6 +585,7 @@
 - **Branch:** `feature/PC-001` → merged to `master`
 
 ### STEP 1 — Architecture Review
+
 - New `products` table migration: `id`, `name`, `description`, `price` (decimal 10,2), `stock` (uint), `image` (nullable), timestamps
 - `Product` model with `$fillable`, `$casts` (`price` → decimal:2, `stock` → integer)
 - `ProductFactory` with `outOfStock()` state helper
@@ -593,30 +594,33 @@
 - Blade view: grid loop with name, price, stock status badge; `{{ $products->links() }}` pagination
 
 ### STEP 2 — Security Checklist
+
 - [x] XSS: Blade `{{ }}` escapes product name and all output
 - [x] No auth required — public route is intentional per AC
 - [x] No mass assignment risk — `$fillable` defined
 - [x] No raw SQL — Eloquent paginate()
 
 ### STEP 3 — Test Results
-| TC    | Description                                      | Type        | Result |
-|-------|--------------------------------------------------|-------------|--------|
-| TC-01 | GET /products returns 200 without login          | Happy       | PASS   |
-| TC-02 | Name, price, stock status visible in listing     | Happy       | PASS   |
-| TC-03 | Out-of-stock product shows "Out of Stock"         | Happy       | PASS   |
-| TC-04 | Page 1 returns exactly 12 items                  | Happy       | PASS   |
-| TC-05 | Page 2 returns remaining items                   | Happy       | PASS   |
-| TC-06 | Empty catalog shows "No products available"      | Edge        | PASS   |
-| TC-07 | Products ordered newest first                    | Happy       | PASS   |
-| TC-08 | Pagination links present with >12 products       | Happy       | PASS   |
-| TC-09 | XSS in product name is escaped                   | Security    | PASS   |
-| TC-10 | Product with null image renders without error    | Edge        | PASS   |
-| TC-11 | Out-of-range page returns 200                    | Edge        | PASS   |
-| TC-12 | Listing responds within 2s                       | Performance | PASS   |
+
+| TC    | Description                                   | Type        | Result |
+| ----- | --------------------------------------------- | ----------- | ------ |
+| TC-01 | GET /products returns 200 without login       | Happy       | PASS   |
+| TC-02 | Name, price, stock status visible in listing  | Happy       | PASS   |
+| TC-03 | Out-of-stock product shows "Out of Stock"     | Happy       | PASS   |
+| TC-04 | Page 1 returns exactly 12 items               | Happy       | PASS   |
+| TC-05 | Page 2 returns remaining items                | Happy       | PASS   |
+| TC-06 | Empty catalog shows "No products available"   | Edge        | PASS   |
+| TC-07 | Products ordered newest first                 | Happy       | PASS   |
+| TC-08 | Pagination links present with >12 products    | Happy       | PASS   |
+| TC-09 | XSS in product name is escaped                | Security    | PASS   |
+| TC-10 | Product with null image renders without error | Edge        | PASS   |
+| TC-11 | Out-of-range page returns 200                 | Edge        | PASS   |
+| TC-12 | Listing responds within 2s                    | Performance | PASS   |
 
 **Score: 12/12 — All acceptance criteria met**
 
 ### STEP 4 — Proposals for Next Task
+
 - PC-002 (search) can reuse `ProductController` with a `search()` method or a query scope on `Product`
 - Consider adding a `Category` model (belongsToMany) before PC-003 filters
 - Image thumbnail generation on upload would improve page-load performance
