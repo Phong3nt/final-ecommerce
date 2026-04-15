@@ -2086,20 +2086,20 @@ git push origin master --tags
 
 ### STEP 2 — Test Cases
 
-| TC    | Test Name                                                          | Result  |
-| ----- | ------------------------------------------------------------------ | ------- |
-| TC-01 | `oh003 status timeline section visible on detail page`             | ✅ PASS |
-| TC-02 | `oh003 placed step shows created at timestamp`                     | ✅ PASS |
-| TC-03 | `oh003 processing timestamp shown when status is processing`       | ✅ PASS |
-| TC-04 | `oh003 shipped timestamp shown when status is shipped`             | ✅ PASS |
-| TC-05 | `oh003 delivered timestamp shown when status is delivered`         | ✅ PASS |
-| TC-06 | `oh003 admin can advance order to processing`                      | ✅ PASS |
-| TC-07 | `oh003 admin can advance order to shipped`                         | ✅ PASS |
-| TC-08 | `oh003 admin can advance order to delivered`                       | ✅ PASS |
-| TC-09 | `oh003 non admin cannot update order status`                       | ✅ PASS |
-| TC-10 | `oh003 invalid status value is rejected`                           | ✅ PASS |
-| TC-11 | `oh003 status change dispatches notification email`                | ✅ PASS |
-| TC-12 | `oh003 status update responds within two seconds`                  | ✅ PASS |
+| TC    | Test Name                                                    | Result  |
+| ----- | ------------------------------------------------------------ | ------- |
+| TC-01 | `oh003 status timeline section visible on detail page`       | ✅ PASS |
+| TC-02 | `oh003 placed step shows created at timestamp`               | ✅ PASS |
+| TC-03 | `oh003 processing timestamp shown when status is processing` | ✅ PASS |
+| TC-04 | `oh003 shipped timestamp shown when status is shipped`       | ✅ PASS |
+| TC-05 | `oh003 delivered timestamp shown when status is delivered`   | ✅ PASS |
+| TC-06 | `oh003 admin can advance order to processing`                | ✅ PASS |
+| TC-07 | `oh003 admin can advance order to shipped`                   | ✅ PASS |
+| TC-08 | `oh003 admin can advance order to delivered`                 | ✅ PASS |
+| TC-09 | `oh003 non admin cannot update order status`                 | ✅ PASS |
+| TC-10 | `oh003 invalid status value is rejected`                     | ✅ PASS |
+| TC-11 | `oh003 status change dispatches notification email`          | ✅ PASS |
+| TC-12 | `oh003 status update responds within two seconds`            | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.29s
 
@@ -2127,6 +2127,84 @@ git push origin master --tags
 - **OH-004 (Order Cancellation)** — allow user to cancel a pending/paid order with confirmation and optional refund trigger
 
 <!-- EVAL-OH-003 END -->
+
+---
+
+## EVAL-OH-004 — Order Cancellation
+
+<!-- EVAL-OH-004 START -->
+
+**Task ID:** OH-004
+**Sprint:** 4
+**Date:** 2026-04-16
+**Branch:** `feature/OH-004` → `master`
+**Tag:** `v1.0-OH-004-stable`
+**Requirement:** As a user, I want to cancel a pending order so I can change my mind before it ships. Cancellation only allowed in "pending" status. Refund initiated automatically via gateway API. Stock restored on cancellation.
+
+---
+
+### STEP 1 — Implementation
+
+**New files:**
+
+- `tests/Feature/OrderCancellationTest.php` — 12 tests
+
+**Modified files:**
+
+- `app/Services/PaymentServiceInterface.php` — added `cancelPaymentIntent(string $intentId): void`
+- `app/Services/StripePaymentService.php` — implemented `cancelPaymentIntent` via `$this->stripe->paymentIntents->cancel($intentId)`
+- `app/Http/Controllers/OrderController.php` — added constructor injection of `PaymentServiceInterface`; added `cancel(Order $order)`: ownership check (403), status guard (pending only), cancels Stripe PaymentIntent if set, restores product stock for items with known `product_id`, sets status to `cancelled`, redirects to `orders.index` with success flash
+- `routes/web.php` — added `POST /orders/{order}/cancel` → `OrderController@cancel` (name: `orders.cancel`) inside `auth` middleware group
+- `resources/views/orders/show.blade.php` — added Cancel Order button (red, with JS confirm dialog) shown only when `$order->status === 'pending'`; added error flash display
+- `tests/Feature/PaymentTokenizationTest.php` — updated two anonymous class stubs to implement new `cancelPaymentIntent` method
+
+**Security:** Route is inside the `auth` middleware group. Ownership check (`abort(403)`) prevents users cancelling others’ orders. Status guard prevents cancellation of non-pending orders. Cancel form uses `@csrf` token.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC    | Test Name                                                         | Result  |
+| ----- | ----------------------------------------------------------------- | ------- |
+| TC-01 | `oh004 guest is redirected to login`                              | ✅ PASS |
+| TC-02 | `oh004 owner can cancel pending order`                            | ✅ PASS |
+| TC-03 | `oh004 non owner gets 403`                                        | ✅ PASS |
+| TC-04 | `oh004 cannot cancel paid order`                                  | ✅ PASS |
+| TC-05 | `oh004 cannot cancel processing order`                            | ✅ PASS |
+| TC-06 | `oh004 cannot cancel already cancelled order`                     | ✅ PASS |
+| TC-07 | `oh004 stock is restored on cancellation`                         | ✅ PASS |
+| TC-08 | `oh004 stripe payment intent is cancelled`                        | ✅ PASS |
+| TC-09 | `oh004 payment intent not cancelled when null`                    | ✅ PASS |
+| TC-10 | `oh004 cancel button visible for pending orders`                  | ✅ PASS |
+| TC-11 | `oh004 cancel button not shown for non pending orders`            | ✅ PASS |
+| TC-12 | `oh004 cancel endpoint responds within two seconds`               | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.46s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 374 / 374 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/OH-004 -m "merge: OH-004 order cancellation -- 374/374 tests pass, 0 regressions"
+git tag v1.0-OH-004-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **RV-001 (Product Reviews)** — allow users to leave a rating and review on a purchased product
+
+<!-- EVAL-OH-004 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2170,6 +2248,7 @@ git push origin master --tags
 | 2026-04-16 | OH-001 (Sprint 4)     | 338         | 338    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-002 (Sprint 4)     | 350         | 350    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-003 (Sprint 4)     | 362         | 362    | 0      | 0            | Agent  |
+| 2026-04-16 | OH-004 (Sprint 4)     | 374         | 374    | 0      | 0            | Agent  |
 
 ---
 
