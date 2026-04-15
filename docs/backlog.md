@@ -244,7 +244,7 @@
 | PC-004  | Product Catalog                | Done        | 2      | Agent       | [EVAL-PC-004](evaluation_history.md#eval-pc-004--product-sort-by-newest-oldest-price-rating)         | `v1.0-PC-004-stable` |       |
 | PC-005  | Product Catalog                | Done        | 2      | Agent       | [EVAL-PC-005](evaluation_history.md#eval-pc-005--product-detail-page-with-slug-sku-related-products) | `v1.0-PC-005-stable` |       |
 | SC-001  | Shopping Cart                  | Done        | 2      | Agent       | [EVAL-SC-001](evaluation_history.md#eval-sc-001--add-to-cart-session-based-guestauth-ajax)           | `v1.0-SC-001-stable` |       |
-| SC-002  | Shopping Cart                  | Not Started | 2      | —           | —                                                                                                    | —                    |       |
+| SC-002  | Shopping Cart                  | Done        | 2      | Agent       | [EVAL-SC-002](evaluation_history.md#eval-sc-002--view-cart-items-subtotals-order-total)              | `v1.0-SC-002-stable` |       |
 | SC-003  | Shopping Cart                  | Not Started | 2      | —           | —                                                                                                    | —                    |       |
 | SC-004  | Shopping Cart                  | Not Started | 2      | —           | —                                                                                                    | —                    |       |
 | SC-005  | Shopping Cart                  | Not Started | 7      | —           | —                                                                                                    | —                    |       |

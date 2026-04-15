@@ -883,7 +883,55 @@
 
 <!-- EVAL-SC-001 END -->
 
-<!-- EVAL-SC-002 through SC-004 -->
+## EVAL-SC-002 · View Cart — Items, Subtotals, Order Total
+
+**Version:** A  
+**Date:** 2026-04-15  
+**Status in Backlog:** Done  
+**Linked Task:** [SC-002](backlog.md)  
+**Git Tag:** `v1.0-SC-002-stable`
+
+### Test Results
+
+| TC    | Scenario                                          | Type       | Result  |
+| ----- | ------------------------------------------------- | ---------- | ------- |
+| TC-01 | Cart page returns 200 for guest                   | Happy Path | PASS ✅ |
+| TC-02 | Cart page returns 200 for authenticated user      | Happy Path | PASS ✅ |
+| TC-03 | Empty cart shows empty-cart message               | Edge       | PASS ✅ |
+| TC-04 | Cart shows product name                           | Happy Path | PASS ✅ |
+| TC-05 | Cart shows unit price                             | Happy Path | PASS ✅ |
+| TC-06 | Cart shows quantity                               | Happy Path | PASS ✅ |
+| TC-07 | Cart shows correct line subtotal                  | Happy Path | PASS ✅ |
+| TC-08 | Cart shows correct order total                    | Happy Path | PASS ✅ |
+| TC-09 | Multiple products all appear in the cart          | Happy Path | PASS ✅ |
+| TC-10 | Empty cart does not show order total              | Edge       | PASS ✅ |
+| TC-11 | Cart page has a Continue Shopping link            | Happy Path | PASS ✅ |
+| TC-12 | Cart page responds within 1 second                | Perf       | PASS ✅ |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Regression:** All 158 previous tests still PASS ✅ · Total suite: 170/170 · 337 assertions
+
+### Quality Scores (1–5)
+
+| Dimension          | Score | Notes                                                       |
+| ------------------ | ----- | ----------------------------------------------------------- |
+| Correctness        | 5     | All AC satisfied; name, unit price, qty, subtotal, total    |
+| Test Coverage      | 5     | 12 tests cover happy, edge, perf                            |
+| Security           | 5     | Read-only view; no user input processed                     |
+| Code Clarity       | 5     | `index()` is 7 lines, total computed via `array_map`        |
+| Architecture Fit   | 5     | Consistent with SC-001; same session cart structure         |
+
+**Score: 12/12 — All acceptance criteria met**
+
+### STEP 4 — Proposals for Next Task
+
+- **SC-003 (Update Cart Qty)** — `PATCH /cart/{productId}` → `CartController::update()`; qty bounded 1–stock; redirect to cart view
+- **SC-004 (Remove from Cart)** — `DELETE /cart/{productId}` → `CartController::destroy()`; can be batched with SC-003 (same sprint)
+- Consider moving total calculation into a helper/service once SC-003 lands (total will be reused across update/view)
+
+<!-- EVAL-SC-002 END -->
+
+<!-- EVAL-SC-003 through SC-004 -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -910,7 +958,7 @@
 | 2026-04-15 | PC-004 (Sprint 2)     | 134         | 134    | 0      | 0            | Agent  |
 | 2026-04-15 | PC-005 (Sprint 2)     | 146         | 146    | 0      | 0            | Agent  |
 | 2026-04-15 | SC-001 (Sprint 2)     | 158         | 158    | 0      | 0            | Agent  |
-| 2026-04-15 | SC-001 (Sprint 2)     | 158         | 158    | 0      | 0            | Agent  |
+| 2026-04-15 | SC-002 (Sprint 2)     | 170         | 170    | 0      | 0            | Agent  |
 
 ---
 
