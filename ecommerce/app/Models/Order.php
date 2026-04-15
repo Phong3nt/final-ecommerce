@@ -21,6 +21,9 @@ class Order extends Model
         'address',
         'stripe_payment_intent_id',
         'stripe_client_secret',
+        'processing_at',
+        'shipped_at',
+        'delivered_at',
     ];
 
     protected $casts = [
@@ -28,6 +31,9 @@ class Order extends Model
         'subtotal' => 'float',
         'shipping_cost' => 'float',
         'total' => 'float',
+        'processing_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
