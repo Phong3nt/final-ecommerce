@@ -2005,20 +2005,20 @@ git push origin master --tags
 
 ### STEP 2 — Test Cases
 
-| TC    | Test Name                                                    | Result  |
-| ----- | ------------------------------------------------------------ | ------- |
-| TC-01 | `oh002 guest is redirected to login`                         | ✅ PASS |
-| TC-02 | `oh002 owner can view order detail`                          | ✅ PASS |
-| TC-03 | `oh002 other user gets 403`                                  | ✅ PASS |
-| TC-04 | `oh002 order id shown on detail page`                        | ✅ PASS |
-| TC-05 | `oh002 item product names shown`                             | ✅ PASS |
-| TC-06 | `oh002 item quantity shown`                                  | ✅ PASS |
-| TC-07 | `oh002 item unit price shown`                                | ✅ PASS |
-| TC-08 | `oh002 order total shown`                                    | ✅ PASS |
-| TC-09 | `oh002 shipping address shown`                               | ✅ PASS |
-| TC-10 | `oh002 payment method section shown`                         | ✅ PASS |
-| TC-11 | `oh002 order status shown on detail page`                    | ✅ PASS |
-| TC-12 | `oh002 order detail page responds within two seconds`        | ✅ PASS |
+| TC    | Test Name                                             | Result  |
+| ----- | ----------------------------------------------------- | ------- |
+| TC-01 | `oh002 guest is redirected to login`                  | ✅ PASS |
+| TC-02 | `oh002 owner can view order detail`                   | ✅ PASS |
+| TC-03 | `oh002 other user gets 403`                           | ✅ PASS |
+| TC-04 | `oh002 order id shown on detail page`                 | ✅ PASS |
+| TC-05 | `oh002 item product names shown`                      | ✅ PASS |
+| TC-06 | `oh002 item quantity shown`                           | ✅ PASS |
+| TC-07 | `oh002 item unit price shown`                         | ✅ PASS |
+| TC-08 | `oh002 order total shown`                             | ✅ PASS |
+| TC-09 | `oh002 shipping address shown`                        | ✅ PASS |
+| TC-10 | `oh002 payment method section shown`                  | ✅ PASS |
+| TC-11 | `oh002 order status shown on detail page`             | ✅ PASS |
+| TC-12 | `oh002 order detail page responds within two seconds` | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.30s
 
@@ -2046,6 +2046,87 @@ git push origin master --tags
 - **OH-003 (Order Status Tracking)** — Pending → Processing → Shipped → Delivered timeline with timestamps and email notification on status change
 
 <!-- EVAL-OH-002 END -->
+
+---
+
+## EVAL-OH-003 — Order Status Tracking
+
+<!-- EVAL-OH-003 START -->
+
+**Task ID:** OH-003
+**Sprint:** 4
+**Date:** 2026-04-16
+**Branch:** `feature/OH-003` → `master`
+**Tag:** `v1.0-OH-003-stable`
+**Requirement:** As a user, I want to track my order status so I know when it will arrive. Status steps: Pending → Processing → Shipped → Delivered. Timestamps for each step. Email notification on status change.
+
+---
+
+### STEP 1 — Implementation
+
+**New files:**
+
+- `database/migrations/2026_04_16_000001_add_status_timestamps_to_orders_table.php` — adds `processing_at`, `shipped_at`, `delivered_at` nullable timestamp columns
+- `app/Http/Controllers/Admin/OrderStatusController.php` — `update(Request, Order)`: validates status in `['processing','shipped','delivered']`, sets the corresponding `_at` timestamp, sends `OrderStatusChanged` mail, redirects back
+- `app/Mail/OrderStatusChanged.php` — mailable with subject "Order #X Status Update"
+- `resources/views/mail/order-status-changed.blade.php` — email view showing new status label, items table, order total
+- `tests/Feature/OrderStatusTest.php` — 12 tests
+
+**Modified files:**
+
+- `database/migrations/2026_04_15_210000_create_orders_table.php` — expanded status enum to include `processing`, `shipped`, `delivered`
+- `app/Models/Order.php` — added `processing_at`, `shipped_at`, `delivered_at` to `$fillable` and `$casts` (datetime)
+- `database/factories/OrderFactory.php` — added `processing()`, `shipped()`, `delivered()` states
+- `resources/views/orders/show.blade.php` — replaced simple status badge with 4-step timeline (Placed / Processing / Shipped / Delivered) with timestamps and CSS styling
+- `routes/web.php` — added `PATCH /admin/orders/{order}/status` → `OrderStatusController@update` (name: `admin.orders.status`) inside `auth + role:admin` group
+
+**Security:** Route is inside the `auth` + `role:admin` middleware group — unauthenticated users redirect to login, non-admin users get 403. Status values are validated via `Rule::in()` — arbitrary strings are rejected with 422.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC    | Test Name                                                          | Result  |
+| ----- | ------------------------------------------------------------------ | ------- |
+| TC-01 | `oh003 status timeline section visible on detail page`             | ✅ PASS |
+| TC-02 | `oh003 placed step shows created at timestamp`                     | ✅ PASS |
+| TC-03 | `oh003 processing timestamp shown when status is processing`       | ✅ PASS |
+| TC-04 | `oh003 shipped timestamp shown when status is shipped`             | ✅ PASS |
+| TC-05 | `oh003 delivered timestamp shown when status is delivered`         | ✅ PASS |
+| TC-06 | `oh003 admin can advance order to processing`                      | ✅ PASS |
+| TC-07 | `oh003 admin can advance order to shipped`                         | ✅ PASS |
+| TC-08 | `oh003 admin can advance order to delivered`                       | ✅ PASS |
+| TC-09 | `oh003 non admin cannot update order status`                       | ✅ PASS |
+| TC-10 | `oh003 invalid status value is rejected`                           | ✅ PASS |
+| TC-11 | `oh003 status change dispatches notification email`                | ✅ PASS |
+| TC-12 | `oh003 status update responds within two seconds`                  | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.29s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 362 / 362 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/OH-003 -m "merge: OH-003 order status tracking -- 362/362 tests pass, 0 regressions"
+git tag v1.0-OH-003-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **OH-004 (Order Cancellation)** — allow user to cancel a pending/paid order with confirmation and optional refund trigger
+
+<!-- EVAL-OH-003 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2088,6 +2169,7 @@ git push origin master --tags
 | 2026-04-16 | NF-003 (Sprint 3)     | 326         | 326    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-001 (Sprint 4)     | 338         | 338    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-002 (Sprint 4)     | 350         | 350    | 0      | 0            | Agent  |
+| 2026-04-16 | OH-003 (Sprint 4)     | 362         | 362    | 0      | 0            | Agent  |
 
 ---
 
