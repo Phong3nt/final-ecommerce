@@ -636,20 +636,23 @@
 - **Branch:** `feature/PC-002` → merged to `master`
 
 ### STEP 1 — Architecture Review
+
 - `scopeSearch($query, string $term)` added to `Product` model — `LIKE %term%` on `name` OR `description`
 - `ProductController::search()` — validates blank query (redirects to index), paginates 12/page with `withQueryString()`
 - Route `GET /products/search` added as public (no auth)
 - New view `products/search.blade.php` — search form, result count, product grid, "No products found" state, pagination
 
 ### STEP 2 — Security Checklist
+
 - [x] XSS: `{{ $q }}` auto-escaped; product fields rendered with `{{ }}`
 - [x] SQL injection: Eloquent `LIKE` binding — never raw interpolation
 - [x] No auth required — public route per AC
 - [x] Query string preserved via `withQueryString()` — no sensitive data leak
 
 ### STEP 3 — Test Results
+
 | TC    | Description                                     | Type        | Result |
-|-------|-------------------------------------------------|-------------|--------|
+| ----- | ----------------------------------------------- | ----------- | ------ |
 | TC-01 | Search by name keyword returns matching product | Happy       | PASS   |
 | TC-02 | Search by description keyword returns match     | Happy       | PASS   |
 | TC-03 | Search results paginated at 12/page             | Happy       | PASS   |
@@ -666,6 +669,7 @@
 **Score: 12/12 — All acceptance criteria met**
 
 ### STEP 4 — Proposals for Next Task
+
 - PC-003 (filter by category/price/rating) can add `scopeFilter()` on Product; category requires its own model
 - Consider debounced JS search-as-you-type for UX improvement (post-MVP)
 - Search index (MySQL FULLTEXT) recommended before production for scale

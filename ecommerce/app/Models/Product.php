@@ -20,7 +20,7 @@ class Product extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('name', 'like', '%' . $term . '%')
-              ->orWhere('description', 'like', '%' . $term . '%');
+                ->orWhere('description', 'like', '%' . $term . '%');
         });
     }
 }
