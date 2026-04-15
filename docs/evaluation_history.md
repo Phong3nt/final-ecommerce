@@ -1052,49 +1052,49 @@
 **Date:** 2026-04-15  
 **Branch:** `feature/CP-001` → merged `master` @ `v1.0-CP-001-stable`  
 **Baseline:** 194 tests · 395 assertions · 0 failures  
-**Result:** 206 tests · 422 assertions · 0 failures  
+**Result:** 206 tests · 422 assertions · 0 failures
 
 ### STEP 1 — Code
 
-| File | Change |
-|------|--------|
-| `2026_04_15_200000_create_user_addresses_table.php` | NEW migration — `user_addresses` (user_id, name, address_line1/2, city, state, postal_code, country, is_default) |
-| `UserAddress.php` | NEW model — `belongsTo User`, fillable, `is_default` cast |
-| `User.php` | Added `addresses()` hasMany relationship |
-| `UserAddressFactory.php` | NEW factory |
-| `CheckoutController.php` | NEW — `showAddress()` + `storeAddress()` — saved address selection or new address validation, stores to `checkout.address` session |
-| `routes/web.php` | Added `GET/POST /checkout/address` (auth), `GET /checkout/shipping` placeholder |
-| `checkout/address.blade.php` | NEW view — saved addresses list (radio), new address form, validation errors |
-| `CheckoutAddressTest.php` | NEW — 12 tests |
+| File                                                | Change                                                                                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `2026_04_15_200000_create_user_addresses_table.php` | NEW migration — `user_addresses` (user_id, name, address_line1/2, city, state, postal_code, country, is_default)                   |
+| `UserAddress.php`                                   | NEW model — `belongsTo User`, fillable, `is_default` cast                                                                          |
+| `User.php`                                          | Added `addresses()` hasMany relationship                                                                                           |
+| `UserAddressFactory.php`                            | NEW factory                                                                                                                        |
+| `CheckoutController.php`                            | NEW — `showAddress()` + `storeAddress()` — saved address selection or new address validation, stores to `checkout.address` session |
+| `routes/web.php`                                    | Added `GET/POST /checkout/address` (auth), `GET /checkout/shipping` placeholder                                                    |
+| `checkout/address.blade.php`                        | NEW view — saved addresses list (radio), new address form, validation errors                                                       |
+| `CheckoutAddressTest.php`                           | NEW — 12 tests                                                                                                                     |
 
 ### STEP 2 — Tests (CheckoutAddressTest.php — 12/12 PASS)
 
-| # | Test | Result |
-|---|------|--------|
-| TC-01 | `cp001 address page returns 200 for auth user` | ✅ PASS |
-| TC-02 | `cp001 guest is redirected to login` | ✅ PASS |
-| TC-03 | `cp001 auth user sees saved addresses` | ✅ PASS |
+| #     | Test                                                 | Result  |
+| ----- | ---------------------------------------------------- | ------- |
+| TC-01 | `cp001 address page returns 200 for auth user`       | ✅ PASS |
+| TC-02 | `cp001 guest is redirected to login`                 | ✅ PASS |
+| TC-03 | `cp001 auth user sees saved addresses`               | ✅ PASS |
 | TC-04 | `cp001 user with no addresses sees new address form` | ✅ PASS |
-| TC-05 | `cp001 valid address stored in session` | ✅ PASS |
-| TC-06 | `cp001 new address saved to database` | ✅ PASS |
+| TC-05 | `cp001 valid address stored in session`              | ✅ PASS |
+| TC-06 | `cp001 new address saved to database`                | ✅ PASS |
 | TC-07 | `cp001 selecting saved address stores it in session` | ✅ PASS |
-| TC-08 | `cp001 name is required` | ✅ PASS |
-| TC-09 | `cp001 address line1 is required` | ✅ PASS |
-| TC-10 | `cp001 city is required` | ✅ PASS |
-| TC-11 | `cp001 postal code is required` | ✅ PASS |
-| TC-12 | `cp001 country is required` | ✅ PASS |
+| TC-08 | `cp001 name is required`                             | ✅ PASS |
+| TC-09 | `cp001 address line1 is required`                    | ✅ PASS |
+| TC-10 | `cp001 city is required`                             | ✅ PASS |
+| TC-11 | `cp001 postal code is required`                      | ✅ PASS |
+| TC-12 | `cp001 country is required`                          | ✅ PASS |
 
 **Regression:** All 194 previous tests still PASS ✅ · Total suite: 206/206 · 422 assertions
 
 ### STEP 3 — Evaluation
 
-| Criterion        | Score | Notes |
-|------------------|-------|-------|
-| Correctness      | 5     | Saved addresses listed, new form available, address saved to DB and session |
+| Criterion        | Score | Notes                                                                                               |
+| ---------------- | ----- | --------------------------------------------------------------------------------------------------- |
+| Correctness      | 5     | Saved addresses listed, new form available, address saved to DB and session                         |
 | Test Coverage    | 5     | 12 tests: auth/guest, saved address display, new address DB persist, session, all 5 required fields |
-| Security         | 5     | Auth guard enforced, address ownership checked (user_id scope) before use, CSRF on all forms |
-| Code Clarity     | 5     | `showAddress()` is 4 lines; `storeAddress()` is 25 lines; dual path clearly branched |
-| Architecture Fit | 5     | `checkout.address` session key scoped under `checkout.*` for CP-002+ steps |
+| Security         | 5     | Auth guard enforced, address ownership checked (user_id scope) before use, CSRF on all forms        |
+| Code Clarity     | 5     | `showAddress()` is 4 lines; `storeAddress()` is 25 lines; dual path clearly branched                |
+| Architecture Fit | 5     | `checkout.address` session key scoped under `checkout.*` for CP-002+ steps                          |
 
 **Score: 12/12 — All acceptance criteria met**
 
