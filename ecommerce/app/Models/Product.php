@@ -54,12 +54,12 @@ class Product extends Model
 
     public function scopeSort($query, string $sort)
     {
-        return match($sort) {
-            'price_asc'  => $query->orderBy('price', 'asc'),
+        return match ($sort) {
+            'price_asc' => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),
-            'oldest'     => $query->orderBy('created_at', 'asc'),
-            'rating'     => $query->orderByDesc('rating'),
-            default      => $query->latest(), // newest
+            'oldest' => $query->orderBy('created_at', 'asc'),
+            'rating' => $query->orderByDesc('rating'),
+            default => $query->latest(), // newest
         };
     }
 }
