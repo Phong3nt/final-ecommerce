@@ -938,44 +938,44 @@
 **Date:** 2026-04-15  
 **Branch:** `feature/SC-003` → merged `master` @ `v1.0-SC-003-stable`  
 **Baseline:** 170 tests · 337 assertions · 0 failures  
-**Result:** 182 tests · 363 assertions · 0 failures  
+**Result:** 182 tests · 363 assertions · 0 failures
 
 ### STEP 1 — Code
 
-| File | Change |
-|------|--------|
-| `CartController.php` | Added `update(Request $request, int $productId)` — validates qty ≥ 1, caps at stock, dual JSON/redirect response |
-| `routes/web.php` | Added `Route::patch('/cart/{productId}', ...)` → `cart.update` |
-| `cart/index.blade.php` | Added CSRF meta, qty-update `<form class="qty-update-form">` per row, subtotal/total IDs, AJAX JS |
-| `CartUpdateTest.php` | NEW — 12 tests |
+| File                   | Change                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `CartController.php`   | Added `update(Request $request, int $productId)` — validates qty ≥ 1, caps at stock, dual JSON/redirect response |
+| `routes/web.php`       | Added `Route::patch('/cart/{productId}', ...)` → `cart.update`                                                   |
+| `cart/index.blade.php` | Added CSRF meta, qty-update `<form class="qty-update-form">` per row, subtotal/total IDs, AJAX JS                |
+| `CartUpdateTest.php`   | NEW — 12 tests                                                                                                   |
 
 ### STEP 2 — Tests (CartUpdateTest.php — 12/12 PASS)
 
-| # | Test | Result |
-|---|------|--------|
-| TC-01 | `sc003 update redirects to cart` | ✅ PASS |
-| TC-02 | `sc003 update saves new quantity in session` | ✅ PASS |
-| TC-03 | `sc003 quantity exceeding stock is capped` | ✅ PASS |
+| #     | Test                                                    | Result  |
+| ----- | ------------------------------------------------------- | ------- |
+| TC-01 | `sc003 update redirects to cart`                        | ✅ PASS |
+| TC-02 | `sc003 update saves new quantity in session`            | ✅ PASS |
+| TC-03 | `sc003 quantity exceeding stock is capped`              | ✅ PASS |
 | TC-04 | `sc003 ajax returns json with subtotal and order total` | ✅ PASS |
-| TC-05 | `sc003 ajax order total recalculates across items` | ✅ PASS |
-| TC-06 | `sc003 updating nonexistent cart item returns 404` | ✅ PASS |
-| TC-07 | `sc003 zero quantity fails validation` | ✅ PASS |
-| TC-08 | `sc003 negative quantity fails validation` | ✅ PASS |
-| TC-09 | `sc003 missing quantity fails validation` | ✅ PASS |
-| TC-10 | `sc003 minimum quantity one is accepted` | ✅ PASS |
-| TC-11 | `sc003 successful update flashes success message` | ✅ PASS |
-| TC-12 | `sc003 update completes within one second` | ✅ PASS |
+| TC-05 | `sc003 ajax order total recalculates across items`      | ✅ PASS |
+| TC-06 | `sc003 updating nonexistent cart item returns 404`      | ✅ PASS |
+| TC-07 | `sc003 zero quantity fails validation`                  | ✅ PASS |
+| TC-08 | `sc003 negative quantity fails validation`              | ✅ PASS |
+| TC-09 | `sc003 missing quantity fails validation`               | ✅ PASS |
+| TC-10 | `sc003 minimum quantity one is accepted`                | ✅ PASS |
+| TC-11 | `sc003 successful update flashes success message`       | ✅ PASS |
+| TC-12 | `sc003 update completes within one second`              | ✅ PASS |
 
 **Regression:** All 170 previous tests still PASS ✅ · Total suite: 182/182 · 363 assertions
 
 ### STEP 3 — Evaluation
 
-| Criterion        | Score | Notes |
-|------------------|-------|-------|
-| Correctness      | 5     | Qty bounded 1–stock, session updated, subtotal/order_total correct |
-| Test Coverage    | 5     | 12 tests: happy path, edge (min/stock cap), validation, AJAX, perf |
-| Security         | 5     | CSRF protected, input validated, no direct object injection |
-| Code Clarity     | 5     | `update()` is 22 lines; dual-mode pattern mirrors `store()` |
+| Criterion        | Score | Notes                                                               |
+| ---------------- | ----- | ------------------------------------------------------------------- |
+| Correctness      | 5     | Qty bounded 1–stock, session updated, subtotal/order_total correct  |
+| Test Coverage    | 5     | 12 tests: happy path, edge (min/stock cap), validation, AJAX, perf  |
+| Security         | 5     | CSRF protected, input validated, no direct object injection         |
+| Code Clarity     | 5     | `update()` is 22 lines; dual-mode pattern mirrors `store()`         |
 | Architecture Fit | 5     | Consistent session-cart pattern; AJAX response shape extends SC-001 |
 
 **Score: 12/12 — All acceptance criteria met**
