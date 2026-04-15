@@ -1814,6 +1814,7 @@ git push origin master --tags
 ### STEP 1 — Production Code Audit
 
 **Architecture finding — Stripe.js + PaymentIntents flow:**
+
 1. Server calls `StripePaymentService::createPaymentIntent()` (amount, currency, metadata only — no card data).
 2. Server returns `client_secret` to the browser.
 3. Browser mounts Stripe Payment Element (`elements.create('payment')`) — card fields rendered entirely inside Stripe's iframe.
@@ -1822,19 +1823,23 @@ git push origin master --tags
 6. Webhook handler (`handleWebhook`) reads only `event.data.object.id` (intent ID) to update order status.
 
 **Schema audit — `orders` table columns:**
+
 - ✅ `stripe_payment_intent_id` — Stripe token (safe to store, not card data)
 - ✅ `stripe_client_secret` — used by Stripe.js to complete confirmation
 - ❌ No `card_number`, `cvv`, `cvc`, `expiry`, `pan` columns exist
 
 **Model audit — `Order::$fillable`:**
+
 - Contains `stripe_payment_intent_id` and `stripe_client_secret`
 - Does **not** contain any card data field
 
 **Service audit — `StripePaymentService`:**
+
 - Wraps official `\Stripe\StripeClient` SDK
 - No `curl_init`, no raw HTTP card submission
 
 **Interface audit — `PaymentServiceInterface`:**
+
 - `createPaymentIntent(int $amountCents, string $currency, array $metadata)` — no card parameters
 - `constructWebhookEvent(string $payload, string $sigHeader, string $secret)` — no card parameters
 
@@ -1844,20 +1849,20 @@ git push origin master --tags
 
 ### STEP 2 — Test Cases
 
-| TC     | Test Name                                                                        | Type    | Result  |
-|--------|----------------------------------------------------------------------------------|---------|---------|
-| TC-01  | `nf003 orders table has no card pan cvv expiry columns`                          | Schema  | ✅ PASS |
-| TC-02  | `nf003 order fillable contains no card data fields`                              | Model   | ✅ PASS |
-| TC-03  | `nf003 payment service interface has no card data parameters`                    | API     | ✅ PASS |
-| TC-04  | `nf003 stripe payment service uses official stripe client`                       | Service | ✅ PASS |
-| TC-05  | `nf003 stripe payment service source has no raw card http`                       | Service | ✅ PASS |
-| TC-06  | `nf003 checkout controller source never reads card data from request`            | Ctrl    | ✅ PASS |
-| TC-07  | `nf003 review blade loads stripe js sdk`                                         | View    | ✅ PASS |
-| TC-08  | `nf003 review blade uses stripe elements not plain card inputs`                  | View    | ✅ PASS |
-| TC-09  | `nf003 review blade calls stripe confirm payment client side`                    | View    | ✅ PASS |
-| TC-10  | `nf003 place order endpoint stores no card data in order record`                 | Runtime | ✅ PASS |
-| TC-11  | `nf003 place order ignores card number sent in request body`                     | Runtime | ✅ PASS |
-| TC-12  | `nf003 order fillable includes stripe intent id but not card fields`             | Model   | ✅ PASS |
+| TC    | Test Name                                                             | Type    | Result  |
+| ----- | --------------------------------------------------------------------- | ------- | ------- |
+| TC-01 | `nf003 orders table has no card pan cvv expiry columns`               | Schema  | ✅ PASS |
+| TC-02 | `nf003 order fillable contains no card data fields`                   | Model   | ✅ PASS |
+| TC-03 | `nf003 payment service interface has no card data parameters`         | API     | ✅ PASS |
+| TC-04 | `nf003 stripe payment service uses official stripe client`            | Service | ✅ PASS |
+| TC-05 | `nf003 stripe payment service source has no raw card http`            | Service | ✅ PASS |
+| TC-06 | `nf003 checkout controller source never reads card data from request` | Ctrl    | ✅ PASS |
+| TC-07 | `nf003 review blade loads stripe js sdk`                              | View    | ✅ PASS |
+| TC-08 | `nf003 review blade uses stripe elements not plain card inputs`       | View    | ✅ PASS |
+| TC-09 | `nf003 review blade calls stripe confirm payment client side`         | View    | ✅ PASS |
+| TC-10 | `nf003 place order endpoint stores no card data in order record`      | Runtime | ✅ PASS |
+| TC-11 | `nf003 place order ignores card number sent in request body`          | Runtime | ✅ PASS |
+| TC-12 | `nf003 order fillable includes stripe intent id but not card fields`  | Model   | ✅ PASS |
 
 **Isolated run:** 12 / 12 passed — Duration: 1.07s
 
@@ -1886,6 +1891,81 @@ git push origin master --tags
 - **CP-005 (Checkout Success/Failure Pages)** — complete the post-payment user flow
 
 <!-- EVAL-NF-003 END -->
+
+---
+
+## EVAL-OH-001 — Order History Page
+
+<!-- EVAL-OH-001 START -->
+
+**Task ID:** OH-001
+**Sprint:** 4
+**Date:** 2026-04-16
+**Branch:** `feature/OH-001` → `master`
+**Tag:** `v1.0-OH-001-stable`
+**Requirement:** As a user, I want to view my order history so I can track all past purchases. Listed newest-first with order ID, date, total, status. Paginated (10/page).
+
+---
+
+### STEP 1 — Implementation
+
+**New files:**
+- `app/Http/Controllers/OrderController.php` — `index()` queries `auth()->user()->orders()->latest()->paginate(10)`
+- `resources/views/orders/index.blade.php` — table with Order #, Date, Total, Status badge; empty state; `$orders->links()` pagination
+- `database/factories/OrderFactory.php` — factory for test data generation
+
+**Modified files:**
+- `app/Models/User.php` — added `orders(): HasMany` relationship
+- `app/Models/Order.php` — added `HasFactory` trait
+- `routes/web.php` — added `GET /orders` → `OrderController@index` (name: `orders.index`) inside `auth` middleware group
+
+**Security:** Route is inside the `auth` middleware group — guests are redirected to login. Each query is scoped to `auth()->user()->orders()` — users can never see another user's orders.
+
+---
+
+### STEP 2 — Test Cases
+
+| TC     | Test Name                                                              | Result  |
+|--------|------------------------------------------------------------------------|---------|
+| TC-01  | `oh001 guest is redirected to login`                                   | ✅ PASS |
+| TC-02  | `oh001 auth user sees order history page`                              | ✅ PASS |
+| TC-03  | `oh001 empty state shown when no orders`                               | ✅ PASS |
+| TC-04  | `oh001 user orders appear in listing`                                  | ✅ PASS |
+| TC-05  | `oh001 order status visible in listing`                                | ✅ PASS |
+| TC-06  | `oh001 order total visible in listing`                                 | ✅ PASS |
+| TC-07  | `oh001 orders listed newest first`                                     | ✅ PASS |
+| TC-08  | `oh001 user cannot see another users orders`                           | ✅ PASS |
+| TC-09  | `oh001 pagination limits to 10 orders per page`                        | ✅ PASS |
+| TC-10  | `oh001 pagination links present when more than 10 orders`              | ✅ PASS |
+| TC-11  | `oh001 second page is accessible and shows overflow orders`            | ✅ PASS |
+| TC-12  | `oh001 order history page responds within two seconds`                 | ✅ PASS |
+
+**Isolated run:** 12 / 12 passed — Duration: 1.21s
+
+---
+
+### STEP 3 — Full Regression
+
+**Full suite result:** 338 / 338 passed, 0 failures, 0 regressions.
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/OH-001 -m "merge: OH-001 order history -- 338/338 tests pass, 0 regressions"
+git tag v1.0-OH-001-stable
+git push origin master --tags
+```
+
+---
+
+### STEP 5 — Proposals for Next Task
+
+- **OH-002 (Order Detail)** — view items, quantities, prices, shipping address, payment status for a single order
+
+<!-- EVAL-OH-001 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -1926,6 +2006,7 @@ git push origin master --tags
 | 2026-04-16 | NF-006 (Sprint 1)     | 302         | 302    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-002 (Sprint 3)     | 314         | 314    | 0      | 0            | Agent  |
 | 2026-04-16 | NF-003 (Sprint 3)     | 326         | 326    | 0      | 0            | Agent  |
+| 2026-04-16 | OH-001 (Sprint 4)     | 338         | 338    | 0      | 0            | Agent  |
 
 ---
 
