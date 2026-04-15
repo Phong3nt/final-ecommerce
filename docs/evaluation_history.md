@@ -2219,20 +2219,20 @@ git push origin master --tags
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Notes |
-|---|---|---|---|---|
-| TC-01 | Guest redirected to login | Auth | PASS | 302 → /login |
-| TC-02 | Non-admin gets 403 | Auth | PASS | role:admin enforced |
-| TC-03 | Admin can access dashboard (200) + auto-refresh meta | Auth/UI | PASS | `content="300"` present |
-| TC-04 | "Total Revenue" label visible | UI | PASS | |
-| TC-05 | "Orders Today" label visible | UI | PASS | |
-| TC-06 | "New Users Today" label visible | UI | PASS | |
-| TC-07 | "Low-Stock Products" label visible | UI | PASS | |
-| TC-08 | Revenue sums paid + processing + shipped + delivered | Data | PASS | 2×100 + 50 = 250.00 |
-| TC-09 | Revenue excludes pending, cancelled, failed | Data | PASS | shows 0.00 |
-| TC-10 | Orders today excludes past days | Data | PASS | 11 today vs 3 yesterday |
-| TC-11 | New users today excludes past days | Data | PASS | 3 today vs 4 yesterday |
-| TC-12 | Low-stock count (stock ≤ 5) is accurate | Data | PASS | 6 low, 4 normal |
+| Test Case ID | Scenario                                             | Type    | Result | Notes                   |
+| ------------ | ---------------------------------------------------- | ------- | ------ | ----------------------- |
+| TC-01        | Guest redirected to login                            | Auth    | PASS   | 302 → /login            |
+| TC-02        | Non-admin gets 403                                   | Auth    | PASS   | role:admin enforced     |
+| TC-03        | Admin can access dashboard (200) + auto-refresh meta | Auth/UI | PASS   | `content="300"` present |
+| TC-04        | "Total Revenue" label visible                        | UI      | PASS   |                         |
+| TC-05        | "Orders Today" label visible                         | UI      | PASS   |                         |
+| TC-06        | "New Users Today" label visible                      | UI      | PASS   |                         |
+| TC-07        | "Low-Stock Products" label visible                   | UI      | PASS   |                         |
+| TC-08        | Revenue sums paid + processing + shipped + delivered | Data    | PASS   | 2×100 + 50 = 250.00     |
+| TC-09        | Revenue excludes pending, cancelled, failed          | Data    | PASS   | shows 0.00              |
+| TC-10        | Orders today excludes past days                      | Data    | PASS   | 11 today vs 3 yesterday |
+| TC-11        | New users today excludes past days                   | Data    | PASS   | 3 today vs 4 yesterday  |
+| TC-12        | Low-stock count (stock ≤ 5) is accurate              | Data    | PASS   | 6 low, 4 normal         |
 
 **Isolated:** 12/12 passed (14 assertions) in 1.12s  
 **Full Regression:** 386/386 passed (766 assertions) in 19.52s  
@@ -2240,12 +2240,12 @@ git push origin master --tags
 
 ### STEP 2 — Code Quality
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Correctness | 5/5 | All 4 KPIs computed correctly with proper status filtering |
-| Security | 5/5 | Admin-only via role:admin middleware; no raw query exposure |
-| Maintainability | 5/5 | Constants for threshold + revenue statuses; clean compact() |
-| Test Coverage | 5/5 | Auth, label, data accuracy, and boundary tests all covered |
+| Dimension       | Score | Notes                                                       |
+| --------------- | ----- | ----------------------------------------------------------- |
+| Correctness     | 5/5   | All 4 KPIs computed correctly with proper status filtering  |
+| Security        | 5/5   | Admin-only via role:admin middleware; no raw query exposure |
+| Maintainability | 5/5   | Constants for threshold + revenue statuses; clean compact() |
+| Test Coverage   | 5/5   | Auth, label, data accuracy, and boundary tests all covered  |
 
 ### STEP 3 — Bugs Found
 
@@ -2268,6 +2268,69 @@ git push origin master --tags
 - **RV-001 (Product Reviews)** — allow users to leave a rating and review on a purchased product
 
 <!-- EVAL-AD-001 END -->
+
+---
+
+## EVAL-AD-002 — Revenue Chart
+
+<!-- EVAL-AD-002 START -->
+
+**Version:** A  
+**Date:** 2026-04-16  
+**Status in Backlog:** Done  
+**Linked Task:** [AD-002](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Notes |
+|---|---|---|---|---|
+| TC-01 | Guest redirected from chart endpoint | Auth | PASS | 302 → /login |
+| TC-02 | Non-admin gets 403 | Auth | PASS | role:admin enforced |
+| TC-03 | Admin gets 200 JSON with correct structure | Structure | PASS | labels/revenue/orders keys |
+| TC-04 | Daily range returns 7 data points | Data | PASS | last 7 days |
+| TC-05 | Weekly range returns 8 data points | Data | PASS | last 8 weeks |
+| TC-06 | Monthly range returns 12 data points | Data | PASS | last 12 months |
+| TC-07 | Missing range returns 422 | Validation | PASS | |
+| TC-08 | Invalid range value returns 422 | Validation | PASS | |
+| TC-09 | Revenue sums only paid/processing/shipped/delivered | Data | PASS | 120+80=200.00 |
+| TC-10 | Revenue excludes pending/cancelled/failed | Data | PASS | sum=0.00 |
+| TC-11 | Order count includes all statuses | Data | PASS | 3 total |
+| TC-12 | Dashboard view has canvas + Chart.js CDN + range buttons | UI | PASS | |
+
+**Isolated:** 12/12 passed (34 assertions) in 1.23s  
+**Full Regression:** 398/398 passed (803 assertions) in 22.51s  
+**Regressions:** 0
+
+### STEP 2 — Code Quality
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Correctness | 5/5 | PHP-side grouping avoids DB dialect issues; all three ranges accurate |
+| Security | 5/5 | Validated range input (Rule::in); admin-only via middleware |
+| Maintainability | 5/5 | match() per range cleanly defines period slices and format strings |
+| Test Coverage | 5/5 | Auth, validation, structure, data accuracy all covered |
+
+### STEP 3 — Bugs Found
+
+None.
+
+### STEP 4 — Git
+
+```
+git checkout -b feature/AD-002
+git commit -m "feat(AD-002): revenue chart -- Chart.js bar+line, daily/weekly/monthly toggle, JSON endpoint /admin/chart-data -- 12/12 tests pass"
+git checkout master
+git merge --no-ff feature/AD-002 -m "merge: AD-002 revenue chart -- Chart.js bar+line, daily/weekly/monthly, /admin/chart-data endpoint -- 398/398 tests pass, 0 regressions"
+git tag v1.0-AD-002-stable
+git push origin master --tags
+```
+
+### STEP 5 — Proposals for Next Task
+
+- **RV-001 (Product Reviews)** — allow users to leave a rating and review on a purchased product
+- **AD-003** — admin product/order management panel
+
+<!-- EVAL-AD-002 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2313,6 +2376,7 @@ git push origin master --tags
 | 2026-04-16 | OH-003 (Sprint 4)     | 362         | 362    | 0      | 0            | Agent  |
 | 2026-04-16 | OH-004 (Sprint 4)     | 374         | 374    | 0      | 0            | Agent  |
 | 2026-04-16 | AD-001 (Sprint 4)     | 386         | 386    | 0      | 0            | Agent  |
+| 2026-04-16 | AD-002 (Sprint 4)     | 398         | 398    | 0      | 0            | Agent  |
 
 ---
 
