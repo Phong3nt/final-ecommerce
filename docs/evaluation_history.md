@@ -803,20 +803,20 @@
 
 ### STEP 3 — Test Results
 
-| TC    | Description                                                | Type             | Result |
-| ----- | ---------------------------------------------------------- | ---------------- | ------ |
-| TC-01 | Detail page returns 200 for valid slug                     | Happy            | PASS   |
-| TC-02 | Product name shown on detail page                          | Happy            | PASS   |
-| TC-03 | Product description shown on detail page                   | Happy            | PASS   |
-| TC-04 | Product price shown on detail page                         | Happy            | PASS   |
-| TC-05 | In Stock status shown when stock > 0                       | Happy            | PASS   |
-| TC-06 | Out of Stock status shown when stock = 0                   | Edge             | PASS   |
-| TC-07 | SKU shown on detail page                                   | Happy            | PASS   |
-| TC-08 | Category name shown on detail page                         | Happy            | PASS   |
-| TC-09 | Rating shown on detail page                                | Happy            | PASS   |
-| TC-10 | Related products section shown with same-category products | Happy            | PASS   |
-| TC-11 | Non-existent slug returns 404                              | Edge             | PASS   |
-| TC-12 | Detail page accessible without login and responds < 2s     | Security/Perf    | PASS   |
+| TC    | Description                                                | Type          | Result |
+| ----- | ---------------------------------------------------------- | ------------- | ------ |
+| TC-01 | Detail page returns 200 for valid slug                     | Happy         | PASS   |
+| TC-02 | Product name shown on detail page                          | Happy         | PASS   |
+| TC-03 | Product description shown on detail page                   | Happy         | PASS   |
+| TC-04 | Product price shown on detail page                         | Happy         | PASS   |
+| TC-05 | In Stock status shown when stock > 0                       | Happy         | PASS   |
+| TC-06 | Out of Stock status shown when stock = 0                   | Edge          | PASS   |
+| TC-07 | SKU shown on detail page                                   | Happy         | PASS   |
+| TC-08 | Category name shown on detail page                         | Happy         | PASS   |
+| TC-09 | Rating shown on detail page                                | Happy         | PASS   |
+| TC-10 | Related products section shown with same-category products | Happy         | PASS   |
+| TC-11 | Non-existent slug returns 404                              | Edge          | PASS   |
+| TC-12 | Detail page accessible without login and responds < 2s     | Security/Perf | PASS   |
 
 **Score: 12/12 — All acceptance criteria met**
 
