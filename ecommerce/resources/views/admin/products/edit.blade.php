@@ -139,7 +139,9 @@
             @error('images')<div class="error">{{ $message }}</div>@enderror
             @error('images.*')<div class="error">{{ $message }}</div>@enderror
             @if($product->images)
-                <div class="slug-hint">Currently {{ count($product->images) }} image(s) stored.</div>
+                <div class="slug-hint">Currently {{ count($product->images) }} image(s) stored.
+                    <a href="{{ route('admin.products.images', $product) }}">Manage Images →</a>
+                </div>
             @endif
         </div>
 

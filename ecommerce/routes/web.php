@@ -163,6 +163,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // PM-003: Admin product delete (soft delete)
     Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 
+    // PM-006: Admin product image management
+    Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
+    Route::post('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');
+    Route::post('/products/{product}/images/thumbnail', [AdminProductController::class, 'setThumbnail'])->name('products.images.thumbnail');
+    Route::delete('/products/{product}/images/{index}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy')->where('index', '[0-9]+');
+
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
