@@ -2875,6 +2875,56 @@ None.
 
 <!-- EVAL-PM-005 END -->
 
+---
+
+## EVAL-PM-006 · Admin Product Image Management
+
+**Date:** 2025-01-18  
+**Branch:** `feature/PM-006`  
+**Tag:** `v1.0-PM-006-stable`  
+**Status:** ✅ PASS
+
+### User Story
+As an admin, I want to manage product images so each product looks appealing.
+
+### Acceptance Criteria
+- [x] Multiple images per product (stored as JSON array in `images` column)
+- [x] Drag-to-reorder images (saves new order via POST endpoint)
+- [x] One image set as thumbnail (`image` column)
+- [x] Remove individual images by index
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ecommerce/app/Http/Controllers/Admin/ProductController.php` | Added `images()`, `reorderImages()`, `setThumbnail()`, `destroyImage()` methods |
+| `ecommerce/routes/web.php` | Added 4 PM-006 routes under admin prefix |
+| `ecommerce/resources/views/admin/products/images.blade.php` | New view: image list with drag-to-reorder, set-thumbnail, remove |
+| `ecommerce/resources/views/admin/products/edit.blade.php` | Added "Manage Images →" link |
+| `ecommerce/tests/Feature/AdminProductImageManagementTest.php` | 13 feature tests |
+
+### Test Results
+| Suite | Tests | Assertions | Failures |
+|-------|-------|------------|----------|
+| PM-006 targeted | 13 | 31 | 0 |
+| Targeted regression (product+category) | 73 | 187 | 0 |
+
+### Security Checks
+- `reorderImages` only accepts paths already in `$product->images` — prevents path injection
+- `destroyImage` uses index (integer), not arbitrary file path — no directory traversal
+- All routes require `admin` role via middleware
+- No raw file system calls; image paths are stored references only
+
+### Improvement Proposals
+| ID | Proposal | Rationale | Priority |
+|----|----------|-----------|----------|
+| PM-006.1 | Add file upload endpoint to images page | Allow uploading new images directly from management page | High |
+| PM-006.2 | Store image dimensions/metadata in JSON | Enables responsive image selection | Medium |
+| PM-006.3 | Add bulk delete option | Faster cleanup for products with many images | Low |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-006 END -->
+
 ## EVAL-OM-001 · Admin Order List with Filters
 
 **Version:** A  
