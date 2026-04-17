@@ -41,7 +41,11 @@ class ProductController extends Controller
             $canReview = $hasPurchased && $userReview === null;
         }
 
-        return view('products.show', compact('product', 'related', 'canReview', 'userReview'));
+        // RV-002: paginated reviews list + average rating
+        $reviews       = $product->reviews()->with('user')->latest()->paginate(5);
+        $averageRating = $product->reviews()->avg('rating');
+
+        return view('products.show', compact('product', 'related', 'canReview', 'userReview', 'reviews', 'averageRating'));
     }
 
     public function search(Request $request): View|RedirectResponse

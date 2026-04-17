@@ -54,7 +54,8 @@ class ReviewController extends Controller
             'rating' => $data['rating'],
             'comment' => $data['comment'],
         ]);
-
+        // RV-002: keep product.rating in sync with the live average from reviews
+        $product->update(['rating' => round((float) $product->reviews()->avg('rating'), 2)]);
         return redirect()->route('products.show', $product->slug)
             ->with('success', 'Your review has been submitted.');
     }
