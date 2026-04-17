@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ImportProductsCsvJob;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,7 +22,40 @@ class ProductController extends Controller
             ->when($categoryId, fn($q) => $q->where('category_id', (int) $categoryId))
             ->latest()->paginate(20);
         $categories = Category::orderBy('name')->get();
-        return view('admin.products.index', compact('products', 'categories'));
+        $imports = ProductImport::with('user')->latest()->limit(10)->get();
+
+        return view('admin.products.index', compact('products', 'categories', 'imports'));
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
+        ]);
+
+        $expectedHeaders = ['name', 'description', 'price', 'stock', 'status', 'category'];
+        $headers = $this->readCsvHeaders($validated['csv_file']->getRealPath());
+        if ($headers !== $expectedHeaders) {
+            return back()->withErrors([
+                'csv_file' => 'Invalid CSV headers. Expected: ' . implode(',', $expectedHeaders),
+            ]);
+        }
+
+        $path = $validated['csv_file']->store('product-imports');
+        $import = ProductImport::create([
+            'user_id' => auth()->id(),
+            'file_path' => $path,
+            'status' => 'pending',
+            'total_rows' => 0,
+            'success_rows' => 0,
+            'failed_rows' => 0,
+            'errors' => [],
+        ]);
+
+        ImportProductsCsvJob::dispatch($import->id);
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'CSV import queued. Progress and row errors are listed below.');
     }
 
     public function create(): View
@@ -75,6 +110,24 @@ class ProductController extends Controller
             $slug = $base . '-' . $count++;
         }
         return $slug;
+    }
+
+    private function readCsvHeaders(string $path): array
+    {
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return [];
+        }
+
+        $headers = fgetcsv($handle) ?: [];
+        fclose($handle);
+
+        return $this->normalizeHeaders($headers);
+    }
+
+    private function normalizeHeaders(array $headers): array
+    {
+        return array_map(fn($value) => Str::of((string) $value)->trim()->lower()->value(), $headers);
     }
 
     public function edit(Product $product): View
