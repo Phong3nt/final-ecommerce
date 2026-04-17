@@ -2988,6 +2988,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-OM-004 END -->
 
 <!-- EVAL-OM-005 START -->
+
 ## EVAL-OM-005 · Process Refund on Cancelled Order
 
 **Version:** A  
@@ -3003,6 +3004,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 > As an admin, I want to process a refund on a cancelled order so the customer is reimbursed.
 
 **Acceptance Criteria:**
+
 - Calls Payment Gateway refund API
 - Order status set to "Refunded"
 - Refund amount recorded in transaction log
@@ -3011,20 +3013,21 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Implementation Summary
 
-| Area | File(s) |
-|---|---|
-| Migration (refunded_at) | `ecommerce/database/migrations/2026_04_18_000001_add_refunded_at_to_orders_table.php` |
-| Migration (refund_transactions) | `ecommerce/database/migrations/2026_04_18_000002_create_refund_transactions_table.php` |
-| Model | `ecommerce/app/Models/RefundTransaction.php` |
-| Order model | `ecommerce/app/Models/Order.php` (added `refunded_at`, `refundTransactions()`) |
-| Interface | `ecommerce/app/Services/PaymentServiceInterface.php` (added `refund()`) |
-| Service | `ecommerce/app/Services/StripePaymentService.php` (implemented `refund()`) |
-| Controller | `ecommerce/app/Http/Controllers/Admin/RefundController.php` |
-| Route | `ecommerce/routes/web.php` (`POST /admin/orders/{order}/refund`) |
-| View | `ecommerce/resources/views/admin/orders/show.blade.php` (refund button, timeline step, transactions table) |
-| Tests | `ecommerce/tests/Feature/AdminOrderRefundTest.php` |
+| Area                            | File(s)                                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Migration (refunded_at)         | `ecommerce/database/migrations/2026_04_18_000001_add_refunded_at_to_orders_table.php`                      |
+| Migration (refund_transactions) | `ecommerce/database/migrations/2026_04_18_000002_create_refund_transactions_table.php`                     |
+| Model                           | `ecommerce/app/Models/RefundTransaction.php`                                                               |
+| Order model                     | `ecommerce/app/Models/Order.php` (added `refunded_at`, `refundTransactions()`)                             |
+| Interface                       | `ecommerce/app/Services/PaymentServiceInterface.php` (added `refund()`)                                    |
+| Service                         | `ecommerce/app/Services/StripePaymentService.php` (implemented `refund()`)                                 |
+| Controller                      | `ecommerce/app/Http/Controllers/Admin/RefundController.php`                                                |
+| Route                           | `ecommerce/routes/web.php` (`POST /admin/orders/{order}/refund`)                                           |
+| View                            | `ecommerce/resources/views/admin/orders/show.blade.php` (refund button, timeline step, transactions table) |
+| Tests                           | `ecommerce/tests/Feature/AdminOrderRefundTest.php`                                                         |
 
 **Key design decisions:**
+
 - `RefundController::store()` guards: order must be `cancelled` and have a `stripe_payment_intent_id`
 - Full order total is refunded (in cents) via `PaymentServiceInterface::refund()`
 - `refund_transactions` table records `order_id`, `amount`, and `stripe_refund_id`
@@ -3036,23 +3039,23 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Test Results
 
-| Test Case | Description | Result |
-|---|---|---|
-| TC-01 | Guest redirected to login | ✅ Pass |
-| TC-02 | Non-admin gets 403 | ✅ Pass |
-| TC-03 | Cannot refund non-cancelled order | ✅ Pass |
-| TC-04 | Cannot refund order with no payment intent | ✅ Pass |
-| TC-05 | Admin refunds order → status becomes `refunded` | ✅ Pass |
-| TC-06 | RefundTransaction created with correct amount | ✅ Pass |
-| TC-07 | RefundTransaction stores Stripe refund ID | ✅ Pass |
-| TC-08 | Show page displays Process Refund button for eligible order | ✅ Pass |
-| TC-09 | Show page hides refund button for non-cancelled order | ✅ Pass |
-| TC-10 | Refund redirects to order show with success flash | ✅ Pass |
-| TC-11 | Already-refunded order cannot be refunded again | ✅ Pass |
-| TC-12 | `refunded_at` timestamp set on order | ✅ Pass |
-| TC-13 | Exactly one transaction record created | ✅ Pass |
-| TC-14 | Show page displays transaction details after refund | ✅ Pass |
-| TC-15 | Payment service called with correct intent ID and cents | ✅ Pass |
+| Test Case | Description                                                 | Result  |
+| --------- | ----------------------------------------------------------- | ------- |
+| TC-01     | Guest redirected to login                                   | ✅ Pass |
+| TC-02     | Non-admin gets 403                                          | ✅ Pass |
+| TC-03     | Cannot refund non-cancelled order                           | ✅ Pass |
+| TC-04     | Cannot refund order with no payment intent                  | ✅ Pass |
+| TC-05     | Admin refunds order → status becomes `refunded`             | ✅ Pass |
+| TC-06     | RefundTransaction created with correct amount               | ✅ Pass |
+| TC-07     | RefundTransaction stores Stripe refund ID                   | ✅ Pass |
+| TC-08     | Show page displays Process Refund button for eligible order | ✅ Pass |
+| TC-09     | Show page hides refund button for non-cancelled order       | ✅ Pass |
+| TC-10     | Refund redirects to order show with success flash           | ✅ Pass |
+| TC-11     | Already-refunded order cannot be refunded again             | ✅ Pass |
+| TC-12     | `refunded_at` timestamp set on order                        | ✅ Pass |
+| TC-13     | Exactly one transaction record created                      | ✅ Pass |
+| TC-14     | Show page displays transaction details after refund         | ✅ Pass |
+| TC-15     | Payment service called with correct intent ID and cents     | ✅ Pass |
 
 **Targeted:** 15/15 ✅  
 **Regression:** 601/601 ✅
@@ -3065,6 +3068,76 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 - `orders` status enum updated in create migration to include `refunded` (SQLite CHECK constraint compatibility)
 
 <!-- EVAL-OM-005 END -->
+
+<!-- EVAL-UM-001 START -->
+
+## EVAL-UM-001 · Admin User List
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [UM-001](backlog.md)  
+**Tag:** `v1.0-UM-001-stable`
+
+---
+
+### Task Definition
+
+> As an admin, I want to view all registered users so I can manage the user base.
+
+**Acceptance Criteria:**
+
+- Table with name, email, role, registration date, order count
+- Searchable by name/email
+- Paginated (20 per page)
+
+---
+
+### Implementation Summary
+
+| Area       | File(s)                                                               |
+| ---------- | --------------------------------------------------------------------- |
+| Controller | `ecommerce/app/Http/Controllers/Admin/UserController.php`             |
+| View       | `ecommerce/resources/views/admin/users/index.blade.php`               |
+| Route      | `ecommerce/routes/web.php` (`GET /admin/users` → `admin.users.index`) |
+| Tests      | `ecommerce/tests/Feature/AdminUserListTest.php`                       |
+
+**Key design decisions:**
+
+- `UserController::index()` uses `withCount('orders')` and `with('roles')` to avoid N+1
+- Search filters by `name` or `email` using `LIKE` (case-insensitive)
+- Paginated at 20 per page with `withQueryString()` to preserve search param in pagination links
+- Role badge coloured by role name (`badge-admin`, `badge-user`)
+
+---
+
+### Test Results
+
+| Test Case | Description                              | Result  |
+| --------- | ---------------------------------------- | ------- |
+| TC-01     | Guest redirected to login                | ✅ Pass |
+| TC-02     | Non-admin gets 403                       | ✅ Pass |
+| TC-03     | Admin gets 200                           | ✅ Pass |
+| TC-04     | Table shows user name                    | ✅ Pass |
+| TC-05     | Table shows user email                   | ✅ Pass |
+| TC-06     | Table shows user role                    | ✅ Pass |
+| TC-07     | Table shows registration date            | ✅ Pass |
+| TC-08     | Table shows order count column           | ✅ Pass |
+| TC-09     | Order count reflects actual orders       | ✅ Pass |
+| TC-10     | Search by name filters results           | ✅ Pass |
+| TC-11     | Search by email filters results          | ✅ Pass |
+| TC-12     | Empty search returns all users           | ✅ Pass |
+| TC-13     | No match shows empty state               | ✅ Pass |
+| TC-14     | Paginated at 20 per page                 | ✅ Pass |
+| TC-15     | Second page accessible                   | ✅ Pass |
+| TC-16     | Pagination links present when > 20 users | ✅ Pass |
+| TC-17     | Search term preserved in input           | ✅ Pass |
+| TC-18     | Page responds within two seconds         | ✅ Pass |
+
+**Targeted:** 18/18 ✅  
+**Regression:** 619/619 ✅
+
+<!-- EVAL-UM-001 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
