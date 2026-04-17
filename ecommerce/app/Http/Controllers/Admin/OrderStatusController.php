@@ -12,12 +12,13 @@ use Illuminate\Validation\Rule;
 
 class OrderStatusController extends Controller
 {
-    private const VALID_STATUSES = ['processing', 'shipped', 'delivered'];
+    private const VALID_STATUSES = ['processing', 'shipped', 'delivered', 'cancelled'];
 
     private const STATUS_TIMESTAMPS = [
         'processing' => 'processing_at',
         'shipped' => 'shipped_at',
         'delivered' => 'delivered_at',
+        'cancelled' => 'cancelled_at',
     ];
 
     public function update(Request $request, Order $order): RedirectResponse

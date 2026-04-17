@@ -17,6 +17,7 @@ class OrderStatusChanged extends Mailable
         'processing' => 'Being Processed',
         'shipped' => 'Shipped',
         'delivered' => 'Delivered',
+        'cancelled' => 'Cancelled',
     ];
 
     public function __construct(public readonly Order $order)

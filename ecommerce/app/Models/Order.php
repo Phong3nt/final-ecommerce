@@ -24,6 +24,7 @@ class Order extends Model
         'processing_at',
         'shipped_at',
         'delivered_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class Order extends Model
         'processing_at' => 'datetime',
         'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

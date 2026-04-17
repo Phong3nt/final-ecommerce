@@ -54,7 +54,7 @@ class OrderController extends Controller
     {
         $order->load('user', 'items');
 
-        $updatableStatuses = ['processing', 'shipped', 'delivered'];
+        $updatableStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
 
         return view('admin.orders.show', compact('order', 'updatableStatuses'));
     }
