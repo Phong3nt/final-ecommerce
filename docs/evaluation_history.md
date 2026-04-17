@@ -2490,20 +2490,20 @@ None.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                          | Type     | Result  | Duration | Notes                                                         |
-| ------------ | ----------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------------- |
-| TC-PM003-01  | Guest is redirected from delete endpoint → login                  | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                                    |
-| TC-PM003-02  | Non-admin gets 403 on delete                                      | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                              |
-| TC-PM003-03  | Admin can archive product → redirects to index with success msg   | Happy    | PASS ✅ | 0.05s    | Flash `success` confirmed                                     |
-| TC-PM003-04  | Product is soft-deleted (deleted_at set, record still in DB)      | Happy    | PASS ✅ | 0.07s    | `withTrashed()->find()` confirms row exists, `deleted_at` set |
-| TC-PM003-05  | Archived product hidden from storefront product listing           | Edge     | PASS ✅ | 0.08s    | `scopePublished` + SoftDeletes global scope both active       |
-| TC-PM003-06  | Archived product hidden from storefront search                    | Edge     | PASS ✅ | 0.06s    | Returns "No products found" message                           |
-| TC-PM003-07  | Admin product index excludes archived product                     | Edge     | PASS ✅ | 0.09s    | Default scope hides soft-deleted from `index()`               |
-| TC-PM003-08  | Audit log entry created on archive                                | Happy    | PASS ✅ | 0.06s    | `action=product.deleted`, old `name`, new `deleted_at` in log |
-| TC-PM003-09  | Deleting already-archived product returns 404                     | Negative | PASS ✅ | 0.06s    | SoftDeletes global scope causes route model binding to 404    |
-| TC-PM003-10  | Admin index shows Archive button for each product                 | Happy    | PASS ✅ | 0.05s    | "Archive" text present in response                            |
-| TC-PM003-11  | Delete form has @csrf and @method DELETE                          | Security | PASS ✅ | 0.06s    | `_token`, `_method`, `DELETE` all present                     |
-| TC-PM003-12  | Admin index has data-confirm attribute for JS confirmation        | Happy    | PASS ✅ | 0.12s    | `data-confirm` attribute present in rendered HTML             |
+| Test Case ID | Scenario                                                        | Type     | Result  | Duration | Notes                                                         |
+| ------------ | --------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------------- |
+| TC-PM003-01  | Guest is redirected from delete endpoint → login                | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                                    |
+| TC-PM003-02  | Non-admin gets 403 on delete                                    | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                              |
+| TC-PM003-03  | Admin can archive product → redirects to index with success msg | Happy    | PASS ✅ | 0.05s    | Flash `success` confirmed                                     |
+| TC-PM003-04  | Product is soft-deleted (deleted_at set, record still in DB)    | Happy    | PASS ✅ | 0.07s    | `withTrashed()->find()` confirms row exists, `deleted_at` set |
+| TC-PM003-05  | Archived product hidden from storefront product listing         | Edge     | PASS ✅ | 0.08s    | `scopePublished` + SoftDeletes global scope both active       |
+| TC-PM003-06  | Archived product hidden from storefront search                  | Edge     | PASS ✅ | 0.06s    | Returns "No products found" message                           |
+| TC-PM003-07  | Admin product index excludes archived product                   | Edge     | PASS ✅ | 0.09s    | Default scope hides soft-deleted from `index()`               |
+| TC-PM003-08  | Audit log entry created on archive                              | Happy    | PASS ✅ | 0.06s    | `action=product.deleted`, old `name`, new `deleted_at` in log |
+| TC-PM003-09  | Deleting already-archived product returns 404                   | Negative | PASS ✅ | 0.06s    | SoftDeletes global scope causes route model binding to 404    |
+| TC-PM003-10  | Admin index shows Archive button for each product               | Happy    | PASS ✅ | 0.05s    | "Archive" text present in response                            |
+| TC-PM003-11  | Delete form has @csrf and @method DELETE                        | Security | PASS ✅ | 0.06s    | `_token`, `_method`, `DELETE` all present                     |
+| TC-PM003-12  | Admin index has data-confirm attribute for JS confirmation      | Happy    | PASS ✅ | 0.12s    | `data-confirm` attribute present in rendered HTML             |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Test Duration:** ~0.7s (PM-003 alone)  
@@ -2514,12 +2514,12 @@ None.
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                                               |
-| ------------- | ----- | ----------------------------------------------------------------------------------------------------- |
-| Simplicity    | 5/5   | `destroy()` is 18 lines; SoftDeletes handles global scope automatically across all queries            |
-| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF form, `@method('DELETE')`, audit log with user attribution     |
-| Performance   | 5/5   | All tests complete well under 2s threshold                                                            |
-| Test Coverage | 5/5   | 12 cases — 3× happy, 3× edge, 3× security, 1× negative, 1× UI element, 1× JS confirmation            |
+| Dimension     | Score | Comment                                                                                           |
+| ------------- | ----- | ------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | `destroy()` is 18 lines; SoftDeletes handles global scope automatically across all queries        |
+| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF form, `@method('DELETE')`, audit log with user attribution |
+| Performance   | 5/5   | All tests complete well under 2s threshold                                                        |
+| Test Coverage | 5/5   | 12 cases — 3× happy, 3× edge, 3× security, 1× negative, 1× UI element, 1× JS confirmation         |
 
 ---
 
@@ -2542,15 +2542,86 @@ None.
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                                    | Benefit                                              | Complexity |
-| ----------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | ---------- |
-| PM-003.1    | Add a "Restore" action to un-archive soft-deleted products                     | Admin can recover accidentally archived products    | Low        |
-| PM-003.2    | Add an "Archived Products" tab in admin index using `onlyTrashed()` scope      | Visibility into archived inventory                  | Low        |
-| PM-003.3    | Hard-delete (permanent removal) option with secondary confirmation step        | Data hygiene for truly obsolete products            | Medium     |
+| Proposal ID | Description                                                               | Benefit                                          | Complexity |
+| ----------- | ------------------------------------------------------------------------- | ------------------------------------------------ | ---------- |
+| PM-003.1    | Add a "Restore" action to un-archive soft-deleted products                | Admin can recover accidentally archived products | Low        |
+| PM-003.2    | Add an "Archived Products" tab in admin index using `onlyTrashed()` scope | Visibility into archived inventory               | Low        |
+| PM-003.3    | Hard-delete (permanent removal) option with secondary confirmation step   | Data hygiene for truly obsolete products         | Medium     |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-PM-003 END -->
+
+## EVAL-PM-004 · Admin Category CRUD
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [PM-004](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                                   | Type     | Result  | Duration | Notes                                                          |
+| ------------ | -------------------------------------------------------------------------- | -------- | ------- | -------- | -------------------------------------------------------------- |
+| TC-PM004-01  | Guest is redirected from categories index → login                          | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                                     |
+| TC-PM004-02  | Non-admin gets 403 on categories index                                     | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                               |
+| TC-PM004-03  | Admin can view categories index (200)                                      | Happy    | PASS ✅ | 0.06s    | Category name visible in response                              |
+| TC-PM004-04  | Admin can create a category → redirects to index                           | Happy    | PASS ✅ | 0.05s    | Row present in DB, flash success                               |
+| TC-PM004-05  | Category name is required → 422                                            | Negative | PASS ✅ | 0.04s    | JSON validation error on `name`                                |
+| TC-PM004-06  | Category name must be unique → 422                                         | Negative | PASS ✅ | 0.04s    | `unique:categories,name` rule enforced                         |
+| TC-PM004-07  | Admin can access edit form (200), pre-populated                            | Happy    | PASS ✅ | 0.05s    | Category name visible in edit view                             |
+| TC-PM004-08  | Admin can update a category name                                           | Happy    | PASS ✅ | 0.05s    | DB row updated                                                 |
+| TC-PM004-09  | Admin can assign a parent category (hierarchy)                             | Edge     | PASS ✅ | 0.05s    | `parent_id` FK set correctly                                   |
+| TC-PM004-10  | Admin can delete a category → redirects to index                           | Happy    | PASS ✅ | 0.05s    | Row removed from DB                                            |
+| TC-PM004-11  | Deleting category sets products' category_id to null                       | Edge     | PASS ✅ | 0.06s    | `products.category_id` nullified, product not deleted          |
+| TC-PM004-12  | Admin products index filtered by category_id shows only matching products  | Happy    | PASS ✅ | 0.06s    | Filter returns correct product, hides other-category products  |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Test Duration:** ~0.6s (PM-004 alone)  
+**Targeted Regression:** PM-004 (12) + PM-003 (12) + PM-002 (12) + PM-001 (12) = **48/48 PASS** ✅ · 0 regressions  
+**Full Suite:** 446/446 PASS ✅
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                              |
+| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is self-contained; hierarchy handled via nullable FK, no tree library needed              |
+| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF on all forms, validation prevents self-parent assignment      |
+| Performance   | 5/5   | All tests well under 2s; eager-loading `parent` on index prevents N+1                                |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 2× negative, 2× edge, 2× security, 2× AC-3 filter                              |
+
+---
+
+### Bugs / Side Effects Found
+
+None.
+
+---
+
+### Technical Notes
+
+- **`parent_id` FK** — migration `2026_04_17_000004` adds nullable self-referencing `parent_id` with `nullOnDelete()`. Children are not cascade-deleted; their `parent_id` is nullified.
+- **Category hierarchy** — implemented as a simple adjacency list. The `parent()` and `children()` relationships on the Category model are sufficient for one-level depth (parent/child). Deep trees would require recursive CTEs or a nested-set library — out of scope for this task.
+- **Self-parent guard** — `Rule::notIn([$category->id])` in the update validation prevents a category from being set as its own parent. Children are excluded from the parent dropdown in the edit view via PHP filtering.
+- **Product category filter (AC-3)** — `AdminProductController::index()` now accepts `?category_id=` query param and filters via `where('category_id', ...)`. The `$categories` collection is passed to the view to populate the dropdown. `withQueryString()` on the paginator preserves the filter across pagination.
+- **`destroy()` cascade** — manually nullifies `products.category_id` (via `update`) and children's `parent_id` before hard-deleting the category. This is safe because both are nullable FKs.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                         | Benefit                                              | Complexity |
+| ----------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------- | ---------- |
+| PM-004.1    | Add multi-level hierarchy support (nested set or closure table)                     | Enables unlimited category depth                     | High       |
+| PM-004.2    | Add category image/icon upload                                                      | Improves storefront category browsing UX             | Medium     |
+| PM-004.3    | Add category slug for SEO-friendly category filter URLs                             | Cleaner URLs; consistent with product slug pattern   | Low        |
+| PM-004.4    | Show product count per category in admin index                                      | Visibility into inventory distribution               | Low        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-004 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
