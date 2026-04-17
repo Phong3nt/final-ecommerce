@@ -300,6 +300,12 @@
                         <span class="timeline-ts">{{ $order->delivered_at->format('d M Y, H:i') }}</span>
                     @endif
                 </li>
+                @if($order->cancelled_at)
+                    <li class="timeline-step timeline-step--done" style="border-left-color:#dc3545;">
+                        <strong>Cancelled</strong>
+                        <span class="timeline-ts">{{ $order->cancelled_at->format('d M Y, H:i') }}</span>
+                    </li>
+                @endif
             </ol>
 
             {{-- Status update form (OH-003 reuse) --}}
