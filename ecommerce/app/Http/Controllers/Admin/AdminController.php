@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -17,18 +19,58 @@ class AdminController extends Controller
     private const LOW_STOCK_THRESHOLD = 5;
     private const REVENUE_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
 
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
         $totalRevenue = Order::whereIn('status', self::REVENUE_STATUSES)->sum('total');
         $ordersToday = Order::whereDate('created_at', today())->count();
         $newUsersToday = User::whereDate('created_at', today())->count();
         $lowStockProducts = Product::where('stock', '<=', self::LOW_STOCK_THRESHOLD)->count();
 
+        // Top-selling products (by units sold and revenue), filterable by date range
+        $filters = $request->validate([
+            'top_selling_start' => ['nullable', 'date'],
+            'top_selling_end' => ['nullable', 'date', 'after_or_equal:top_selling_start'],
+        ]);
+        $dateStart = $filters['top_selling_start'] ?? null;
+        $dateEnd = $filters['top_selling_end'] ?? null;
+
+        $query = OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereIn('orders.status', self::REVENUE_STATUSES);
+        if ($dateStart) {
+            $query->where('orders.created_at', '>=', Carbon::parse($dateStart)->startOfDay());
+        }
+        if ($dateEnd) {
+            $query->where('orders.created_at', '<=', Carbon::parse($dateEnd)->endOfDay());
+        }
+        $topSelling = $query
+            ->select([
+                'order_items.product_id',
+                'order_items.product_name',
+                DB::raw('SUM(order_items.quantity) as units_sold'),
+                DB::raw('SUM(order_items.subtotal) as total_revenue'),
+            ])
+            ->groupBy('order_items.product_id', 'order_items.product_name')
+            ->orderByDesc('units_sold')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+
+        // Recent orders (last 10)
+        $recentOrders = Order::with('user')
+            ->latest('created_at')
+            ->limit(10)
+            ->get();
+
         return view('admin.dashboard', compact(
             'totalRevenue',
             'ordersToday',
             'newUsersToday',
-            'lowStockProducts'
+            'lowStockProducts',
+            'topSelling',
+            'dateStart',
+            'dateEnd',
+            'recentOrders'
         ));
     }
 

@@ -116,6 +116,88 @@
         <canvas id="revenue-chart" width="760" height="300"></canvas>
     </div>
 
+    <div class="chart-section" id="top-selling-section" style="margin-top:2.5rem;">
+        <h2>Top-Selling Products</h2>
+        <form method="GET" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:end;">
+            <div>
+                <label for="top_selling_start">From:</label>
+                <input type="date" id="top_selling_start" name="top_selling_start" value="{{ $dateStart }}">
+            </div>
+            <div>
+                <label for="top_selling_end">To:</label>
+                <input type="date" id="top_selling_end" name="top_selling_end" value="{{ $dateEnd }}">
+            </div>
+            <button type="submit" style="padding:0.5rem 1.2rem;">Filter</button>
+        </form>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f3f4f6;">
+                        <th style="padding:0.5rem 1rem;text-align:left;">#</th>
+                        <th style="padding:0.5rem 1rem;text-align:left;">Product</th>
+                        <th style="padding:0.5rem 1rem;text-align:right;">Units Sold</th>
+                        <th style="padding:0.5rem 1rem;text-align:right;">Revenue ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($topSelling as $i => $row)
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:0.5rem 1rem;">{{ $i + 1 }}</td>
+                            <td style="padding:0.5rem 1rem;">{{ $row->product_name }}</td>
+                            <td style="padding:0.5rem 1rem;text-align:right;">{{ $row->units_sold }}</td>
+                            <td style="padding:0.5rem 1rem;text-align:right;">${{ number_format($row->total_revenue, 2) }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" style="padding:0.5rem 1rem;text-align:center;color:#888;">No sales in this period.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="chart-section" id="recent-orders-section" style="margin-top:2.5rem;">
+        <h2>Recent Orders</h2>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f3f4f6;">
+                        <th style="padding:0.5rem 1rem;text-align:left;">Order #</th>
+                        <th style="padding:0.5rem 1rem;text-align:left;">Customer</th>
+                        <th style="padding:0.5rem 1rem;text-align:left;">Date</th>
+                        <th style="padding:0.5rem 1rem;text-align:left;">Status</th>
+                        <th style="padding:0.5rem 1rem;text-align:right;">Total ($)</th>
+                        <th style="padding:0.5rem 1rem;text-align:center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentOrders as $order)
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:0.5rem 1rem;">{{ $order->id }}</td>
+                            <td style="padding:0.5rem 1rem;">{{ $order->user ? $order->user->name : 'Guest' }}</td>
+                            <td style="padding:0.5rem 1rem;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                            <td style="padding:0.5rem 1rem;">
+                                <span
+                                    style="display:inline-block;padding:0.2em 0.7em;border-radius:12px;font-size:0.95em;background:#eef;">{{ ucfirst($order->status) }}</span>
+                            </td>
+                            <td style="padding:0.5rem 1rem;text-align:right;">${{ number_format($order->total, 2) }}</td>
+                            <td style="padding:0.5rem 1rem;text-align:center;">
+                                <a href="{{ route('admin.orders.show', $order) }}"
+                                    style="color:#2563eb;text-decoration:underline;">View</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="padding:0.5rem 1rem;text-align:center;color:#888;">No recent orders.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>
         const chartDataUrl = '{{ route("admin.chart-data") }}';
