@@ -2941,45 +2941,130 @@ As an admin, I want to manage product images so each product looks appealing.
 **Status:** ✅ PASS
 
 ### User Story
+
 As an admin, I want to export orders to CSV so I can share data with logistics partners.
 
 ### Acceptance Criteria
+
 - [x] Filtered result set is exported (status, date range, customer filters all applied)
 - [x] CSV includes Order ID, Customer Name, Customer Email, Items, Total, Status, Date
 - [x] Response is a file download (Content-Disposition: attachment)
 - [x] Export CSV button visible on admin orders index
 
 ### Files Changed
-| File | Change |
-|------|--------|
+
+| File                                                       | Change                                                                |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- |
 | `ecommerce/app/Http/Controllers/Admin/OrderController.php` | Added `export()` method with filter support and streamed CSV download |
-| `ecommerce/routes/web.php` | Added `GET /admin/orders/export` route (before `{order}` wildcard) |
-| `ecommerce/resources/views/admin/orders/index.blade.php` | Added Export CSV link passing current filter params |
-| `ecommerce/tests/Feature/AdminOrderExportCsvTest.php` | 14 feature tests |
+| `ecommerce/routes/web.php`                                 | Added `GET /admin/orders/export` route (before `{order}` wildcard)    |
+| `ecommerce/resources/views/admin/orders/index.blade.php`   | Added Export CSV link passing current filter params                   |
+| `ecommerce/tests/Feature/AdminOrderExportCsvTest.php`      | 14 feature tests                                                      |
 
 ### Test Results
-| Suite | Tests | Assertions | Failures |
-|-------|-------|------------|----------|
-| OM-004 targeted | 14 | 37 | 0 |
-| Targeted regression (order management) | 50 | 116 | 0 |
-| Full suite (pre-commit hook) | 586 | 1338 | 0 |
+
+| Suite                                  | Tests | Assertions | Failures |
+| -------------------------------------- | ----- | ---------- | -------- |
+| OM-004 targeted                        | 14    | 37         | 0        |
+| Targeted regression (order management) | 50    | 116        | 0        |
+| Full suite (pre-commit hook)           | 586   | 1338       | 0        |
 
 ### Security Checks
+
 - Export endpoint behind `auth` + `role:admin` middleware — no public access
 - Filters use Eloquent query builder with parameter binding — no SQL injection
 - `streamDownload` uses `php://output` via `fputcsv` — no arbitrary file writes
 - No user-controlled data used in filename (only `now()->format('Y-m-d')` appended)
 
 ### Improvement Proposals
-| ID | Proposal | Rationale | Priority |
-|----|----------|-----------|----------|
-| OM-004.1 | Add date_to filter to export | Parity with index page filters | Medium |
-| OM-004.2 | Stream export as chunked query | Avoid memory issues for very large order sets | High |
-| OM-004.3 | Add Excel (.xlsx) export option | Logistics partners may prefer native spreadsheets | Low |
+
+| ID       | Proposal                        | Rationale                                         | Priority |
+| -------- | ------------------------------- | ------------------------------------------------- | -------- |
+| OM-004.1 | Add date_to filter to export    | Parity with index page filters                    | Medium   |
+| OM-004.2 | Stream export as chunked query  | Avoid memory issues for very large order sets     | High     |
+| OM-004.3 | Add Excel (.xlsx) export option | Logistics partners may prefer native spreadsheets | Low      |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-OM-004 END -->
+
+<!-- EVAL-OM-005 START -->
+## EVAL-OM-005 · Process Refund on Cancelled Order
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [OM-005](backlog.md)  
+**Tag:** `v1.0-OM-005-stable`
+
+---
+
+### Task Definition
+
+> As an admin, I want to process a refund on a cancelled order so the customer is reimbursed.
+
+**Acceptance Criteria:**
+- Calls Payment Gateway refund API
+- Order status set to "Refunded"
+- Refund amount recorded in transaction log
+
+---
+
+### Implementation Summary
+
+| Area | File(s) |
+|---|---|
+| Migration (refunded_at) | `ecommerce/database/migrations/2026_04_18_000001_add_refunded_at_to_orders_table.php` |
+| Migration (refund_transactions) | `ecommerce/database/migrations/2026_04_18_000002_create_refund_transactions_table.php` |
+| Model | `ecommerce/app/Models/RefundTransaction.php` |
+| Order model | `ecommerce/app/Models/Order.php` (added `refunded_at`, `refundTransactions()`) |
+| Interface | `ecommerce/app/Services/PaymentServiceInterface.php` (added `refund()`) |
+| Service | `ecommerce/app/Services/StripePaymentService.php` (implemented `refund()`) |
+| Controller | `ecommerce/app/Http/Controllers/Admin/RefundController.php` |
+| Route | `ecommerce/routes/web.php` (`POST /admin/orders/{order}/refund`) |
+| View | `ecommerce/resources/views/admin/orders/show.blade.php` (refund button, timeline step, transactions table) |
+| Tests | `ecommerce/tests/Feature/AdminOrderRefundTest.php` |
+
+**Key design decisions:**
+- `RefundController::store()` guards: order must be `cancelled` and have a `stripe_payment_intent_id`
+- Full order total is refunded (in cents) via `PaymentServiceInterface::refund()`
+- `refund_transactions` table records `order_id`, `amount`, and `stripe_refund_id`
+- `orders.status` enum extended to include `refunded`; `refunded_at` timestamp added
+- "Process Refund" button shown in admin order detail only when `status === 'cancelled'` and intent exists
+- Confirmation dialog before submitting the refund form
+
+---
+
+### Test Results
+
+| Test Case | Description | Result |
+|---|---|---|
+| TC-01 | Guest redirected to login | ✅ Pass |
+| TC-02 | Non-admin gets 403 | ✅ Pass |
+| TC-03 | Cannot refund non-cancelled order | ✅ Pass |
+| TC-04 | Cannot refund order with no payment intent | ✅ Pass |
+| TC-05 | Admin refunds order → status becomes `refunded` | ✅ Pass |
+| TC-06 | RefundTransaction created with correct amount | ✅ Pass |
+| TC-07 | RefundTransaction stores Stripe refund ID | ✅ Pass |
+| TC-08 | Show page displays Process Refund button for eligible order | ✅ Pass |
+| TC-09 | Show page hides refund button for non-cancelled order | ✅ Pass |
+| TC-10 | Refund redirects to order show with success flash | ✅ Pass |
+| TC-11 | Already-refunded order cannot be refunded again | ✅ Pass |
+| TC-12 | `refunded_at` timestamp set on order | ✅ Pass |
+| TC-13 | Exactly one transaction record created | ✅ Pass |
+| TC-14 | Show page displays transaction details after refund | ✅ Pass |
+| TC-15 | Payment service called with correct intent ID and cents | ✅ Pass |
+
+**Targeted:** 15/15 ✅  
+**Regression:** 601/601 ✅
+
+---
+
+### Regression Notes
+
+- `PaymentTokenizationTest` anonymous class updated to implement new `refund()` interface method
+- `orders` status enum updated in create migration to include `refunded` (SQLite CHECK constraint compatibility)
+
+<!-- EVAL-OM-005 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
