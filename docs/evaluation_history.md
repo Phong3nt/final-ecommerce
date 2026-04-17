@@ -2012,32 +2012,32 @@ git push origin master --tags
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Notes |
-|---|---|---|---|---|
-| TC-01 | Guest redirected to login from admin order detail | Security | ✅ PASS | |
-| TC-02 | Non-admin gets 403 on admin order detail | Security | ✅ PASS | |
-| TC-03 | Admin gets 200 for existing order | Happy | ✅ PASS | |
-| TC-04 | Order ID shown on detail page | Happy | ✅ PASS | |
-| TC-05 | Customer name and email shown | Happy | ✅ PASS | |
-| TC-06 | Item product name, qty, unit price, subtotal shown | Happy | ✅ PASS | |
-| TC-07 | Order totals (subtotal, shipping, total) shown | Happy | ✅ PASS | |
-| TC-08 | Shipping address shown | Happy | ✅ PASS | |
-| TC-09 | Payment section shows Stripe info and intent ID | Happy | ✅ PASS | |
-| TC-10 | Status history section visible | Happy | ✅ PASS | |
-| TC-11 | Processing timestamp shown for processing order | Happy | ✅ PASS | |
-| TC-12 | Status update form present on detail page | Happy | ✅ PASS | |
+| Test Case ID | Scenario                                           | Type     | Result  | Notes |
+| ------------ | -------------------------------------------------- | -------- | ------- | ----- |
+| TC-01        | Guest redirected to login from admin order detail  | Security | ✅ PASS |       |
+| TC-02        | Non-admin gets 403 on admin order detail           | Security | ✅ PASS |       |
+| TC-03        | Admin gets 200 for existing order                  | Happy    | ✅ PASS |       |
+| TC-04        | Order ID shown on detail page                      | Happy    | ✅ PASS |       |
+| TC-05        | Customer name and email shown                      | Happy    | ✅ PASS |       |
+| TC-06        | Item product name, qty, unit price, subtotal shown | Happy    | ✅ PASS |       |
+| TC-07        | Order totals (subtotal, shipping, total) shown     | Happy    | ✅ PASS |       |
+| TC-08        | Shipping address shown                             | Happy    | ✅ PASS |       |
+| TC-09        | Payment section shows Stripe info and intent ID    | Happy    | ✅ PASS |       |
+| TC-10        | Status history section visible                     | Happy    | ✅ PASS |       |
+| TC-11        | Processing timestamp shown for processing order    | Happy    | ✅ PASS |       |
+| TC-12        | Status update form present on detail page          | Happy    | ✅ PASS |       |
 
 **Test count:** 12 new · **Targeted regression:** 72/72 (AdminOrderDetailTest + AdminOrderListTest + AdminProductCreateTest + AdminProductEditTest + AdminProductDeleteTest + AdminCategoryTest)
 **Full suite:** 470/470 passed
 
 ### Quality Scores
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Correctness | 5/5 | All ACs met: customer, items, totals, shipping, payment, status history |
-| Test coverage | 5/5 | 12 tests covering security, happy paths, timestamps |
-| Security | 5/5 | Admin middleware + route model binding; guests → login, non-admins → 403 |
-| Code quality | 5/5 | Lean controller (4 lines), view reuses OH-003 status form |
+| Dimension     | Score | Notes                                                                    |
+| ------------- | ----- | ------------------------------------------------------------------------ |
+| Correctness   | 5/5   | All ACs met: customer, items, totals, shipping, payment, status history  |
+| Test coverage | 5/5   | 12 tests covering security, happy paths, timestamps                      |
+| Security      | 5/5   | Admin middleware + route model binding; guests → login, non-admins → 403 |
+| Code quality  | 5/5   | Lean controller (4 lines), view reuses OH-003 status form                |
 
 ### Bugs Found
 
@@ -2808,3 +2808,62 @@ None.
 | Upgrade ID | Base Task | Proposal Source (EVAL link) | Approval Date | New Metrics vs Old | Outcome |
 | ---------- | --------- | --------------------------- | ------------- | ------------------ | ------- |
 | —          | —         | —                           | —             | —                  | —       |
+
+---
+
+## EVAL-OM-003 · Admin Order Status Update
+
+**Version:** A
+**Date:** 2026-04-17
+**Status in Backlog:** Done
+**Linked Task:** [OM-003](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Notes |
+|---|---|---|---|---|
+| TC-01 | Guest redirected to login on status update | Security | ✅ PASS | |
+| TC-02 | Non-admin gets 403 on status update | Security | ✅ PASS | |
+| TC-03 | Admin sets status to processing; processing_at recorded | Happy | ✅ PASS | |
+| TC-04 | Admin sets status to shipped; shipped_at recorded | Happy | ✅ PASS | |
+| TC-05 | Admin sets status to delivered; delivered_at recorded | Happy | ✅ PASS | |
+| TC-06 | Admin cancels order; cancelled_at recorded | Happy | ✅ PASS | |
+| TC-07 | Email sent to customer on processing transition | Happy | ✅ PASS | |
+| TC-08 | Email sent to customer on cancellation | Happy | ✅ PASS | |
+| TC-09 | Invalid status value rejected with 422 | Edge | ✅ PASS | |
+| TC-10 | Missing status value rejected with 422 | Edge | ✅ PASS | |
+| TC-11 | Successful update redirects with success flash | Happy | ✅ PASS | |
+| TC-12 | Non-existent order returns 404 | Edge | ✅ PASS | |
+
+**Test count:** 12 new · **Targeted regression:** 84/84 (AdminOrderStatusUpdateTest + AdminOrderDetailTest + AdminOrderListTest + AdminProductCreateTest + AdminProductEditTest + AdminProductDeleteTest + AdminCategoryTest)
+**Full suite:** 482/482 passed
+
+### Quality Scores
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Correctness | 5/5 | All ACs met: processing/shipped/delivered/cancelled transitions + email on each change |
+| Test coverage | 5/5 | 12 tests: security, all 4 transitions, email x2, validation x2, flash, 404 |
+| Security | 5/5 | Admin-only route; guests → login, non-admins → 403; CSRF via PATCH |
+| Code quality | 5/5 | Minimal diff — VALID_STATUSES + STATUS_TIMESTAMPS extended; no logic duplication |
+
+### Bugs Found
+
+None.
+
+### New Files
+
+- `database/migrations/2026_04_17_000004_add_cancelled_at_to_orders_table.php` — adds nullable `cancelled_at` timestamp column
+- `tests/Feature/AdminOrderStatusUpdateTest.php` — 12 tests (`test_om003_*`)
+
+### Modified Files
+
+- `app/Http/Controllers/Admin/OrderStatusController.php` — added `cancelled` to `VALID_STATUSES` and `STATUS_TIMESTAMPS`
+- `app/Http/Controllers/Admin/OrderController.php` — added `cancelled` to `$updatableStatuses` in `show()`
+- `app/Mail/OrderStatusChanged.php` — added `cancelled` → `'Cancelled'` label
+- `app/Models/Order.php` — added `cancelled_at` to `$fillable` and `$casts`
+- `resources/views/admin/orders/show.blade.php` — Cancelled step added to status timeline
+
+### Upgrade Proposals
+
+None at this time.
