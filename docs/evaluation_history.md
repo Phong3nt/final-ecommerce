@@ -2820,32 +2820,32 @@ None.
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Notes |
-|---|---|---|---|---|
-| TC-01 | Guest redirected to login on status update | Security | ✅ PASS | |
-| TC-02 | Non-admin gets 403 on status update | Security | ✅ PASS | |
-| TC-03 | Admin sets status to processing; processing_at recorded | Happy | ✅ PASS | |
-| TC-04 | Admin sets status to shipped; shipped_at recorded | Happy | ✅ PASS | |
-| TC-05 | Admin sets status to delivered; delivered_at recorded | Happy | ✅ PASS | |
-| TC-06 | Admin cancels order; cancelled_at recorded | Happy | ✅ PASS | |
-| TC-07 | Email sent to customer on processing transition | Happy | ✅ PASS | |
-| TC-08 | Email sent to customer on cancellation | Happy | ✅ PASS | |
-| TC-09 | Invalid status value rejected with 422 | Edge | ✅ PASS | |
-| TC-10 | Missing status value rejected with 422 | Edge | ✅ PASS | |
-| TC-11 | Successful update redirects with success flash | Happy | ✅ PASS | |
-| TC-12 | Non-existent order returns 404 | Edge | ✅ PASS | |
+| Test Case ID | Scenario                                                | Type     | Result  | Notes |
+| ------------ | ------------------------------------------------------- | -------- | ------- | ----- |
+| TC-01        | Guest redirected to login on status update              | Security | ✅ PASS |       |
+| TC-02        | Non-admin gets 403 on status update                     | Security | ✅ PASS |       |
+| TC-03        | Admin sets status to processing; processing_at recorded | Happy    | ✅ PASS |       |
+| TC-04        | Admin sets status to shipped; shipped_at recorded       | Happy    | ✅ PASS |       |
+| TC-05        | Admin sets status to delivered; delivered_at recorded   | Happy    | ✅ PASS |       |
+| TC-06        | Admin cancels order; cancelled_at recorded              | Happy    | ✅ PASS |       |
+| TC-07        | Email sent to customer on processing transition         | Happy    | ✅ PASS |       |
+| TC-08        | Email sent to customer on cancellation                  | Happy    | ✅ PASS |       |
+| TC-09        | Invalid status value rejected with 422                  | Edge     | ✅ PASS |       |
+| TC-10        | Missing status value rejected with 422                  | Edge     | ✅ PASS |       |
+| TC-11        | Successful update redirects with success flash          | Happy    | ✅ PASS |       |
+| TC-12        | Non-existent order returns 404                          | Edge     | ✅ PASS |       |
 
 **Test count:** 12 new · **Targeted regression:** 84/84 (AdminOrderStatusUpdateTest + AdminOrderDetailTest + AdminOrderListTest + AdminProductCreateTest + AdminProductEditTest + AdminProductDeleteTest + AdminCategoryTest)
 **Full suite:** 482/482 passed
 
 ### Quality Scores
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Correctness | 5/5 | All ACs met: processing/shipped/delivered/cancelled transitions + email on each change |
-| Test coverage | 5/5 | 12 tests: security, all 4 transitions, email x2, validation x2, flash, 404 |
-| Security | 5/5 | Admin-only route; guests → login, non-admins → 403; CSRF via PATCH |
-| Code quality | 5/5 | Minimal diff — VALID_STATUSES + STATUS_TIMESTAMPS extended; no logic duplication |
+| Dimension     | Score | Notes                                                                                  |
+| ------------- | ----- | -------------------------------------------------------------------------------------- |
+| Correctness   | 5/5   | All ACs met: processing/shipped/delivered/cancelled transitions + email on each change |
+| Test coverage | 5/5   | 12 tests: security, all 4 transitions, email x2, validation x2, flash, 404             |
+| Security      | 5/5   | Admin-only route; guests → login, non-admins → 403; CSRF via PATCH                     |
+| Code quality  | 5/5   | Minimal diff — VALID_STATUSES + STATUS_TIMESTAMPS extended; no logic duplication       |
 
 ### Bugs Found
 
@@ -2867,3 +2867,216 @@ None.
 ### Upgrade Proposals
 
 None at this time.
+
+---
+
+## EVAL-UP-002 · User Saved Addresses CRUD
+
+**Version:** A
+**Date:** 2026-04-17
+**Status in Backlog:** Done
+**Linked Task:** [UP-002](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                 | Type     | Result  | Notes |
+| ------------ | -------------------------------------------------------- | -------- | ------- | ----- |
+| TC-01        | Guest is redirected to login from addresses index        | Security | ✅ PASS |       |
+| TC-02        | Authenticated user gets 200 on addresses index           | Happy    | ✅ PASS |       |
+| TC-03        | User with no addresses sees empty state                  | Edge     | ✅ PASS |       |
+| TC-04        | User can add a new address (stored in DB)                | Happy    | ✅ PASS |       |
+| TC-05        | Name field is required when storing an address           | Edge     | ✅ PASS |       |
+| TC-06        | User can update their own address                        | Happy    | ✅ PASS |       |
+| TC-07        | User cannot update another user's address (403)          | Security | ✅ PASS |       |
+| TC-08        | User can delete their own address                        | Happy    | ✅ PASS |       |
+| TC-09        | User cannot delete another user's address (403)          | Security | ✅ PASS |       |
+| TC-10        | User can set an address as default                       | Happy    | ✅ PASS |       |
+| TC-11        | Setting default unsets all other defaults for that user  | Happy    | ✅ PASS |       |
+| TC-12        | Default address is returned first (pre-fill at checkout) | Happy    | ✅ PASS |       |
+
+**Test count:** 12 new · **Targeted regression:** 24/24 (UserAddressTest + ProfileTest)
+**Full suite:** 494/494 passed
+
+### Quality Scores
+
+| Dimension     | Score | Notes                                                                                    |
+| ------------- | ----- | ---------------------------------------------------------------------------------------- |
+| Correctness   | 5/5   | All 3 ACs met: CRUD, default toggling, default pre-fill via existing CP-001 ordering     |
+| Test coverage | 5/5   | 12 tests: 3 security, 6 happy, 3 edge — all controller actions covered                   |
+| Security      | 5/5   | `abort_unless` ownership checks on update/destroy/setDefault; CSRF on all mutating forms |
+| Code quality  | 5/5   | Controller is lean; single query to unset all defaults then set new; no duplication      |
+
+### Bugs Found
+
+None.
+
+### New Files
+
+- `app/Http/Controllers/UserAddressController.php` — index, store, update, destroy, setDefault
+- `resources/views/user/addresses/index.blade.php` — full CRUD view with inline edit forms
+- `tests/Feature/UserAddressTest.php` — 12 tests (`test_up002_*`)
+
+### Modified Files
+
+- `routes/web.php` — 5 address routes added inside `auth` middleware group
+
+### Upgrade Proposals
+
+None at this time.
+
+---
+
+## EVAL-SC-005 · Coupon / Discount Code
+
+**Version:** A
+**Date:** 2026-04-17
+**Status in Backlog:** Done
+**Linked Task:** [SC-005](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                     | Type  | Result  | Notes |
+| ------------ | ------------------------------------------------------------ | ----- | ------- | ----- |
+| TC-01        | Valid percent coupon stored in session on apply              | Happy | ✅ PASS |       |
+| TC-02        | Valid fixed coupon stored in session on apply                | Happy | ✅ PASS |       |
+| TC-03        | Expired coupon shows error                                   | Edge  | ✅ PASS |       |
+| TC-04        | Inactive coupon shows error                                  | Edge  | ✅ PASS |       |
+| TC-05        | Non-existent code shows error                                | Edge  | ✅ PASS |       |
+| TC-06        | code field is required (validation)                          | Edge  | ✅ PASS |       |
+| TC-07        | Discount shown on cart page when coupon applied              | Happy | ✅ PASS |       |
+| TC-08        | Percent discount amount is calculated correctly              | Happy | ✅ PASS |       |
+| TC-09        | Fixed discount amount is applied correctly                   | Happy | ✅ PASS |       |
+| TC-10        | Fixed discount capped at cart subtotal (no negative totals)  | Edge  | ✅ PASS |       |
+| TC-11        | Removing coupon clears it from session                       | Happy | ✅ PASS |       |
+| TC-12        | Checkout review page shows discount line when coupon applied | Happy | ✅ PASS |       |
+
+**Test count:** 12 new · **Targeted regression:** 72/72 (CartCouponTest + CartTest + CartViewTest + CartUpdateTest + CartRemoveTest + UserAddressTest)
+**Full suite:** 506/506 passed
+
+### Quality Scores
+
+| Dimension     | Score | Notes                                                                                    |
+| ------------- | ----- | ---------------------------------------------------------------------------------------- |
+| Correctness   | 5/5   | All 3 ACs met: DB validation, % and fixed discount, error on expired/invalid             |
+| Test coverage | 5/5   | 12 tests: 4 happy, 5 edge (expired, inactive, unknown, empty code, cap), 3 integration   |
+| Security      | 5/5   | Coupon stored server-side in session; no client input trusted for discount calculation   |
+| Code quality  | 5/5   | `computeDiscount` helper shared by CartController and CheckoutController; no duplication |
+
+### Bugs Found
+
+None.
+
+### New Files
+
+- `database/migrations/2026_04_17_000005_create_coupons_table.php` — `coupons` table (code, type, value, expires_at, is_active, times_used)
+- `database/migrations/2026_04_17_000007_add_coupon_fields_to_orders_table.php` — adds `coupon_code`, `discount_amount` to orders
+- `app/Models/Coupon.php` — Coupon model with `isValid()` helper
+- `app/Http/Controllers/CouponController.php` — `apply()` and `remove()` endpoints
+- `tests/Feature/CartCouponTest.php` — 12 tests (`test_sc005_*`)
+
+### Modified Files
+
+- `app/Http/Controllers/CartController.php` — `computeDiscount()` helper; updated `index()`, `update()`, `destroy()` to include discount in responses
+- `resources/views/cart/index.blade.php` — coupon apply/remove forms, discount line, grand total, AJAX JS updates
+- `app/Http/Controllers/CheckoutController.php` — `computeCouponDiscount()` helper; coupon factored into `showReview()` and `placeOrder()`; coupon cleared from session on success
+- `resources/views/checkout/review.blade.php` — discount line shown when coupon applied
+- `app/Models/Order.php` — `coupon_code`, `discount_amount` added to `$fillable` and `$casts`
+- `routes/web.php` — `POST /cart/coupon` and `DELETE /cart/coupon` added (before `{productId}` pattern)
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-SC-005 END -->
+
+---
+
+<!-- EVAL-RV-001 -->
+
+## EVAL-RV-001 · Product Reviews
+
+**Story:** RV-001 — As a user, I want to leave a review and star rating on a purchased product so others benefit from my experience.
+
+**Sprint:** 7 | **Epic:** 7 — Product Reviews | **Points:** 5
+
+---
+
+### STEP 1 — Architecture Review
+
+- **Migration** `2026_04_17_000008_create_product_reviews_table.php` — `product_reviews` table: `id`, `user_id` (FK → cascadeOnDelete), `product_id` (FK → cascadeOnDelete), `rating` (unsignedTinyInteger 1–5), `comment` (text), timestamps, unique constraint on `(user_id, product_id)`
+- **`Review` model** — `$table = 'product_reviews'`; `$fillable = ['user_id', 'product_id', 'rating', 'comment']`; `rating` cast to `integer`; `belongsTo User` and `belongsTo Product`
+- **`Product` model** — `reviews(): HasMany` relationship added; `HasMany` import added
+- **`User` model** — `reviews(): HasMany` relationship added
+- **`ReviewController::store()`** — auth enforced via middleware; purchase gate via `Order::whereIn('status', ['paid','processing','shipped','delivered'])->whereHas('items', ...)` ; duplicate-review guard; validation `rating:integer|min:1|max:5`, `comment:required|string|max:2000`; on success redirect to product page with `session('success')` flash
+- **`ProductController::show()`** — now computes `$canReview` (purchased and not yet reviewed) and `$userReview` (own existing review) and passes both to view
+- **Route** `POST /products/{product:slug}/reviews` → `reviews.store` (auth middleware); placed after the public `GET /products/{product:slug}` show route
+
+---
+
+### STEP 2 — Security Checklist
+
+- [x] Auth middleware on review route — guests redirect to login
+- [x] Purchase gate — unpurchased users receive redirect with error, review not stored
+- [x] Duplicate guard — second attempt redirected with error, count stays at 1
+- [x] Rating validated `min:1|max:5` — values 0 and 6 rejected
+- [x] Comment required and max:2000 — empty string rejected
+- [x] XSS: all Blade output via `{{ }}` auto-escaped
+- [x] CSRF: `@csrf` in form
+- [x] `product_id` derived from route model binding — not user-supplied
+
+---
+
+### STEP 3 — Test Results
+
+| TC    | Description                                                   | Type     | Result  | Notes                                          |
+| ----- | ------------------------------------------------------------- | -------- | ------- | ---------------------------------------------- |
+| TC-01 | Guest redirected to login when submitting review              | Security | PASS ✅ | DB count = 0 confirmed                         |
+| TC-02 | Unpurchased user cannot submit review (error in session)      | Security | PASS ✅ | `assertSessionHasErrors('review')`             |
+| TC-03 | Purchased user can submit a review (stored in DB)             | Happy    | PASS ✅ | `assertDatabaseHas` rating+comment confirmed   |
+| TC-04 | User cannot submit second review for same product             | Edge     | PASS ✅ | DB count stays at 1                            |
+| TC-05 | Review form shown on product page for eligible purchaser      | Happy    | PASS ✅ | "Leave a Review" + form action URL present     |
+| TC-06 | Review form hidden for non-purchaser                          | Security | PASS ✅ | "Leave a Review" not in response               |
+| TC-07 | Rating of 0 fails validation                                  | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
+| TC-08 | Rating of 6 fails validation                                  | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
+| TC-09 | Comment is required                                           | Edge     | PASS ✅ | `assertSessionHasErrors('comment')`            |
+| TC-10 | Successful review redirects with success flash                | Happy    | PASS ✅ | `assertSessionHas('success', '...')`           |
+| TC-11 | Different users can each review the same product              | Happy    | PASS ✅ | DB count = 2, both rows confirmed              |
+| TC-12 | Reviewer's name and rating shown on product detail page       | Happy    | PASS ✅ | `assertSee('Alice Tester')` + rating confirmed |
+
+**Targeted Regression:** RV-001 (12) + SC-005 / CartCouponTest (12) + UP-002 / UserAddressTest (12) = **36/36 PASS** ✅ · 0 regressions
+
+**Full Suite (pre-commit hook):** 518/518 PASS ✅
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/RV-001 -m "merge: RV-001 product reviews -- 36/36 targeted regression, 0 regressions"
+git tag v1.0-RV-001-stable
+git push origin master --tags
+```
+
+---
+
+### New Files
+
+- `database/migrations/2026_04_17_000008_create_product_reviews_table.php`
+- `app/Models/Review.php`
+- `app/Http/Controllers/ReviewController.php`
+- `tests/Feature/ProductReviewTest.php` — 12 tests (`test_rv001_*`)
+
+### Modified Files
+
+- `app/Models/Product.php` — `reviews(): HasMany` added; `HasMany` import added
+- `app/Models/User.php` — `reviews(): HasMany` added
+- `app/Http/Controllers/ProductController.php` — `show()` now passes `$canReview` and `$userReview` to view; `Order` import added
+- `resources/views/products/show.blade.php` — Customer Reviews section added with conditional form and own-review display
+- `routes/web.php` — `POST /products/{product:slug}/reviews` route added; `ReviewController` imported
+
+### Upgrade Proposals
+
+- RV-002 — Display all reviews for a product (average rating prominent, paginated 5/page)
+
+<!-- EVAL-RV-001 END -->
