@@ -2410,6 +2410,77 @@ git push origin master --tags
 
 <!-- EVAL-PM-001 END -->
 
+## EVAL-PM-002 · Admin Product Edit
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [PM-002](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                       | Type     | Result  | Duration | Notes                                                  |
+| ------------ | -------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------ |
+| TC-PM002-01  | Guest is redirected from edit page → login                     | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                             |
+| TC-PM002-02  | Non-admin gets 403 on edit page                                | Security | PASS ✅ | 0.04s    | `role:admin` middleware enforced                       |
+| TC-PM002-03  | Admin can access edit form (200), pre-populated                | Happy    | PASS ✅ | 0.05s    | name and price rendered in form                        |
+| TC-PM002-04  | Admin can update name and price                                | Happy    | PASS ✅ | 0.05s    | DB row confirmed                                       |
+| TC-PM002-05  | All fields editable (description, stock, status, category)     | Happy    | PASS ✅ | 0.05s    | All columns updated in DB                              |
+| TC-PM002-06  | Name change auto-updates slug                                  | Edge     | PASS ✅ | 0.04s    | `completely-new-title` generated from `Completely New Title` |
+| TC-PM002-07  | Publishing draft → product immediately visible on storefront   | Edge     | PASS ✅ | 0.05s    | Storefront shows product after update                  |
+| TC-PM002-08  | Drafting published → product immediately hidden from storefront| Edge     | PASS ✅ | 0.05s    | Storefront hides product after update                  |
+| TC-PM002-09  | Audit log entry created with old + new values                  | Happy    | PASS ✅ | 0.05s    | `audit_logs` row with old/new JSON confirmed           |
+| TC-PM002-10  | Name is required — 422 validation error                        | Negative | PASS ✅ | 0.04s    |                                                        |
+| TC-PM002-11  | Price must be positive — 422 validation error                  | Negative | PASS ✅ | 0.04s    |                                                        |
+| TC-PM002-12  | New images appended and stored; success redirect to index      | Happy    | PASS ✅ | 0.05s    | Storage::fake, 1 file appended, redirect confirmed     |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Test Duration:** ~0.7s (PM-002 alone)  
+**Targeted Regression:** PM-002 (12) + PM-001 (12) = **24/24 PASS** ✅ · 0 regressions  
+**Full Suite:** 422/422 PASS ✅
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                              |
+| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | `edit()` + `update()` are 20 and 40 lines respectively; logic is clear and direct                   |
+| Security      | 5/5   | `auth`+`role:admin` double guard, validated inputs, audit log with user attribution, CSRF form       |
+| Performance   | 5/5   | All tests complete well under 2s threshold                                                           |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 3× edge, 2× security, 2× negative, 1× image upload + redirect                 |
+
+---
+
+### Bugs / Side Effects Found
+
+None.
+
+---
+
+### Technical Notes
+
+- **`audit_logs` migration** — `2026_04_17_000002_create_audit_logs_table.php` creates `audit_logs` table with `user_id` (nullable FK), `action`, `subject_type`, `subject_id`, `old_values` (JSON), `new_values` (JSON).
+- **`AuditLog` model** — `$fillable` for all columns; `old_values`/`new_values` cast to `array`; belongs to `User`.
+- **`uniqueSlug` updated** — now accepts optional `?int $excludeId` to skip the current product's own slug when checking uniqueness during edit.
+- **Images append** — new uploads are appended to the existing `images` JSON array rather than replacing it.
+- **Storefront immediacy** — no cache layer; `scopePublished` is re-evaluated on each request, so status changes are instant.
+- **Targeted regression rule** — for PM-002 (Sprint 5, Epic 9): run PM-002 tests + Done tasks in same sprint (PM-001) + Done tasks in same epic (PM-001). Result: 24/24.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                 | Benefit                                              | Complexity |
+| ----------- | --------------------------------------------------------------------------- | ---------------------------------------------------- | ---------- |
+| PM-002.1    | Allow removing individual existing images from the edit form                | Prevents accumulation of stale images               | Medium     |
+| PM-002.2    | Add admin product delete (soft-delete with confirmation modal)              | Completes full CRUD for PM-003                      | Low        |
+| PM-002.3    | Paginate audit_logs on an admin audit trail page                            | Visibility into all product change history          | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-002 END -->
+
 <!-- ============================================================
      More sprints follow the same pattern...
      ============================================================ -->
