@@ -101,6 +101,57 @@
             </div>
         </section>
     @endif
+
+    {{-- RV-001: Product Reviews --}}
+    <section class="product-reviews">
+        <h2>Customer Reviews</h2>
+
+        {{-- Show user's own existing review --}}
+        @if ($userReview)
+            <div class="user-review">
+                <p><strong>Your Review:</strong></p>
+                <p class="review-rating">Rating: {{ $userReview->rating }} / 5</p>
+                <p class="review-comment">{{ $userReview->comment }}</p>
+                <p class="review-author">— {{ $userReview->user->name }}</p>
+            </div>
+        @endif
+
+        {{-- Review submission form — only for eligible purchasers --}}
+        @if ($canReview)
+            <div class="review-form">
+                <h3>Leave a Review</h3>
+
+                @if ($errors->has('rating') || $errors->has('comment'))
+                    <ul class="alert-error">
+                        @foreach ($errors->get('rating') as $msg)
+                            <li>{{ $msg }}</li>
+                        @endforeach
+                        @foreach ($errors->get('comment') as $msg)
+                            <li>{{ $msg }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                <form action="{{ route('reviews.store', $product->slug) }}" method="POST">
+                    @csrf
+                    <div>
+                        <label for="rating">Rating (1–5):</label>
+                        <select id="rating" name="rating" required>
+                            <option value="">Select…</option>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <option value="{{ $i }}" {{ old('rating') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div>
+                        <label for="comment">Comment:</label>
+                        <textarea id="comment" name="comment" rows="4" required>{{ old('comment') }}</textarea>
+                    </div>
+                    <button type="submit">Submit Review</button>
+                </form>
+            </div>
+        @endif
+    </section>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var form = document.getElementById('add-to-cart-form');
