@@ -102,21 +102,35 @@
         </section>
     @endif
 
-    {{-- RV-001: Product Reviews --}}
+    {{-- RV-001 / RV-002: Product Reviews --}}
     <section class="product-reviews">
         <h2>Customer Reviews</h2>
 
-        {{-- Show user's own existing review --}}
-        @if ($userReview)
-            <div class="user-review">
-                <p><strong>Your Review:</strong></p>
-                <p class="review-rating">Rating: {{ $userReview->rating }} / 5</p>
-                <p class="review-comment">{{ $userReview->comment }}</p>
-                <p class="review-author">— {{ $userReview->user->name }}</p>
-            </div>
+        {{-- RV-002: Average rating shown prominently --}}
+        @if ($averageRating !== null)
+            <p class="average-rating">
+                <strong>Average Rating: {{ number_format($averageRating, 1) }} / 5</strong>
+                ({{ $reviews->total() }} review{{ $reviews->total() === 1 ? '' : 's' }})
+            </p>
         @endif
 
-        {{-- Review submission form — only for eligible purchasers --}}
+        {{-- RV-002: Paginated reviews list --}}
+        @if ($reviews->isEmpty())
+            <p class="no-reviews">No reviews yet.</p>
+        @else
+            <div class="reviews-list">
+                @foreach ($reviews as $review)
+                    <div class="review-item">
+                        <p class="review-rating">Rating: {{ $review->rating }} / 5</p>
+                        <p class="review-comment">{{ $review->comment }}</p>
+                        <p class="review-author">— {{ $review->user->name }}</p>
+                    </div>
+                @endforeach
+            </div>
+            {{ $reviews->links() }}
+        @endif
+
+        {{-- RV-001: Review submission form — only for eligible purchasers --}}
         @if ($canReview)
             <div class="review-form">
                 <h3>Leave a Review</h3>
