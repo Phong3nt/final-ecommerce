@@ -17,6 +17,10 @@
         <p class="alert-success">{{ session('success') }}</p>
     @endif
 
+    @if ($errors->has('coupon'))
+        <p class="alert-error">{{ $errors->first('coupon') }}</p>
+    @endif
+
     @if (empty($cart))
         <p class="cart-empty">Your cart is empty.</p>
     @else
@@ -67,7 +71,39 @@
             </tbody>
         </table>
 
-        <p class="order-total">Order Total: $<span id="order-total">{{ number_format($total, 2) }}</span></p>
+        <p class="order-total">Order Total: $<span id="order-total">{{ number_format($subtotal, 2) }}</span></p>
+
+        {{-- SC-005: coupon discount --}}
+        @if($discount > 0)
+            <p class="order-discount" id="discount-line">
+                Discount ({{ $coupon['code'] }}): -$<span id="discount-amount">{{ number_format($discount, 2) }}</span>
+            </p>
+            <p class="grand-total"><strong>Grand Total: $<span id="grand-total">{{ number_format($total, 2) }}</span></strong>
+            </p>
+        @else
+            <p class="grand-total" id="grand-total-line" style="display:none;">
+                Discount (<span id="coupon-code-label"></span>): -$<span id="discount-amount">0.00</span><br>
+                <strong>Grand Total: $<span id="grand-total">{{ number_format($total, 2) }}</span></strong>
+            </p>
+        @endif
+
+        {{-- SC-005: coupon apply form --}}
+        <div class="coupon-section">
+            @if($coupon)
+                <p>Coupon <strong>{{ $coupon['code'] }}</strong> applied.</p>
+                <form class="coupon-remove-form" action="{{ route('cart.coupon.remove') }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit">Remove Coupon</button>
+                </form>
+            @else
+                <form class="coupon-apply-form" action="{{ route('cart.coupon.apply') }}" method="POST">
+                    @csrf
+                    <input type="text" name="code" placeholder="Coupon code" value="{{ old('code') }}">
+                    <button type="submit">Apply Coupon</button>
+                </form>
+            @endif
+        </div>
     @endif
 
     <script>
@@ -92,8 +128,16 @@
                                 var tot = document.getElementById('order-total');
                                 if (tot) tot.textContent = json.order_total;
                             }
+                            if (json.discount_amount !== undefined && parseFloat(json.discount_amount) > 0) {
+                                var disc = document.getElementById('discount-amount');
+                                if (disc) disc.textContent = json.discount_amount;
+                                var gt = document.getElementById('grand-total');
+                                if (gt) gt.textContent = json.grand_total;
+                                var gtLine = document.getElementById('grand-total-line');
+                                if (gtLine) gtLine.style.display = '';
+                            }
                         })
-                        .catch(function () {});
+                        .catch(function () { });
                 });
             });
 
@@ -104,7 +148,7 @@
                     var productId = parseInt(input.getAttribute('data-product-id'));
                     var quantity = parseInt(inpu t.value);
                     fetch(form.action, {
-             method: 'PATCH',
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
@@ -122,8 +166,16 @@
                                 var tot = document.getElementById('order-total');
                                 if (tot) tot.textContent = json.order_total;
                             }
+                            if (json.discount_amount !== undefined && parseFloat(json.discount_amount) > 0) {
+                                var disc = document.getElementById('discount-amount');
+                                if (disc) disc.textContent = json.discount_amount;
+                                var gt = document.getElementById('grand-total');
+                                if (gt) gt.textContent = json.grand_total;
+                                var gtLine = document.getElementById('grand-total-line');
+                                if (gtLine) gtLine.style.display = '';
+                            }
                         })
-                        .catch(function () {});
+                        .catch(function () { });
                 });
             });
         });

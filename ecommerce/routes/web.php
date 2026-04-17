@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -37,6 +38,10 @@ Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 
 // SC-002: View cart — session-based, guest + auth allowed
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+
+// SC-005: Coupon — apply (POST) and remove (DELETE); must precede /cart/{productId} to avoid ambiguity
+Route::post('/cart/coupon', [CouponController::class, 'apply'])->name('cart.coupon.apply');
+Route::delete('/cart/coupon', [CouponController::class, 'remove'])->name('cart.coupon.remove');
 
 // SC-003: Update cart item quantity — PATCH + form method spoofing
 Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('cart.update');

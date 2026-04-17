@@ -11,17 +11,37 @@ use Illuminate\Http\Request;
 class CartController extends Controller
 {
     /**
+     * SC-005: Compute the coupon discount for the given cart subtotal.
+     * Returns 0.0 when no coupon is in session.
+     */
+    private static function computeDiscount(float $subtotal): float
+    {
+        $coupon = session('checkout.coupon');
+        if (!$coupon) {
+            return 0.0;
+        }
+        if ($coupon['type'] === 'percent') {
+            return round($subtotal * $coupon['value'] / 100, 2);
+        }
+        // fixed — capped so discount never exceeds the subtotal
+        return min((float) $coupon['value'], $subtotal);
+    }
+
+    /**
      * SC-002: Display the session cart contents.
      */
     public function index(): View
     {
         $cart = session()->get('cart', []);
-        $total = array_sum(array_map(
+        $subtotal = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
             $cart
         ));
+        $discount = self::computeDiscount($subtotal);
+        $total = $subtotal - $discount;
+        $coupon = session('checkout.coupon');
 
-        return view('cart.index', compact('cart', 'total'));
+        return view('cart.index', compact('cart', 'subtotal', 'discount', 'total', 'coupon'));
     }
 
     /**
@@ -57,12 +77,17 @@ class CartController extends Controller
             $cart
         ));
 
+        $discount = self::computeDiscount($newTotal);
+        $grandTotal = $newTotal - $discount;
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Cart updated.',
                 'quantity' => $qty,
                 'subtotal' => number_format($newSubtotal, 2),
                 'order_total' => number_format($newTotal, 2),
+                'discount_amount' => number_format($discount, 2),
+                'grand_total' => number_format($grandTotal, 2),
             ]);
         }
 
@@ -90,11 +115,16 @@ class CartController extends Controller
         $cartCount = array_sum(array_column($cart, 'quantity'));
         $newTotal = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
 
+        $discount = self::computeDiscount($newTotal);
+        $grandTotal = $newTotal - $discount;
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Item removed from cart.',
                 'cart_count' => $cartCount,
                 'order_total' => number_format($newTotal, 2),
+                'discount_amount' => number_format($discount, 2),
+                'grand_total' => number_format($grandTotal, 2),
             ]);
         }
 
