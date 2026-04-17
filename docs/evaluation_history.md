@@ -2419,20 +2419,20 @@ git push origin master --tags
 
 ### Test Results
 
-| Test Case ID | Scenario                                                       | Type     | Result  | Duration | Notes                                                  |
-| ------------ | -------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------ |
-| TC-PM002-01  | Guest is redirected from edit page → login                     | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                             |
-| TC-PM002-02  | Non-admin gets 403 on edit page                                | Security | PASS ✅ | 0.04s    | `role:admin` middleware enforced                       |
-| TC-PM002-03  | Admin can access edit form (200), pre-populated                | Happy    | PASS ✅ | 0.05s    | name and price rendered in form                        |
-| TC-PM002-04  | Admin can update name and price                                | Happy    | PASS ✅ | 0.05s    | DB row confirmed                                       |
-| TC-PM002-05  | All fields editable (description, stock, status, category)     | Happy    | PASS ✅ | 0.05s    | All columns updated in DB                              |
-| TC-PM002-06  | Name change auto-updates slug                                  | Edge     | PASS ✅ | 0.04s    | `completely-new-title` generated from `Completely New Title` |
-| TC-PM002-07  | Publishing draft → product immediately visible on storefront   | Edge     | PASS ✅ | 0.05s    | Storefront shows product after update                  |
-| TC-PM002-08  | Drafting published → product immediately hidden from storefront| Edge     | PASS ✅ | 0.05s    | Storefront hides product after update                  |
-| TC-PM002-09  | Audit log entry created with old + new values                  | Happy    | PASS ✅ | 0.05s    | `audit_logs` row with old/new JSON confirmed           |
-| TC-PM002-10  | Name is required — 422 validation error                        | Negative | PASS ✅ | 0.04s    |                                                        |
-| TC-PM002-11  | Price must be positive — 422 validation error                  | Negative | PASS ✅ | 0.04s    |                                                        |
-| TC-PM002-12  | New images appended and stored; success redirect to index      | Happy    | PASS ✅ | 0.05s    | Storage::fake, 1 file appended, redirect confirmed     |
+| Test Case ID | Scenario                                                        | Type     | Result  | Duration | Notes                                                        |
+| ------------ | --------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------------ |
+| TC-PM002-01  | Guest is redirected from edit page → login                      | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                                   |
+| TC-PM002-02  | Non-admin gets 403 on edit page                                 | Security | PASS ✅ | 0.04s    | `role:admin` middleware enforced                             |
+| TC-PM002-03  | Admin can access edit form (200), pre-populated                 | Happy    | PASS ✅ | 0.05s    | name and price rendered in form                              |
+| TC-PM002-04  | Admin can update name and price                                 | Happy    | PASS ✅ | 0.05s    | DB row confirmed                                             |
+| TC-PM002-05  | All fields editable (description, stock, status, category)      | Happy    | PASS ✅ | 0.05s    | All columns updated in DB                                    |
+| TC-PM002-06  | Name change auto-updates slug                                   | Edge     | PASS ✅ | 0.04s    | `completely-new-title` generated from `Completely New Title` |
+| TC-PM002-07  | Publishing draft → product immediately visible on storefront    | Edge     | PASS ✅ | 0.05s    | Storefront shows product after update                        |
+| TC-PM002-08  | Drafting published → product immediately hidden from storefront | Edge     | PASS ✅ | 0.05s    | Storefront hides product after update                        |
+| TC-PM002-09  | Audit log entry created with old + new values                   | Happy    | PASS ✅ | 0.05s    | `audit_logs` row with old/new JSON confirmed                 |
+| TC-PM002-10  | Name is required — 422 validation error                         | Negative | PASS ✅ | 0.04s    |                                                              |
+| TC-PM002-11  | Price must be positive — 422 validation error                   | Negative | PASS ✅ | 0.04s    |                                                              |
+| TC-PM002-12  | New images appended and stored; success redirect to index       | Happy    | PASS ✅ | 0.05s    | Storage::fake, 1 file appended, redirect confirmed           |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Test Duration:** ~0.7s (PM-002 alone)  
@@ -2443,12 +2443,12 @@ git push origin master --tags
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                                              |
-| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
-| Simplicity    | 5/5   | `edit()` + `update()` are 20 and 40 lines respectively; logic is clear and direct                   |
-| Security      | 5/5   | `auth`+`role:admin` double guard, validated inputs, audit log with user attribution, CSRF form       |
-| Performance   | 5/5   | All tests complete well under 2s threshold                                                           |
-| Test Coverage | 5/5   | 12 cases — 4× happy, 3× edge, 2× security, 2× negative, 1× image upload + redirect                 |
+| Dimension     | Score | Comment                                                                                        |
+| ------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | `edit()` + `update()` are 20 and 40 lines respectively; logic is clear and direct              |
+| Security      | 5/5   | `auth`+`role:admin` double guard, validated inputs, audit log with user attribution, CSRF form |
+| Performance   | 5/5   | All tests complete well under 2s threshold                                                     |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 3× edge, 2× security, 2× negative, 1× image upload + redirect             |
 
 ---
 
@@ -2471,15 +2471,86 @@ None.
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                                 | Benefit                                              | Complexity |
-| ----------- | --------------------------------------------------------------------------- | ---------------------------------------------------- | ---------- |
-| PM-002.1    | Allow removing individual existing images from the edit form                | Prevents accumulation of stale images               | Medium     |
-| PM-002.2    | Add admin product delete (soft-delete with confirmation modal)              | Completes full CRUD for PM-003                      | Low        |
-| PM-002.3    | Paginate audit_logs on an admin audit trail page                            | Visibility into all product change history          | Medium     |
+| Proposal ID | Description                                                    | Benefit                                    | Complexity |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------ | ---------- |
+| PM-002.1    | Allow removing individual existing images from the edit form   | Prevents accumulation of stale images      | Medium     |
+| PM-002.2    | Add admin product delete (soft-delete with confirmation modal) | Completes full CRUD for PM-003             | Low        |
+| PM-002.3    | Paginate audit_logs on an admin audit trail page               | Visibility into all product change history | Medium     |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-PM-002 END -->
+
+## EVAL-PM-003 · Admin Product Archive
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [PM-003](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                          | Type     | Result  | Duration | Notes                                                         |
+| ------------ | ----------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------------- |
+| TC-PM003-01  | Guest is redirected from delete endpoint → login                  | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                                    |
+| TC-PM003-02  | Non-admin gets 403 on delete                                      | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                              |
+| TC-PM003-03  | Admin can archive product → redirects to index with success msg   | Happy    | PASS ✅ | 0.05s    | Flash `success` confirmed                                     |
+| TC-PM003-04  | Product is soft-deleted (deleted_at set, record still in DB)      | Happy    | PASS ✅ | 0.07s    | `withTrashed()->find()` confirms row exists, `deleted_at` set |
+| TC-PM003-05  | Archived product hidden from storefront product listing           | Edge     | PASS ✅ | 0.08s    | `scopePublished` + SoftDeletes global scope both active       |
+| TC-PM003-06  | Archived product hidden from storefront search                    | Edge     | PASS ✅ | 0.06s    | Returns "No products found" message                           |
+| TC-PM003-07  | Admin product index excludes archived product                     | Edge     | PASS ✅ | 0.09s    | Default scope hides soft-deleted from `index()`               |
+| TC-PM003-08  | Audit log entry created on archive                                | Happy    | PASS ✅ | 0.06s    | `action=product.deleted`, old `name`, new `deleted_at` in log |
+| TC-PM003-09  | Deleting already-archived product returns 404                     | Negative | PASS ✅ | 0.06s    | SoftDeletes global scope causes route model binding to 404    |
+| TC-PM003-10  | Admin index shows Archive button for each product                 | Happy    | PASS ✅ | 0.05s    | "Archive" text present in response                            |
+| TC-PM003-11  | Delete form has @csrf and @method DELETE                          | Security | PASS ✅ | 0.06s    | `_token`, `_method`, `DELETE` all present                     |
+| TC-PM003-12  | Admin index has data-confirm attribute for JS confirmation        | Happy    | PASS ✅ | 0.12s    | `data-confirm` attribute present in rendered HTML             |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Test Duration:** ~0.7s (PM-003 alone)  
+**Targeted Regression:** PM-003 (12) + PM-002 (12) + PM-001 (12) = **36/36 PASS** ✅ · 0 regressions  
+**Full Suite:** 434/434 PASS ✅
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                               |
+| ------------- | ----- | ----------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | `destroy()` is 18 lines; SoftDeletes handles global scope automatically across all queries            |
+| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF form, `@method('DELETE')`, audit log with user attribution     |
+| Performance   | 5/5   | All tests complete well under 2s threshold                                                            |
+| Test Coverage | 5/5   | 12 cases — 3× happy, 3× edge, 3× security, 1× negative, 1× UI element, 1× JS confirmation            |
+
+---
+
+### Bugs / Side Effects Found
+
+None.
+
+---
+
+### Technical Notes
+
+- **`SoftDeletes` trait** — added to `Product` model. Laravel's global scope automatically excludes soft-deleted rows from all queries (`index`, `search`, storefront listing, detail page) without any additional code.
+- **`deleted_at` migration** — `2026_04_17_000003_add_deleted_at_to_products_table.php` adds nullable `deleted_at` timestamp via `$table->softDeletes()`.
+- **Route model binding + 404** — once a product is soft-deleted, route model binding on `{product}` (by slug) returns 404 automatically — no extra guard needed.
+- **JS confirmation modal** — implemented via `data-confirm` attribute on the delete `<form>` + a `querySelectorAll` listener that calls `confirm()` before submit. No modal library required.
+- **Audit log** — records `action=product.deleted` with `old_values` (name, slug, status) and `new_values` (deleted_at timestamp).
+- **Targeted regression rule (task_template updated)** — regression now runs current task + Done tasks in same Sprint + Done tasks in same Epic (replaces full suite requirement).
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                    | Benefit                                              | Complexity |
+| ----------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- | ---------- |
+| PM-003.1    | Add a "Restore" action to un-archive soft-deleted products                     | Admin can recover accidentally archived products    | Low        |
+| PM-003.2    | Add an "Archived Products" tab in admin index using `onlyTrashed()` scope      | Visibility into archived inventory                  | Low        |
+| PM-003.3    | Hard-delete (permanent removal) option with secondary confirmation step        | Data hygiene for truly obsolete products            | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-003 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2527,6 +2598,8 @@ None.
 | 2026-04-16 | AD-001 (Sprint 4)     | 386         | 386    | 0      | 0            | Agent  |
 | 2026-04-16 | AD-002 (Sprint 4)     | 398         | 398    | 0      | 0            | Agent  |
 | 2026-04-17 | PM-001 (Sprint 5)     | 410         | 410    | 0      | 0            | Agent  |
+| 2026-04-17 | PM-002 (Sprint 5)     | 422         | 422    | 0      | 0            | Agent  |
+| 2026-04-17 | PM-003 (Sprint 5)     | 434         | 434    | 0      | 0            | Agent  |
 
 ---
 
