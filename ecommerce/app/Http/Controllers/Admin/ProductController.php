@@ -130,4 +130,21 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')
             ->with('success', 'Product updated successfully.');
     }
+
+    public function destroy(Product $product): RedirectResponse
+    {
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'product.deleted',
+            'subject_type' => 'Product',
+            'subject_id' => $product->id,
+            'old_values' => $product->only(['name', 'slug', 'status']),
+            'new_values' => ['deleted_at' => now()->toDateTimeString()],
+        ]);
+
+        $product->delete();
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Product archived successfully.');
+    }
 }

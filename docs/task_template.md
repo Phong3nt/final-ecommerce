@@ -36,12 +36,12 @@ git branch        # must be on master
 git tag --list    # confirm latest tag exists
 ```
 
-| Check                   | Result       | Action if Fail                    |
-| ----------------------- | ------------ | --------------------------------- |
-| Working tree clean?     | ☐ Yes / ☐ No | Commit or stash before continuing |
-| On `master` branch?     | ☐ Yes / ☐ No | `git checkout master`             |
-| Latest tag correct?     | ☐ Yes / ☐ No | Re-tag or investigate             |
-| Regression green (36+)? | ☐ Yes / ☐ No | **STOP — fix before starting**    |
+| Check                      | Result       | Action if Fail                    |
+| -------------------------- | ------------ | --------------------------------- |
+| Working tree clean?        | ☐ Yes / ☐ No | Commit or stash before continuing |
+| On `master` branch?        | ☐ Yes / ☐ No | `git checkout master`             |
+| Latest tag correct?        | ☐ Yes / ☐ No | Re-tag or investigate             |
+| Targeted regression green? | ☐ Yes / ☐ No | **STOP — fix before starting**    |
 
 ---
 
@@ -95,12 +95,25 @@ Planned test cases:
 Run tests:
 
 ```powershell
-php artisan test --filter [TaskID]Test
-php artisan test   # full regression — must stay green
+# 1. Isolated — current task only
+php artisan test tests/Feature/[TaskID]Test.php
+
+# 2. Targeted regression
+#    = current task  +  Done tasks in same Sprint  +  Done tasks in same Epic
+#    (replace with actual test file paths for each done task)
+php artisan test tests/Feature/[TaskID]Test.php \
+                tests/Feature/[SameSprint_DoneTask1]Test.php \
+                tests/Feature/[SameSprint_DoneTask2]Test.php \
+                ...
 ```
 
+> **Regression scope rule:**  
+> Run the current task's tests **plus** the test files of every task that is already `Done` and shares the same **Sprint** or the same **Epic** as the current task.  
+> This replaces the old "full suite" regression. A full suite run is still optional for extra confidence but is not required.
+
 Baseline before task: `__ tests · __ assertions · 0 failures`  
-Expected after task: `__ tests · __ assertions · 0 failures`
+Expected after task: `__ tests · __ assertions · 0 failures`  
+Targeted regression files: `[list test file paths here]`
 
 ---
 
