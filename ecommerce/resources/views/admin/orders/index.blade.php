@@ -232,6 +232,14 @@
         </div>
     </form>
 
+    {{-- OM-004: Export CSV (passes current filters through) --}}
+    @php
+        $exportParams = array_filter(request()->only(['status', 'date_from', 'date_to', 'customer']));
+    @endphp
+    <div style="margin-bottom:1rem;">
+        <a href="{{ route('admin.orders.export', $exportParams) }}" class="btn btn-secondary">Export CSV</a>
+    </div>
+
     {{-- Sort helpers --}}
     @php
         $sortUrl = fn(string $col) => route('admin.orders.index', array_merge(request()->except('sort', 'page'), ['sort' => $col]));
