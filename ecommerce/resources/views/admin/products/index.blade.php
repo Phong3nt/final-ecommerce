@@ -82,6 +82,7 @@
                 <th>Category</th>
                 <th>Status</th>
                 <th>Created</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -94,6 +95,7 @@
                     <td>{{ $product->category?->name ?? '—' }}</td>
                     <td><span class="badge-{{ $product->status }}">{{ ucfirst($product->status) }}</span></td>
                     <td>{{ $product->created_at->format('Y-m-d') }}</td>
+                    <td><a href="{{ route('admin.products.edit', $product) }}">Edit</a></td>
                 </tr>
             @empty
                 <tr>

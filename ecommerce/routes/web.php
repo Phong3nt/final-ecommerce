@@ -127,6 +127,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
     Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+
+    // PM-002: Admin product edit
+    Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+    Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)
