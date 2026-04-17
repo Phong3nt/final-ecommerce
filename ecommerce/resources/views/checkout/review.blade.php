@@ -55,6 +55,9 @@
 
         <p>Subtotal: <span id="subtotal">${{ number_format($subtotal, 2) }}</span></p>
         <p>Shipping: <span id="shipping-cost">${{ number_format($shipping['cost'], 2) }}</span></p>
+        @if($discount > 0)
+            <p id="discount-line">Discount ({{ $coupon['code'] }}): -${{ number_format($discount, 2) }}</p>
+        @endif
         <p><strong>Total: <span id="grand-total">${{ number_format($total, 2) }}</span></strong></p>
     </section>
 

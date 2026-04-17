@@ -27,6 +27,21 @@ class CheckoutController extends Controller
     }
 
     /**
+     * SC-005: Compute coupon discount for the given subtotal.
+     * Returns 0.0 when no coupon is provided.
+     */
+    private static function computeCouponDiscount(float $subtotal, ?array $coupon): float
+    {
+        if (!$coupon) {
+            return 0.0;
+        }
+        if ($coupon['type'] === 'percent') {
+            return round($subtotal * $coupon['value'] / 100, 2);
+        }
+        return min((float) $coupon['value'], $subtotal);
+    }
+
+    /**
      * CP-001: Show the checkout address step.
      * Auth users see their saved addresses + a new address form.
      */
@@ -143,11 +158,13 @@ class CheckoutController extends Controller
         $cart = session('cart', []);
         $address = session('checkout.address');
         $shipping = session('checkout.shipping');
+        $coupon = session('checkout.coupon');
 
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        $total = $subtotal + $shipping['cost'];
+        $discount = self::computeCouponDiscount($subtotal, $coupon);
+        $total = $subtotal + $shipping['cost'] - $discount;
 
-        return view('checkout.review', compact('cart', 'address', 'shipping', 'subtotal', 'total'));
+        return view('checkout.review', compact('cart', 'address', 'shipping', 'subtotal', 'discount', 'coupon', 'total'));
     }
 
     /**
@@ -167,10 +184,12 @@ class CheckoutController extends Controller
         $cart = session('cart', []);
         $address = session('checkout.address');
         $shipping = session('checkout.shipping');
+        $coupon = session('checkout.coupon');
         $user = auth()->user();
 
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        $total = $subtotal + $shipping['cost'];
+        $discount = self::computeCouponDiscount($subtotal, $coupon);
+        $total = $subtotal + $shipping['cost'] - $discount;
 
         // Create the order record (pending — awaiting payment confirmation)
         $order = Order::create([
@@ -181,6 +200,8 @@ class CheckoutController extends Controller
             'total' => $total,
             'shipping_method' => $shipping['method'],
             'shipping_label' => $shipping['label'],
+            'coupon_code' => $coupon ? $coupon['code'] : null,
+            'discount_amount' => $discount,
             'address' => $address,
         ]);
 
@@ -258,7 +279,7 @@ class CheckoutController extends Controller
      */
     public function showSuccess(Request $request): View|RedirectResponse
     {
-        $intentId     = $request->query('payment_intent');
+        $intentId = $request->query('payment_intent');
         $redirectStatus = $request->query('redirect_status', '');
 
         if (!$intentId) {
@@ -275,7 +296,7 @@ class CheckoutController extends Controller
         }
 
         if ($redirectStatus === 'succeeded') {
-            session()->forget(['checkout.address', 'checkout.shipping', 'cart']);
+            session()->forget(['checkout.address', 'checkout.shipping', 'checkout.coupon', 'cart']);
             return view('checkout.success', compact('order'));
         }
 
