@@ -125,6 +125,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // OM-001: Admin order list with filters, sort, pagination
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
 
+    // OM-002: Admin order detail
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+
     // OH-003: Admin order status update
     Route::patch('/orders/{order}/status', [OrderStatusController::class, 'update'])->name('orders.status');
 
