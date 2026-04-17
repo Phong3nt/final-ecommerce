@@ -2388,6 +2388,126 @@ git push origin master --tags
 
 <!-- EVAL-AD-002 END -->
 
+---
+
+## EVAL-AD-003 — Top-Selling Products
+
+<!-- EVAL-AD-003 START -->
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [AD-003](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                              | Type      | Result | Notes                                           |
+| ------------ | ----------------------------------------------------- | --------- | ------ | ----------------------------------------------- |
+| TC-01        | Guest redirected to login on dashboard                | Auth      | PASS   | 302 to `/login`                                 |
+| TC-02        | Non-admin user gets 403                               | Auth      | PASS   | `role:admin` middleware enforced                |
+| TC-03        | Top-Selling section + filter inputs are visible       | UI        | PASS   | title, columns, date inputs rendered            |
+| TC-04        | Sorted by units sold desc, then revenue desc          | Data      | PASS   | tie-break ordering validated                    |
+| TC-05        | List is limited to top 10 products                    | Data      | PASS   | items ranked and truncated to 10                |
+| TC-06        | Non-revenue statuses are excluded                     | Data      | PASS   | pending/cancelled not included                  |
+| TC-07        | `top_selling_start` excludes older sales              | Filter    | PASS   | only data on/after selected start date included |
+| TC-08        | `top_selling_end` excludes newer sales                | Filter    | PASS   | only data on/before selected end date included  |
+| TC-09        | Empty-state message shown when no matching sales data | Edge / UI | PASS   | `No sales in this period.`                      |
+
+**Isolated:** 9/9 passed (30 assertions) in 1.13s  
+**Dashboard Regression Pack:** 41/41 passed (99 assertions) in 3.93s  
+**Full Regression:** 547/547 passed (1202 assertions) in 37.24s  
+**Regressions:** 0
+
+### STEP 2 — Code Quality
+
+| Dimension       | Score | Notes                                                                |
+| --------------- | ----- | -------------------------------------------------------------------- |
+| Correctness     | 5/5   | Aggregation, sorting, and top-10 limit match acceptance criteria     |
+| Security        | 5/5   | Admin-only route + request-level date validation                     |
+| Maintainability | 5/5   | Uses constants for revenue statuses and explicit query composition   |
+| Test Coverage   | 5/5   | Covers auth, ordering, status filtering, date range, and empty state |
+
+### STEP 3 — Bugs Found
+
+- Fixed malformed dashboard Blade structure (content accidentally inserted before `<!DOCTYPE html>`).
+- Hardened date-range filtering to use full-day boundaries (`startOfDay` / `endOfDay`) for predictable results.
+
+### STEP 4 — Git
+
+```
+git checkout -b feature/AD-003
+git commit -m "feat(AD-003): top-selling products on admin dashboard -- top 10 by units/revenue, date-range filter, tests"
+git checkout master
+git merge --no-ff feature/AD-003 -m "merge: AD-003 top-selling products dashboard -- targeted + full regression pass"
+git tag v1.0-AD-003-stable
+git push origin master --tags
+```
+
+### STEP 5 — Proposals for Next Task
+
+- **AD-004** — add recent orders panel with status and quick action link.
+
+<!-- EVAL-AD-003 END -->
+
+---
+
+## EVAL-AD-004 — Recent Orders On Dashboard
+
+<!-- EVAL-AD-004 START -->
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [AD-004](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                       | Type       | Result | Notes                               |
+| ------------ | ---------------------------------------------- | ---------- | ------ | ----------------------------------- |
+| TC-01        | Guest redirected to login on dashboard         | Auth       | PASS   | 302 to `/login`                     |
+| TC-02        | Non-admin user gets 403                        | Auth       | PASS   | `role:admin` middleware enforced    |
+| TC-03        | Recent Orders section + required columns shown | UI         | PASS   | section and headers visible         |
+| TC-04        | Only last 10 orders are passed to dashboard    | Data       | PASS   | `recentOrders` limited to 10        |
+| TC-05        | Orders are sorted newest-first                 | Data       | PASS   | latest `created_at` displayed first |
+| TC-06        | Order status is displayed per row              | UI / Data  | PASS   | `ucfirst(status)` shown             |
+| TC-07        | Quick-action link points to order detail route | Navigation | PASS   | link targets `admin.orders.show`    |
+| TC-08        | Empty-state message shown when no orders exist | Edge / UI  | PASS   | `No recent orders.`                 |
+
+**Isolated:** 8/8 passed (21 assertions) in 1.03s  
+**Dashboard Regression Pack:** 41/41 passed (99 assertions) in 3.93s  
+**Full Regression:** 547/547 passed (1202 assertions) in 37.24s  
+**Regressions:** 0
+
+### STEP 2 — Code Quality
+
+| Dimension       | Score | Notes                                                                |
+| --------------- | ----- | -------------------------------------------------------------------- |
+| Correctness     | 5/5   | Dashboard returns and renders last 10 orders with all required data  |
+| Security        | 5/5   | Dashboard remains protected by `auth` + `role:admin`                 |
+| Maintainability | 5/5   | Uses existing order detail route and eager loads `user` relation     |
+| Test Coverage   | 5/5   | Covers auth, ordering, limit, display fields, route link, empty case |
+
+### STEP 3 — Bugs Found
+
+None.
+
+### STEP 4 — Git
+
+```
+git checkout -b feature/AD-004
+git commit -m "feat(AD-004): recent orders on admin dashboard -- latest 10 with status and quick-action link, tests"
+git checkout master
+git merge --no-ff feature/AD-004 -m "merge: AD-004 recent orders dashboard panel -- targeted + full regression pass"
+git tag v1.0-AD-004-stable
+git push origin master --tags
+```
+
+### STEP 5 — Proposals for Next Task
+
+- **PM-005** — bulk actions for product status updates from admin listing.
+
+<!-- EVAL-AD-004 END -->
+
 <!-- ============================================================
      SPRINT 5 — Product & Order Management (Admin)
      ============================================================ -->
@@ -2678,6 +2798,82 @@ None.
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-PM-004 END -->
+
+## EVAL-PM-005 · Admin Product CSV Import
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [PM-005](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                  | Type       | Result  | Notes                                                 |
+| ------------ | --------------------------------------------------------- | ---------- | ------- | ----------------------------------------------------- |
+| TC-PM005-01  | Guest is redirected from CSV import endpoint → login      | Security   | PASS ✅ | `auth` middleware enforced                            |
+| TC-PM005-02  | Non-admin gets 403 on CSV import endpoint                 | Security   | PASS ✅ | `role:admin` middleware enforced                      |
+| TC-PM005-03  | Admin sees CSV import form on products index              | Happy      | PASS ✅ | File input and import section visible                 |
+| TC-PM005-04  | CSV file is required                                      | Validation | PASS ✅ | Session validation error on `csv_file`                |
+| TC-PM005-05  | Invalid CSV headers are rejected before queueing          | Validation | PASS ✅ | Header schema validated strictly                      |
+| TC-PM005-06  | Valid CSV creates import record and queues background job | Happy      | PASS ✅ | `ImportProductsCsvJob` dispatched                     |
+| TC-PM005-07  | Job imports valid rows and maps existing category by name | Data       | PASS ✅ | Products created; category FK mapped                  |
+| TC-PM005-08  | Job reports per-row data type errors                      | Negative   | PASS ✅ | Row error payload includes row index + messages       |
+| TC-PM005-09  | Job reports unknown category per row                      | Negative   | PASS ✅ | Unknown category flagged without crashing import      |
+| TC-PM005-10  | Job marks import as failed when file is missing           | Edge       | PASS ✅ | Import status becomes `failed` with descriptive error |
+| TC-PM005-11  | Product index displays import history errors per row      | UI / Data  | PASS ✅ | `Row N` + error messages rendered                     |
+| TC-PM005-12  | Large CSV upload still uses queued background processing  | Perf / UX  | PASS ✅ | Queue dispatch path validated for bulk input          |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Test Duration:** 1.36s (PM-005 alone)  
+**Targeted Regression:** PM-001/002/003/004/005 = 60/60 PASS ✅ · 156 assertions · 3.93s  
+**Full Suite:** 559/559 PASS ✅ · 1255 assertions · 36.26s
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                             |
+| ------------- | ----- | --------------------------------------------------------------------------------------------------- |
+| Simplicity    | 4/5   | CSV upload endpoint + dedicated queue job keep sync request light; error schema is straightforward  |
+| Security      | 5/5   | Admin-only route, file type/size validation, no raw SQL, strict typed row validation                |
+| Performance   | 5/5   | Background job strategy prevents long blocking request for large files                              |
+| Test Coverage | 5/5   | Covers auth, validation, row-level error reporting, category mapping, queue behavior, and UI output |
+
+---
+
+### Bugs / Side Effects Found
+
+- While running PM-005 full regression, AD-003 empty-state string in dashboard view had a line-break mismatch; normalized back to single-line text to keep existing AD-003 test stable.
+
+---
+
+### Technical Notes
+
+- Added table `product_imports` to persist import lifecycle (`pending` → `processing` → `completed`/`failed`) and per-row errors.
+- CSV header contract is strict and case-insensitive normalized to: `name,description,price,stock,status,category`.
+- Row validation rules:
+  - `name` required, max 255
+  - `price` numeric >= 0.01
+  - `stock` integer >= 0
+  - `status` in `draft|published`
+  - `category` optional; if provided must match existing category name
+- Job persists row errors in JSON with format: `[{row: <line>, messages: [..]}]` for audit and UI display.
+- Product creation from CSV auto-generates unique slug and synthetic unique SKU (`CSV-<random>`).
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                             | Benefit                                  | Complexity |
+| ----------- | ----------------------------------------------------------------------- | ---------------------------------------- | ---------- |
+| PM-005.1    | Add downloadable error CSV (failed rows + messages)                     | Faster correction loop for admins        | Medium     |
+| PM-005.2    | Support upsert mode by SKU (update existing products instead of create) | Avoids duplicates in recurrent imports   | High       |
+| PM-005.3    | Add import progress endpoint + polling UI                               | Better UX for long-running imports       | Medium     |
+| PM-005.4    | Add async chunking for very large CSV files                             | Improved memory footprint and throughput | High       |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-005 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
@@ -3117,20 +3313,20 @@ git push origin master --tags
 
 ### STEP 3 — Test Results
 
-| TC    | Description                                                       | Type  | Result  | Notes                                               |
-| ----- | ----------------------------------------------------------------- | ----- | ------- | --------------------------------------------------- |
-| TC-01 | Reviews section heading shown on product page                     | Happy | PASS ✅ | `assertSee('Customer Reviews')`                     |
-| TC-02 | Product with no reviews shows "No reviews yet"                    | Happy | PASS ✅ | `assertSee('No reviews yet')`                       |
-| TC-03 | Average rating shown prominently when reviews exist               | Happy | PASS ✅ | `assertSee('Average Rating')`                       |
-| TC-04 | Average rating calculated correctly (3+5=4.0)                     | Happy | PASS ✅ | `assertSee('Average Rating: 4.0')`                  |
-| TC-05 | Each review shows reviewer name                                   | Happy | PASS ✅ | `assertSee('Bob Reviewer')`                         |
-| TC-06 | Each review shows star rating                                     | Happy | PASS ✅ | `assertSee('Rating: 4 / 5')`                        |
-| TC-07 | Each review shows comment text                                    | Happy | PASS ✅ | Unique comment string found on page                 |
-| TC-08 | Reviews paginated 5/page — oldest not on page 1 with 6 reviews   | Happy | PASS ✅ | `assertDontSee('Oldest review goes to page two')`   |
-| TC-09 | Page 2 shows the remaining (oldest) review                        | Happy | PASS ✅ | `assertSee('Oldest review goes to page two')`       |
-| TC-10 | Guest can view reviews without authentication                     | Happy | PASS ✅ | Unauthenticated GET → 200 + review text visible     |
-| TC-11 | Single review — average equals that review's rating              | Edge  | PASS ✅ | `assertSee('Average Rating: 4.0')` for rating=4     |
-| TC-12 | `product.rating` updated after review submission via HTTP         | Happy | PASS ✅ | `assertDatabaseHas('products', ['rating' => 5.00])` |
+| TC    | Description                                                    | Type  | Result  | Notes                                               |
+| ----- | -------------------------------------------------------------- | ----- | ------- | --------------------------------------------------- |
+| TC-01 | Reviews section heading shown on product page                  | Happy | PASS ✅ | `assertSee('Customer Reviews')`                     |
+| TC-02 | Product with no reviews shows "No reviews yet"                 | Happy | PASS ✅ | `assertSee('No reviews yet')`                       |
+| TC-03 | Average rating shown prominently when reviews exist            | Happy | PASS ✅ | `assertSee('Average Rating')`                       |
+| TC-04 | Average rating calculated correctly (3+5=4.0)                  | Happy | PASS ✅ | `assertSee('Average Rating: 4.0')`                  |
+| TC-05 | Each review shows reviewer name                                | Happy | PASS ✅ | `assertSee('Bob Reviewer')`                         |
+| TC-06 | Each review shows star rating                                  | Happy | PASS ✅ | `assertSee('Rating: 4 / 5')`                        |
+| TC-07 | Each review shows comment text                                 | Happy | PASS ✅ | Unique comment string found on page                 |
+| TC-08 | Reviews paginated 5/page — oldest not on page 1 with 6 reviews | Happy | PASS ✅ | `assertDontSee('Oldest review goes to page two')`   |
+| TC-09 | Page 2 shows the remaining (oldest) review                     | Happy | PASS ✅ | `assertSee('Oldest review goes to page two')`       |
+| TC-10 | Guest can view reviews without authentication                  | Happy | PASS ✅ | Unauthenticated GET → 200 + review text visible     |
+| TC-11 | Single review — average equals that review's rating            | Edge  | PASS ✅ | `assertSee('Average Rating: 4.0')` for rating=4     |
+| TC-12 | `product.rating` updated after review submission via HTTP      | Happy | PASS ✅ | `assertDatabaseHas('products', ['rating' => 5.00])` |
 
 **Targeted Regression:** RV-002 (12) + RV-001 / ProductReviewTest (12) + UP-002 / UserAddressTest (12) + SC-005 / CartCouponTest (12) = **48/48 PASS** ✅ · 0 regressions
 
