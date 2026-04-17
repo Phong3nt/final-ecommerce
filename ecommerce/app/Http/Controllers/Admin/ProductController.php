@@ -15,8 +15,12 @@ class ProductController extends Controller
 {
     public function index(): View
     {
-        $products = Product::with('category')->latest()->paginate(20);
-        return view('admin.products.index', compact('products'));
+        $categoryId = request('category_id');
+        $products = Product::with('category')
+            ->when($categoryId, fn($q) => $q->where('category_id', (int) $categoryId))
+            ->latest()->paginate(20);
+        $categories = Category::orderBy('name')->get();
+        return view('admin.products.index', compact('products', 'categories'));
     }
 
     public function create(): View
