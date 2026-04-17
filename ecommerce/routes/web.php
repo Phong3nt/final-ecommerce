@@ -144,6 +144,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // OM-001: Admin order list with filters, sort, pagination
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
 
+    // OM-004: Export orders to CSV
+    Route::get('/orders/export', [AdminOrderController::class, 'export'])->name('orders.export');
+
     // OM-002: Admin order detail
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -57,5 +58,53 @@ class OrderController extends Controller
         $updatableStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
 
         return view('admin.orders.show', compact('order', 'updatableStatuses'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $query = Order::with(['user', 'items'])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('customer')) {
+            $search = $request->customer;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->get();
+        $filename = 'orders-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Order ID', 'Customer Name', 'Customer Email', 'Items', 'Total', 'Status', 'Date']);
+            foreach ($orders as $order) {
+                $items = $order->items
+                    ->map(fn ($item) => $item->product_name . ' x' . $item->quantity)
+                    ->implode(', ');
+                fputcsv($handle, [
+                    $order->id,
+                    $order->user?->name ?? '',
+                    $order->user?->email ?? '',
+                    $items,
+                    number_format($order->total, 2),
+                    $order->status,
+                    $order->created_at->format('Y-m-d'),
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 }
