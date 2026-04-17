@@ -4,6 +4,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\Admin\OrderStatusController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -152,6 +153,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // OH-003: Admin order status update
     Route::patch('/orders/{order}/status', [OrderStatusController::class, 'update'])->name('orders.status');
+
+    // OM-005: Admin process refund on cancelled order
+    Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund');
 
     // PM-001: Admin product management
     Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');

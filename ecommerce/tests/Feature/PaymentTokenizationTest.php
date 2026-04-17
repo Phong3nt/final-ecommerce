@@ -259,6 +259,11 @@ class PaymentTokenizationTest extends TestCase
             public function cancelPaymentIntent(string $intentId): void
             {
             }
+
+            public function refund(string $intentId, int $amountCents): string
+            {
+                return 're_stub';
+            }
         });
 
         $this->actingAs($user)->withSession([
@@ -334,6 +339,11 @@ class PaymentTokenizationTest extends TestCase
 
             public function cancelPaymentIntent(string $intentId): void
             {
+            }
+
+            public function refund(string $intentId, int $amountCents): string
+            {
+                return 're_stub';
             }
         });
 

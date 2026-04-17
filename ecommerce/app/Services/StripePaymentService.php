@@ -7,16 +7,29 @@ use Stripe\Webhook;
 
 class StripePaymentService implements PaymentServiceInterface
 {
-    private StripeClient $stripe;
+    private ?StripeClient $stripe = null;
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        // Lazy: instantiated only when a Stripe method is called
+    }
+
+    private function client(): StripeClient
+    {
+        if ($this->stripe === null) {
+            $secret = config('services.stripe.secret');
+            if (empty($secret)) {
+                throw new \RuntimeException('Stripe secret key is not configured. Set STRIPE_SECRET in .env');
+            }
+            $this->stripe = new StripeClient($secret);
+        }
+
+        return $this->stripe;
     }
 
     public function createPaymentIntent(int $amountCents, string $currency, array $metadata): array
     {
-        $intent = $this->stripe->paymentIntents->create([
+        $intent = $this->client()->paymentIntents->create([
             'amount' => $amountCents,
             'currency' => $currency,
             'metadata' => $metadata,
@@ -36,6 +49,16 @@ class StripePaymentService implements PaymentServiceInterface
 
     public function cancelPaymentIntent(string $intentId): void
     {
-        $this->stripe->paymentIntents->cancel($intentId);
+        $this->client()->paymentIntents->cancel($intentId);
+    }
+
+    public function refund(string $intentId, int $amountCents): string
+    {
+        $refund = $this->client()->refunds->create([
+            'payment_intent' => $intentId,
+            'amount' => $amountCents,
+        ]);
+
+        return $refund->id;
     }
 }

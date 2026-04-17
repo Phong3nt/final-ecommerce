@@ -28,4 +28,14 @@ interface PaymentServiceInterface
      * @throws \Stripe\Exception\ApiErrorException
      */
     public function cancelPaymentIntent(string $intentId): void;
+
+    /**
+     * Issue a refund for a PaymentIntent and return the Stripe refund ID.
+     *
+     * @param  string $intentId    The Stripe PaymentIntent ID to refund
+     * @param  int    $amountCents Amount to refund in the smallest currency unit (e.g. cents)
+     * @return string              The Stripe refund ID (re_...)
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function refund(string $intentId, int $amountCents): string;
 }
