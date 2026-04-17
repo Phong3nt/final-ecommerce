@@ -132,6 +132,11 @@
             color: #842029;
         }
 
+        .badge-refunded {
+            background: #d0f0fd;
+            color: #0c4a6e;
+        }
+
         .timeline {
             list-style: none;
             padding: 0;
@@ -306,6 +311,12 @@
                         <span class="timeline-ts">{{ $order->cancelled_at->format('d M Y, H:i') }}</span>
                     </li>
                 @endif
+                @if($order->refunded_at)
+                    <li class="timeline-step timeline-step--done" style="border-left-color:#0c4a6e;">
+                        <strong>Refunded</strong>
+                        <span class="timeline-ts">{{ $order->refunded_at->format('d M Y, H:i') }}</span>
+                    </li>
+                @endif
             </ol>
 
             {{-- Status update form (OH-003 reuse) --}}
@@ -319,6 +330,20 @@
                 </select>
                 <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
             </form>
+
+            {{-- OM-005: Process Refund button (only for cancelled orders with a payment intent) --}}
+            @if($order->status === 'cancelled' && $order->stripe_payment_intent_id)
+                @error('order')
+                    <div class="alert-error" style="margin-top:.75rem;">{{ $message }}</div>
+                @enderror
+                <form method="POST" action="{{ route('admin.orders.refund', $order) }}" style="margin-top:.75rem;"
+                    onsubmit="return confirm('Process a refund of ${{ number_format($order->total, 2) }} for Order #{{ $order->id }}?')">
+                    @csrf
+                    <button type="submit" class="btn btn-sm" style="background:#0c4a6e;color:#fff;">
+                        Process Refund (${{ number_format($order->total, 2) }})
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -356,6 +381,30 @@
             </div>
         </div>
     </div>
+    {{-- OM-005: Refund Transactions --}}
+    @if($order->refundTransactions->isNotEmpty())
+        <div class="card" style="margin-bottom:1.25rem;">
+            <h2>Refund Transactions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th class="right">Amount</th>
+                        <th>Stripe Refund ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($order->refundTransactions as $refund)
+                        <tr>
+                            <td>{{ $refund->created_at->format('d M Y, H:i') }}</td>
+                            <td class="right">${{ number_format($refund->amount, 2) }}</td>
+                            <td><small style="color:#6b7280">{{ $refund->stripe_refund_id ?? '—' }}</small></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 
 </body>
 

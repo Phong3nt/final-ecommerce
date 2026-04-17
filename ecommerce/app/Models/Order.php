@@ -27,6 +27,7 @@ class Order extends Model
         'shipped_at',
         'delivered_at',
         'cancelled_at',
+        'refunded_at',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Order extends Model
         'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -49,5 +51,10 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function refundTransactions(): HasMany
+    {
+        return $this->hasMany(RefundTransaction::class);
     }
 }

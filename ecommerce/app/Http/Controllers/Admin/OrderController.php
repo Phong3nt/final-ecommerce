@@ -53,7 +53,7 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load('user', 'items');
+        $order->load('user', 'items', 'refundTransactions');
 
         $updatableStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
 
@@ -92,7 +92,7 @@ class OrderController extends Controller
             fputcsv($handle, ['Order ID', 'Customer Name', 'Customer Email', 'Items', 'Total', 'Status', 'Date']);
             foreach ($orders as $order) {
                 $items = $order->items
-                    ->map(fn ($item) => $item->product_name . ' x' . $item->quantity)
+                    ->map(fn($item) => $item->product_name . ' x' . $item->quantity)
                     ->implode(', ');
                 fputcsv($handle, [
                     $order->id,
