@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\AdminController;
@@ -88,6 +89,13 @@ Route::middleware(['auth'])->group(function () {
     // UP-001: User profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // UP-002: Saved addresses CRUD
+    Route::get('/addresses', [UserAddressController::class, 'index'])->name('addresses.index');
+    Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
+    Route::put('/addresses/{address}', [UserAddressController::class, 'update'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [UserAddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::patch('/addresses/{address}/default', [UserAddressController::class, 'setDefault'])->name('addresses.setDefault');
 
     // OH-001: Order history
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
