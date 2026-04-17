@@ -2885,45 +2885,101 @@ None.
 **Status:** ✅ PASS
 
 ### User Story
+
 As an admin, I want to manage product images so each product looks appealing.
 
 ### Acceptance Criteria
+
 - [x] Multiple images per product (stored as JSON array in `images` column)
 - [x] Drag-to-reorder images (saves new order via POST endpoint)
 - [x] One image set as thumbnail (`image` column)
 - [x] Remove individual images by index
 
 ### Files Changed
-| File | Change |
-|------|--------|
-| `ecommerce/app/Http/Controllers/Admin/ProductController.php` | Added `images()`, `reorderImages()`, `setThumbnail()`, `destroyImage()` methods |
-| `ecommerce/routes/web.php` | Added 4 PM-006 routes under admin prefix |
-| `ecommerce/resources/views/admin/products/images.blade.php` | New view: image list with drag-to-reorder, set-thumbnail, remove |
-| `ecommerce/resources/views/admin/products/edit.blade.php` | Added "Manage Images →" link |
-| `ecommerce/tests/Feature/AdminProductImageManagementTest.php` | 13 feature tests |
+
+| File                                                          | Change                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `ecommerce/app/Http/Controllers/Admin/ProductController.php`  | Added `images()`, `reorderImages()`, `setThumbnail()`, `destroyImage()` methods |
+| `ecommerce/routes/web.php`                                    | Added 4 PM-006 routes under admin prefix                                        |
+| `ecommerce/resources/views/admin/products/images.blade.php`   | New view: image list with drag-to-reorder, set-thumbnail, remove                |
+| `ecommerce/resources/views/admin/products/edit.blade.php`     | Added "Manage Images →" link                                                    |
+| `ecommerce/tests/Feature/AdminProductImageManagementTest.php` | 13 feature tests                                                                |
 
 ### Test Results
-| Suite | Tests | Assertions | Failures |
-|-------|-------|------------|----------|
-| PM-006 targeted | 13 | 31 | 0 |
-| Targeted regression (product+category) | 73 | 187 | 0 |
+
+| Suite                                  | Tests | Assertions | Failures |
+| -------------------------------------- | ----- | ---------- | -------- |
+| PM-006 targeted                        | 13    | 31         | 0        |
+| Targeted regression (product+category) | 73    | 187        | 0        |
 
 ### Security Checks
+
 - `reorderImages` only accepts paths already in `$product->images` — prevents path injection
 - `destroyImage` uses index (integer), not arbitrary file path — no directory traversal
 - All routes require `admin` role via middleware
 - No raw file system calls; image paths are stored references only
 
 ### Improvement Proposals
-| ID | Proposal | Rationale | Priority |
-|----|----------|-----------|----------|
-| PM-006.1 | Add file upload endpoint to images page | Allow uploading new images directly from management page | High |
-| PM-006.2 | Store image dimensions/metadata in JSON | Enables responsive image selection | Medium |
-| PM-006.3 | Add bulk delete option | Faster cleanup for products with many images | Low |
+
+| ID       | Proposal                                | Rationale                                                | Priority |
+| -------- | --------------------------------------- | -------------------------------------------------------- | -------- |
+| PM-006.1 | Add file upload endpoint to images page | Allow uploading new images directly from management page | High     |
+| PM-006.2 | Store image dimensions/metadata in JSON | Enables responsive image selection                       | Medium   |
+| PM-006.3 | Add bulk delete option                  | Faster cleanup for products with many images             | Low      |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-PM-006 END -->
+
+---
+
+## EVAL-OM-004 · Export Orders to CSV
+
+**Date:** 2026-04-18  
+**Branch:** `feature/OM-004`  
+**Tag:** `v1.0-OM-004-stable`  
+**Status:** ✅ PASS
+
+### User Story
+As an admin, I want to export orders to CSV so I can share data with logistics partners.
+
+### Acceptance Criteria
+- [x] Filtered result set is exported (status, date range, customer filters all applied)
+- [x] CSV includes Order ID, Customer Name, Customer Email, Items, Total, Status, Date
+- [x] Response is a file download (Content-Disposition: attachment)
+- [x] Export CSV button visible on admin orders index
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ecommerce/app/Http/Controllers/Admin/OrderController.php` | Added `export()` method with filter support and streamed CSV download |
+| `ecommerce/routes/web.php` | Added `GET /admin/orders/export` route (before `{order}` wildcard) |
+| `ecommerce/resources/views/admin/orders/index.blade.php` | Added Export CSV link passing current filter params |
+| `ecommerce/tests/Feature/AdminOrderExportCsvTest.php` | 14 feature tests |
+
+### Test Results
+| Suite | Tests | Assertions | Failures |
+|-------|-------|------------|----------|
+| OM-004 targeted | 14 | 37 | 0 |
+| Targeted regression (order management) | 50 | 116 | 0 |
+| Full suite (pre-commit hook) | 586 | 1338 | 0 |
+
+### Security Checks
+- Export endpoint behind `auth` + `role:admin` middleware — no public access
+- Filters use Eloquent query builder with parameter binding — no SQL injection
+- `streamDownload` uses `php://output` via `fputcsv` — no arbitrary file writes
+- No user-controlled data used in filename (only `now()->format('Y-m-d')` appended)
+
+### Improvement Proposals
+| ID | Proposal | Rationale | Priority |
+|----|----------|-----------|----------|
+| OM-004.1 | Add date_to filter to export | Parity with index page filters | Medium |
+| OM-004.2 | Stream export as chunked query | Avoid memory issues for very large order sets | High |
+| OM-004.3 | Add Excel (.xlsx) export option | Logistics partners may prefer native spreadsheets | Low |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-OM-004 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
