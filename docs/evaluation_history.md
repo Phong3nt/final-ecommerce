@@ -2003,6 +2003,62 @@ git push origin master --tags
 
 ---
 
+## EVAL-OM-002 · Admin Order Detail
+
+**Version:** A
+**Date:** 2025-07-16
+**Status in Backlog:** Done
+**Linked Task:** [OM-002](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Notes |
+|---|---|---|---|---|
+| TC-01 | Guest redirected to login from admin order detail | Security | ✅ PASS | |
+| TC-02 | Non-admin gets 403 on admin order detail | Security | ✅ PASS | |
+| TC-03 | Admin gets 200 for existing order | Happy | ✅ PASS | |
+| TC-04 | Order ID shown on detail page | Happy | ✅ PASS | |
+| TC-05 | Customer name and email shown | Happy | ✅ PASS | |
+| TC-06 | Item product name, qty, unit price, subtotal shown | Happy | ✅ PASS | |
+| TC-07 | Order totals (subtotal, shipping, total) shown | Happy | ✅ PASS | |
+| TC-08 | Shipping address shown | Happy | ✅ PASS | |
+| TC-09 | Payment section shows Stripe info and intent ID | Happy | ✅ PASS | |
+| TC-10 | Status history section visible | Happy | ✅ PASS | |
+| TC-11 | Processing timestamp shown for processing order | Happy | ✅ PASS | |
+| TC-12 | Status update form present on detail page | Happy | ✅ PASS | |
+
+**Test count:** 12 new · **Targeted regression:** 72/72 (AdminOrderDetailTest + AdminOrderListTest + AdminProductCreateTest + AdminProductEditTest + AdminProductDeleteTest + AdminCategoryTest)
+**Full suite:** 470/470 passed
+
+### Quality Scores
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Correctness | 5/5 | All ACs met: customer, items, totals, shipping, payment, status history |
+| Test coverage | 5/5 | 12 tests covering security, happy paths, timestamps |
+| Security | 5/5 | Admin middleware + route model binding; guests → login, non-admins → 403 |
+| Code quality | 5/5 | Lean controller (4 lines), view reuses OH-003 status form |
+
+### Bugs Found
+
+None.
+
+### New Files
+
+- `app/Http/Controllers/Admin/OrderController.php` — `show()` method added: loads `user` + `items`, passes `$updatableStatuses` to view
+- `resources/views/admin/orders/show.blade.php` — full admin order detail view (customer card, shipping address card, payment card, status timeline + update form, items table, order totals)
+- `tests/Feature/AdminOrderDetailTest.php` — 12 tests (`test_om002_*`)
+
+### Modified Files
+
+- `routes/web.php` — added `GET /admin/orders/{order}` → `AdminOrderController@show` (name: `admin.orders.show`) inside admin middleware group
+
+### Upgrade Proposals
+
+None at this time.
+
+---
+
 ### STEP 2 — Test Cases
 
 | TC    | Test Name                                             | Result  |
@@ -2632,20 +2688,20 @@ None.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                                  | Type     | Result  | Duration | Notes                                                            |
-| ------------ | ------------------------------------------------------------------------- | -------- | ------- | -------- | ---------------------------------------------------------------- |
-| TC-OM001-01  | Guest is redirected from admin orders index → login                       | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                                       |
-| TC-OM001-02  | Non-admin gets 403 on admin orders index                                  | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                                 |
-| TC-OM001-03  | Admin can view orders list (200), order ID and customer name visible      | Happy    | PASS ✅ | 0.05s    | Eager-loaded `user` relation                                     |
-| TC-OM001-04  | Orders paginated at 20 per page                                           | Happy    | PASS ✅ | 0.07s    | 25 created → 20 on page 1                                        |
-| TC-OM001-05  | Filter by status shows only matching orders                               | Happy    | PASS ✅ | 0.05s    | `where('status', ...)` applied                                   |
-| TC-OM001-06  | Filter by `date_from` excludes orders before that date                    | Happy    | PASS ✅ | 0.05s    | `whereDate('created_at', '>=', ...)` applied                     |
-| TC-OM001-07  | Filter by `date_to` excludes orders after that date                       | Happy    | PASS ✅ | 0.06s    | `whereDate('created_at', '<=', ...)` applied                     |
-| TC-OM001-08  | Filter by customer name returns matching orders                           | Happy    | PASS ✅ | 0.05s    | `whereHas('user', ...)` on name and email                        |
-| TC-OM001-09  | Combined status + customer filter works correctly                         | Edge     | PASS ✅ | 0.05s    | Both constraints applied; returns intersection                   |
-| TC-OM001-10  | Default sort is newest first                                              | Happy    | PASS ✅ | 0.06s    | `reorder('created_at', 'desc')` as default                       |
-| TC-OM001-11  | Sort by `total_desc` shows highest total first                            | Happy    | PASS ✅ | 0.05s    | `reorder('total', 'desc')` applied                               |
-| TC-OM001-12  | No filters returns all orders                                             | Edge     | PASS ✅ | 0.06s    | 5 created → 5 returned                                           |
+| Test Case ID | Scenario                                                             | Type     | Result  | Duration | Notes                                          |
+| ------------ | -------------------------------------------------------------------- | -------- | ------- | -------- | ---------------------------------------------- |
+| TC-OM001-01  | Guest is redirected from admin orders index → login                  | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                     |
+| TC-OM001-02  | Non-admin gets 403 on admin orders index                             | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced               |
+| TC-OM001-03  | Admin can view orders list (200), order ID and customer name visible | Happy    | PASS ✅ | 0.05s    | Eager-loaded `user` relation                   |
+| TC-OM001-04  | Orders paginated at 20 per page                                      | Happy    | PASS ✅ | 0.07s    | 25 created → 20 on page 1                      |
+| TC-OM001-05  | Filter by status shows only matching orders                          | Happy    | PASS ✅ | 0.05s    | `where('status', ...)` applied                 |
+| TC-OM001-06  | Filter by `date_from` excludes orders before that date               | Happy    | PASS ✅ | 0.05s    | `whereDate('created_at', '>=', ...)` applied   |
+| TC-OM001-07  | Filter by `date_to` excludes orders after that date                  | Happy    | PASS ✅ | 0.06s    | `whereDate('created_at', '<=', ...)` applied   |
+| TC-OM001-08  | Filter by customer name returns matching orders                      | Happy    | PASS ✅ | 0.05s    | `whereHas('user', ...)` on name and email      |
+| TC-OM001-09  | Combined status + customer filter works correctly                    | Edge     | PASS ✅ | 0.05s    | Both constraints applied; returns intersection |
+| TC-OM001-10  | Default sort is newest first                                         | Happy    | PASS ✅ | 0.06s    | `reorder('created_at', 'desc')` as default     |
+| TC-OM001-11  | Sort by `total_desc` shows highest total first                       | Happy    | PASS ✅ | 0.05s    | `reorder('total', 'desc')` applied             |
+| TC-OM001-12  | No filters returns all orders                                        | Edge     | PASS ✅ | 0.06s    | 5 created → 5 returned                         |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Test Duration:** ~0.6s (OM-001 alone)  
@@ -2656,11 +2712,11 @@ None.
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                                              |
-| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
-| Simplicity    | 5/5   | Controller is 48 lines; all filters are additive `when()` / `where()` — no branching complexity     |
-| Security      | 5/5   | `auth`+`role:admin` double guard; all user input goes through Eloquent query bindings — no raw SQL  |
-| Performance   | 5/5   | `with('user')` eager-loads to avoid N+1; `withQueryString()` preserves filters across pagination     |
+| Dimension     | Score | Comment                                                                                            |
+| ------------- | ----- | -------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is 48 lines; all filters are additive `when()` / `where()` — no branching complexity    |
+| Security      | 5/5   | `auth`+`role:admin` double guard; all user input goes through Eloquent query bindings — no raw SQL |
+| Performance   | 5/5   | `with('user')` eager-loads to avoid N+1; `withQueryString()` preserves filters across pagination   |
 | Test Coverage | 5/5   | 12 cases — 6× happy (filter/sort), 2× edge (combined, no-filter), 2× security, 2× AC (pagination)  |
 
 ---
@@ -2683,12 +2739,12 @@ None.
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                                   | Benefit                                             | Complexity |
-| ----------- | ----------------------------------------------------------------------------- | --------------------------------------------------- | ---------- |
-| OM-001.1    | Add filter by date range with a date-picker UI component                      | Easier date selection for admins                    | Low        |
-| OM-001.2    | Add column for number of items per order                                      | Quick overview without opening order detail         | Low        |
-| OM-001.3    | Add bulk-status-update checkbox action                                        | Operational efficiency for processing many orders   | Medium     |
-| OM-001.4    | Add customer email search via AJAX autocomplete                               | Faster customer lookup in large user bases          | Medium     |
+| Proposal ID | Description                                              | Benefit                                           | Complexity |
+| ----------- | -------------------------------------------------------- | ------------------------------------------------- | ---------- |
+| OM-001.1    | Add filter by date range with a date-picker UI component | Easier date selection for admins                  | Low        |
+| OM-001.2    | Add column for number of items per order                 | Quick overview without opening order detail       | Low        |
+| OM-001.3    | Add bulk-status-update checkbox action                   | Operational efficiency for processing many orders | Medium     |
+| OM-001.4    | Add customer email search via AJAX autocomplete          | Faster customer lookup in large user bases        | Medium     |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
