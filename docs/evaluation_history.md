@@ -2561,20 +2561,20 @@ None.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                                   | Type     | Result  | Duration | Notes                                                          |
-| ------------ | -------------------------------------------------------------------------- | -------- | ------- | -------- | -------------------------------------------------------------- |
-| TC-PM004-01  | Guest is redirected from categories index → login                          | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                                     |
-| TC-PM004-02  | Non-admin gets 403 on categories index                                     | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                               |
-| TC-PM004-03  | Admin can view categories index (200)                                      | Happy    | PASS ✅ | 0.06s    | Category name visible in response                              |
-| TC-PM004-04  | Admin can create a category → redirects to index                           | Happy    | PASS ✅ | 0.05s    | Row present in DB, flash success                               |
-| TC-PM004-05  | Category name is required → 422                                            | Negative | PASS ✅ | 0.04s    | JSON validation error on `name`                                |
-| TC-PM004-06  | Category name must be unique → 422                                         | Negative | PASS ✅ | 0.04s    | `unique:categories,name` rule enforced                         |
-| TC-PM004-07  | Admin can access edit form (200), pre-populated                            | Happy    | PASS ✅ | 0.05s    | Category name visible in edit view                             |
-| TC-PM004-08  | Admin can update a category name                                           | Happy    | PASS ✅ | 0.05s    | DB row updated                                                 |
-| TC-PM004-09  | Admin can assign a parent category (hierarchy)                             | Edge     | PASS ✅ | 0.05s    | `parent_id` FK set correctly                                   |
-| TC-PM004-10  | Admin can delete a category → redirects to index                           | Happy    | PASS ✅ | 0.05s    | Row removed from DB                                            |
-| TC-PM004-11  | Deleting category sets products' category_id to null                       | Edge     | PASS ✅ | 0.06s    | `products.category_id` nullified, product not deleted          |
-| TC-PM004-12  | Admin products index filtered by category_id shows only matching products  | Happy    | PASS ✅ | 0.06s    | Filter returns correct product, hides other-category products  |
+| Test Case ID | Scenario                                                                  | Type     | Result  | Duration | Notes                                                         |
+| ------------ | ------------------------------------------------------------------------- | -------- | ------- | -------- | ------------------------------------------------------------- |
+| TC-PM004-01  | Guest is redirected from categories index → login                         | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                                    |
+| TC-PM004-02  | Non-admin gets 403 on categories index                                    | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                              |
+| TC-PM004-03  | Admin can view categories index (200)                                     | Happy    | PASS ✅ | 0.06s    | Category name visible in response                             |
+| TC-PM004-04  | Admin can create a category → redirects to index                          | Happy    | PASS ✅ | 0.05s    | Row present in DB, flash success                              |
+| TC-PM004-05  | Category name is required → 422                                           | Negative | PASS ✅ | 0.04s    | JSON validation error on `name`                               |
+| TC-PM004-06  | Category name must be unique → 422                                        | Negative | PASS ✅ | 0.04s    | `unique:categories,name` rule enforced                        |
+| TC-PM004-07  | Admin can access edit form (200), pre-populated                           | Happy    | PASS ✅ | 0.05s    | Category name visible in edit view                            |
+| TC-PM004-08  | Admin can update a category name                                          | Happy    | PASS ✅ | 0.05s    | DB row updated                                                |
+| TC-PM004-09  | Admin can assign a parent category (hierarchy)                            | Edge     | PASS ✅ | 0.05s    | `parent_id` FK set correctly                                  |
+| TC-PM004-10  | Admin can delete a category → redirects to index                          | Happy    | PASS ✅ | 0.05s    | Row removed from DB                                           |
+| TC-PM004-11  | Deleting category sets products' category_id to null                      | Edge     | PASS ✅ | 0.06s    | `products.category_id` nullified, product not deleted         |
+| TC-PM004-12  | Admin products index filtered by category_id shows only matching products | Happy    | PASS ✅ | 0.06s    | Filter returns correct product, hides other-category products |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Test Duration:** ~0.6s (PM-004 alone)  
@@ -2585,12 +2585,12 @@ None.
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                                              |
-| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
-| Simplicity    | 5/5   | Controller is self-contained; hierarchy handled via nullable FK, no tree library needed              |
-| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF on all forms, validation prevents self-parent assignment      |
-| Performance   | 5/5   | All tests well under 2s; eager-loading `parent` on index prevents N+1                                |
-| Test Coverage | 5/5   | 12 cases — 4× happy, 2× negative, 2× edge, 2× security, 2× AC-3 filter                              |
+| Dimension     | Score | Comment                                                                                         |
+| ------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is self-contained; hierarchy handled via nullable FK, no tree library needed         |
+| Security      | 5/5   | `auth`+`role:admin` double guard, CSRF on all forms, validation prevents self-parent assignment |
+| Performance   | 5/5   | All tests well under 2s; eager-loading `parent` on index prevents N+1                           |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 2× negative, 2× edge, 2× security, 2× AC-3 filter                          |
 
 ---
 
@@ -2612,16 +2612,87 @@ None.
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                                         | Benefit                                              | Complexity |
-| ----------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------- | ---------- |
-| PM-004.1    | Add multi-level hierarchy support (nested set or closure table)                     | Enables unlimited category depth                     | High       |
-| PM-004.2    | Add category image/icon upload                                                      | Improves storefront category browsing UX             | Medium     |
-| PM-004.3    | Add category slug for SEO-friendly category filter URLs                             | Cleaner URLs; consistent with product slug pattern   | Low        |
-| PM-004.4    | Show product count per category in admin index                                      | Visibility into inventory distribution               | Low        |
+| Proposal ID | Description                                                     | Benefit                                            | Complexity |
+| ----------- | --------------------------------------------------------------- | -------------------------------------------------- | ---------- |
+| PM-004.1    | Add multi-level hierarchy support (nested set or closure table) | Enables unlimited category depth                   | High       |
+| PM-004.2    | Add category image/icon upload                                  | Improves storefront category browsing UX           | Medium     |
+| PM-004.3    | Add category slug for SEO-friendly category filter URLs         | Cleaner URLs; consistent with product slug pattern | Low        |
+| PM-004.4    | Show product count per category in admin index                  | Visibility into inventory distribution             | Low        |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-PM-004 END -->
+
+## EVAL-OM-001 · Admin Order List with Filters
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [OM-001](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                                  | Type     | Result  | Duration | Notes                                                            |
+| ------------ | ------------------------------------------------------------------------- | -------- | ------- | -------- | ---------------------------------------------------------------- |
+| TC-OM001-01  | Guest is redirected from admin orders index → login                       | Security | PASS ✅ | 0.06s    | `auth` middleware enforced                                       |
+| TC-OM001-02  | Non-admin gets 403 on admin orders index                                  | Security | PASS ✅ | 0.05s    | `role:admin` middleware enforced                                 |
+| TC-OM001-03  | Admin can view orders list (200), order ID and customer name visible      | Happy    | PASS ✅ | 0.05s    | Eager-loaded `user` relation                                     |
+| TC-OM001-04  | Orders paginated at 20 per page                                           | Happy    | PASS ✅ | 0.07s    | 25 created → 20 on page 1                                        |
+| TC-OM001-05  | Filter by status shows only matching orders                               | Happy    | PASS ✅ | 0.05s    | `where('status', ...)` applied                                   |
+| TC-OM001-06  | Filter by `date_from` excludes orders before that date                    | Happy    | PASS ✅ | 0.05s    | `whereDate('created_at', '>=', ...)` applied                     |
+| TC-OM001-07  | Filter by `date_to` excludes orders after that date                       | Happy    | PASS ✅ | 0.06s    | `whereDate('created_at', '<=', ...)` applied                     |
+| TC-OM001-08  | Filter by customer name returns matching orders                           | Happy    | PASS ✅ | 0.05s    | `whereHas('user', ...)` on name and email                        |
+| TC-OM001-09  | Combined status + customer filter works correctly                         | Edge     | PASS ✅ | 0.05s    | Both constraints applied; returns intersection                   |
+| TC-OM001-10  | Default sort is newest first                                              | Happy    | PASS ✅ | 0.06s    | `reorder('created_at', 'desc')` as default                       |
+| TC-OM001-11  | Sort by `total_desc` shows highest total first                            | Happy    | PASS ✅ | 0.05s    | `reorder('total', 'desc')` applied                               |
+| TC-OM001-12  | No filters returns all orders                                             | Edge     | PASS ✅ | 0.06s    | 5 created → 5 returned                                           |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Test Duration:** ~0.6s (OM-001 alone)  
+**Targeted Regression:** OM-001 (12) + PM-004 (12) + PM-003 (12) + PM-002 (12) + PM-001 (12) = **60/60 PASS** ✅ · 0 regressions  
+**Full Suite:** 458/458 PASS ✅
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                              |
+| ------------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Controller is 48 lines; all filters are additive `when()` / `where()` — no branching complexity     |
+| Security      | 5/5   | `auth`+`role:admin` double guard; all user input goes through Eloquent query bindings — no raw SQL  |
+| Performance   | 5/5   | `with('user')` eager-loads to avoid N+1; `withQueryString()` preserves filters across pagination     |
+| Test Coverage | 5/5   | 12 cases — 6× happy (filter/sort), 2× edge (combined, no-filter), 2× security, 2× AC (pagination)  |
+
+---
+
+### Bugs / Side Effects Found
+
+None.
+
+---
+
+### Technical Notes
+
+- **Route naming** — `admin.orders.index` is new. The existing `admin.orders.status` (OH-003 PATCH) is a separate route. No conflict.
+- **`reorder()` vs `orderBy()`** — `latest()` pre-sets `ORDER BY created_at DESC`. Using `reorder()` clears that and applies the selected sort. This is intentional so the sort dropdown fully controls ordering.
+- **Customer filter** — uses `whereHas('user', fn => orWhere name/email like %)`. Partial-match, case-insensitive (SQLite `LIKE` is case-insensitive for ASCII by default).
+- **`withQueryString()`** — ensures all active filters are appended to pagination links, preventing loss of filter state on page change.
+- **View** — status badges are styled with per-status CSS classes. The sort links toggle direction on repeated click (newest ↔ oldest, total_asc ↔ total_desc).
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                   | Benefit                                             | Complexity |
+| ----------- | ----------------------------------------------------------------------------- | --------------------------------------------------- | ---------- |
+| OM-001.1    | Add filter by date range with a date-picker UI component                      | Easier date selection for admins                    | Low        |
+| OM-001.2    | Add column for number of items per order                                      | Quick overview without opening order detail         | Low        |
+| OM-001.3    | Add bulk-status-update checkbox action                                        | Operational efficiency for processing many orders   | Medium     |
+| OM-001.4    | Add customer email search via AJAX autocomplete                               | Faster customer lookup in large user bases          | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-OM-001 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
