@@ -16,7 +16,7 @@ class ProductController extends Controller
         $categories = Category::orderBy('name')->get();
         $sort = $filters['sort'] ?? 'newest';
 
-        $products = Product::filter($filters)->sort($sort)->paginate(12)->withQueryString();
+        $products = Product::published()->filter($filters)->sort($sort)->paginate(12)->withQueryString();
 
         return view('products.index', compact('products', 'filters', 'categories'));
     }
@@ -35,7 +35,7 @@ class ProductController extends Controller
             return redirect()->route('products.index');
         }
 
-        $results = Product::search($q)->latest()->paginate(12)->withQueryString();
+        $results = Product::published()->search($q)->latest()->paginate(12)->withQueryString();
 
         return view('products.search', compact('results', 'q'));
     }
