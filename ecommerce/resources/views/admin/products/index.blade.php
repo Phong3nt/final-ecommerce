@@ -87,6 +87,22 @@
 
     <a href="{{ route('admin.products.create') }}" class="btn">+ New Product</a>
 
+    <form method="GET" action="{{ route('admin.products.index') }}" style="margin-bottom:1rem;">
+        <label for="category_id" style="font-weight:600;margin-right:.5rem;">Filter by category:</label>
+        <select name="category_id" id="category_id" style="padding:.4rem .6rem;border:1px solid #ccc;border-radius:4px;">
+            <option value="">All categories</option>
+            @foreach($categories as $cat)
+                <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->name }}
+                </option>
+            @endforeach
+        </select>
+        <button type="submit" style="margin-left:.5rem;padding:.4rem 1rem;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">Filter</button>
+        @if(request('category_id'))
+            <a href="{{ route('admin.products.index') }}" style="margin-left:.5rem;">Clear</a>
+        @endif
+    </form>
+
     <table>
         <thead>
             <tr>
