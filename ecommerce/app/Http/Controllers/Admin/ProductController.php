@@ -204,4 +204,80 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')
             ->with('success', 'Product archived successfully.');
     }
+
+    // PM-006: Image management
+
+    public function images(Product $product): View
+    {
+        return view('admin.products.images', compact('product'));
+    }
+
+    public function reorderImages(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'image_order' => ['required', 'array'],
+            'image_order.*' => ['string'],
+        ]);
+
+        $currentImages = $product->images ?? [];
+        $newOrder = [];
+        foreach ($validated['image_order'] as $path) {
+            if (in_array($path, $currentImages, true)) {
+                $newOrder[] = $path;
+            }
+        }
+
+        $thumbnail = $product->image;
+        $product->update([
+            'images' => $newOrder ?: null,
+            'image' => in_array($thumbnail, $newOrder, true) ? $thumbnail : ($newOrder[0] ?? null),
+        ]);
+
+        return redirect()->route('admin.products.images', $product)
+            ->with('success', 'Image order updated.');
+    }
+
+    public function setThumbnail(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'thumbnail_index' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $images = $product->images ?? [];
+        $index = (int) $validated['thumbnail_index'];
+
+        if (!isset($images[$index])) {
+            return back()->withErrors(['thumbnail_index' => 'Invalid image index.']);
+        }
+
+        $product->update(['image' => $images[$index]]);
+
+        return redirect()->route('admin.products.images', $product)
+            ->with('success', 'Thumbnail updated.');
+    }
+
+    public function destroyImage(Product $product, int $index): RedirectResponse
+    {
+        $images = $product->images ?? [];
+
+        if (!isset($images[$index])) {
+            abort(404);
+        }
+
+        $removedPath = $images[$index];
+        array_splice($images, $index, 1);
+
+        $thumbnail = $product->image;
+        if ($thumbnail === $removedPath) {
+            $thumbnail = $images[0] ?? null;
+        }
+
+        $product->update([
+            'images' => $images ?: null,
+            'image' => $thumbnail,
+        ]);
+
+        return redirect()->route('admin.products.images', $product)
+            ->with('success', 'Image removed.');
+    }
 }
