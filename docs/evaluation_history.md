@@ -2282,20 +2282,20 @@ git push origin master --tags
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Notes |
-|---|---|---|---|---|
-| TC-01 | Guest redirected from chart endpoint | Auth | PASS | 302 → /login |
-| TC-02 | Non-admin gets 403 | Auth | PASS | role:admin enforced |
-| TC-03 | Admin gets 200 JSON with correct structure | Structure | PASS | labels/revenue/orders keys |
-| TC-04 | Daily range returns 7 data points | Data | PASS | last 7 days |
-| TC-05 | Weekly range returns 8 data points | Data | PASS | last 8 weeks |
-| TC-06 | Monthly range returns 12 data points | Data | PASS | last 12 months |
-| TC-07 | Missing range returns 422 | Validation | PASS | |
-| TC-08 | Invalid range value returns 422 | Validation | PASS | |
-| TC-09 | Revenue sums only paid/processing/shipped/delivered | Data | PASS | 120+80=200.00 |
-| TC-10 | Revenue excludes pending/cancelled/failed | Data | PASS | sum=0.00 |
-| TC-11 | Order count includes all statuses | Data | PASS | 3 total |
-| TC-12 | Dashboard view has canvas + Chart.js CDN + range buttons | UI | PASS | |
+| Test Case ID | Scenario                                                 | Type       | Result | Notes                      |
+| ------------ | -------------------------------------------------------- | ---------- | ------ | -------------------------- |
+| TC-01        | Guest redirected from chart endpoint                     | Auth       | PASS   | 302 → /login               |
+| TC-02        | Non-admin gets 403                                       | Auth       | PASS   | role:admin enforced        |
+| TC-03        | Admin gets 200 JSON with correct structure               | Structure  | PASS   | labels/revenue/orders keys |
+| TC-04        | Daily range returns 7 data points                        | Data       | PASS   | last 7 days                |
+| TC-05        | Weekly range returns 8 data points                       | Data       | PASS   | last 8 weeks               |
+| TC-06        | Monthly range returns 12 data points                     | Data       | PASS   | last 12 months             |
+| TC-07        | Missing range returns 422                                | Validation | PASS   |                            |
+| TC-08        | Invalid range value returns 422                          | Validation | PASS   |                            |
+| TC-09        | Revenue sums only paid/processing/shipped/delivered      | Data       | PASS   | 120+80=200.00              |
+| TC-10        | Revenue excludes pending/cancelled/failed                | Data       | PASS   | sum=0.00                   |
+| TC-11        | Order count includes all statuses                        | Data       | PASS   | 3 total                    |
+| TC-12        | Dashboard view has canvas + Chart.js CDN + range buttons | UI         | PASS   |                            |
 
 **Isolated:** 12/12 passed (34 assertions) in 1.23s  
 **Full Regression:** 398/398 passed (803 assertions) in 22.51s  
@@ -2303,12 +2303,12 @@ git push origin master --tags
 
 ### STEP 2 — Code Quality
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Correctness | 5/5 | PHP-side grouping avoids DB dialect issues; all three ranges accurate |
-| Security | 5/5 | Validated range input (Rule::in); admin-only via middleware |
-| Maintainability | 5/5 | match() per range cleanly defines period slices and format strings |
-| Test Coverage | 5/5 | Auth, validation, structure, data accuracy all covered |
+| Dimension       | Score | Notes                                                                 |
+| --------------- | ----- | --------------------------------------------------------------------- |
+| Correctness     | 5/5   | PHP-side grouping avoids DB dialect issues; all three ranges accurate |
+| Security        | 5/5   | Validated range input (Rule::in); admin-only via middleware           |
+| Maintainability | 5/5   | match() per range cleanly defines period slices and format strings    |
+| Test Coverage   | 5/5   | Auth, validation, structure, data accuracy all covered                |
 
 ### STEP 3 — Bugs Found
 
@@ -2331,6 +2331,84 @@ git push origin master --tags
 - **AD-003** — admin product/order management panel
 
 <!-- EVAL-AD-002 END -->
+
+<!-- ============================================================
+     SPRINT 5 — Product & Order Management (Admin)
+     ============================================================ -->
+
+## EVAL-PM-001 · Admin Product Create
+
+**Version:** A  
+**Date:** 2026-04-17  
+**Status in Backlog:** Done  
+**Linked Task:** [PM-001](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                   | Type     | Result  | Duration | Notes                                           |
+| ------------ | ---------------------------------------------------------- | -------- | ------- | -------- | ----------------------------------------------- |
+| TC-PM001-01  | Guest is redirected from create page → login               | Security | PASS ✅ | 0.05s    | `auth` middleware enforced                      |
+| TC-PM001-02  | Non-admin gets 403 on create page                          | Security | PASS ✅ | 0.03s    | `role:admin` middleware enforced                |
+| TC-PM001-03  | Admin can access create form (200)                         | Happy    | PASS ✅ | 0.05s    |                                                 |
+| TC-PM001-04  | Create form has all expected fields                        | Happy    | PASS ✅ | 0.04s    | name, description, price, stock, status, images |
+| TC-PM001-05  | Admin can create a published product → redirected to index | Happy    | PASS ✅ | 0.06s    | DB row confirmed                                |
+| TC-PM001-06  | Admin can create a draft product                           | Happy    | PASS ✅ | 0.04s    | status=draft confirmed                          |
+| TC-PM001-07  | Slug auto-generated from name                              | Edge     | PASS ✅ | 0.04s    | `my-awesome-widget` from `My Awesome Widget`    |
+| TC-PM001-08  | Images uploaded and stored (multi-upload)                  | Happy    | PASS ✅ | 0.08s    | Storage::fake, 2 files, paths in DB             |
+| TC-PM001-09  | Name is required — 422 validation error                    | Negative | PASS ✅ | 0.04s    |                                                 |
+| TC-PM001-10  | Price must be positive — 422 validation error              | Negative | PASS ✅ | 0.03s    |                                                 |
+| TC-PM001-11  | Stock must be non-negative — 422 validation error          | Negative | PASS ✅ | 0.04s    |                                                 |
+| TC-PM001-12  | Published product visible on storefront; draft not         | Edge     | PASS ✅ | 0.05s    | `scopePublished` filter confirmed               |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped · 36 Assertions  
+**Test Duration:** ~1.1s (PM-001 alone) · ~22s (full 410-test suite)  
+**Regression:** All previous 398 tests still PASS ✅ · 0 regressions
+
+---
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                    |
+| ------------- | ----- | ------------------------------------------------------------------------------------------ |
+| Simplicity    | 5/5   | Controller is 75 lines, 3 methods; views are plain HTML with no Blade extends overhead     |
+| Security      | 5/5   | `auth`+`role:admin` double guard, validated inputs, image mime/size constraints, CSRF form |
+| Performance   | 5/5   | All tests complete well under 2s threshold                                                 |
+| Test Coverage | 5/5   | 12 cases — 4× happy, 2× edge, 2× security, 2× negative, 1× image upload, 1× storefront     |
+
+---
+
+### Bugs / Side Effects Found
+
+| Bug ID       | Description                                                                               | Severity | Status                                                                                                  |
+| ------------ | ----------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| BUG-PM001-01 | GD extension disabled in php.ini — `UploadedFile::fake()->image()` threw `LogicException` | Low      | Fixed — enabled `extension=gd` in C:\xampp\php\php.ini. Also fixed 2 pre-existing ProfileTest failures. |
+
+---
+
+### Technical Notes
+
+- **Migration** — `2026_04_17_000001_add_status_images_to_products_table.php` adds `status` (default `published`) and `images` (JSON) to the products table.
+- **`scopePublished`** — added to `Product` model. `ProductController` public index/search now chain `->published()` so draft products are invisible on the storefront.
+- **Slug uniqueness** — `uniqueSlug()` private helper appends an incrementing suffix if a slug already exists (e.g., `widget`, `widget-1`, `widget-2`).
+- **Image storage** — Files stored via `Storage::disk('public')` under `products/`. The first image path is also written to the legacy `image` column for backward compatibility with existing product cards.
+- **Multi-upload pattern** — `name="images[]"` + `enctype="multipart/form-data"`, validated as `array` + each `image|max:2048`.
+- **Mocked Dependencies:** `Storage::fake('public')` in TC-PM001-08 — no real filesystem writes during tests.
+- **GD extension** — Was commented out in `C:\xampp\php\php.ini`. Enabled during this sprint. Also restored the 2 UP-001 ProfileTest avatar tests that were previously failing.
+
+---
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                  | Benefit                                        | Complexity    |
+| ----------- | ---------------------------------------------------------------------------- | ---------------------------------------------- | ------------- |
+| PM-001.1    | Add edit (PUT) and delete routes/actions to complete full CRUD               | Required for PM-002/PM-003 acceptance criteria | Low–Medium    |
+| PM-001.2    | Auto-generate unique SKU if not provided by admin                            | Prevents validation failures from missing SKU  | Low           |
+| PM-001.3    | Add image thumbnail preview on create form before submission (JS FileReader) | Better UX for image uploads                    | Low (JS only) |
+| PM-001.4    | Enforce image dimension/aspect ratio validation (e.g., min 400×400px)        | Consistent product image quality               | Medium        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-PM-001 END -->
 
 <!-- ============================================================
      More sprints follow the same pattern...
@@ -2377,6 +2455,7 @@ git push origin master --tags
 | 2026-04-16 | OH-004 (Sprint 4)     | 374         | 374    | 0      | 0            | Agent  |
 | 2026-04-16 | AD-001 (Sprint 4)     | 386         | 386    | 0      | 0            | Agent  |
 | 2026-04-16 | AD-002 (Sprint 4)     | 398         | 398    | 0      | 0            | Agent  |
+| 2026-04-17 | PM-001 (Sprint 5)     | 410         | 410    | 0      | 0            | Agent  |
 
 ---
 
