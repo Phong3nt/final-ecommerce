@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\OrderStatusController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -120,6 +121,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // AD-002: Revenue chart data endpoint
     Route::get('/chart-data', [AdminController::class, 'chartData'])->name('chart-data');
+
+    // OM-001: Admin order list with filters, sort, pagination
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
 
     // OH-003: Admin order status update
     Route::patch('/orders/{order}/status', [OrderStatusController::class, 'update'])->name('orders.status');
