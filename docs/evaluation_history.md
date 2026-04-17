@@ -3028,20 +3028,20 @@ None at this time.
 
 ### STEP 3 — Test Results
 
-| TC    | Description                                                   | Type     | Result  | Notes                                          |
-| ----- | ------------------------------------------------------------- | -------- | ------- | ---------------------------------------------- |
-| TC-01 | Guest redirected to login when submitting review              | Security | PASS ✅ | DB count = 0 confirmed                         |
-| TC-02 | Unpurchased user cannot submit review (error in session)      | Security | PASS ✅ | `assertSessionHasErrors('review')`             |
-| TC-03 | Purchased user can submit a review (stored in DB)             | Happy    | PASS ✅ | `assertDatabaseHas` rating+comment confirmed   |
-| TC-04 | User cannot submit second review for same product             | Edge     | PASS ✅ | DB count stays at 1                            |
-| TC-05 | Review form shown on product page for eligible purchaser      | Happy    | PASS ✅ | "Leave a Review" + form action URL present     |
-| TC-06 | Review form hidden for non-purchaser                          | Security | PASS ✅ | "Leave a Review" not in response               |
-| TC-07 | Rating of 0 fails validation                                  | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
-| TC-08 | Rating of 6 fails validation                                  | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
-| TC-09 | Comment is required                                           | Edge     | PASS ✅ | `assertSessionHasErrors('comment')`            |
-| TC-10 | Successful review redirects with success flash                | Happy    | PASS ✅ | `assertSessionHas('success', '...')`           |
-| TC-11 | Different users can each review the same product              | Happy    | PASS ✅ | DB count = 2, both rows confirmed              |
-| TC-12 | Reviewer's name and rating shown on product detail page       | Happy    | PASS ✅ | `assertSee('Alice Tester')` + rating confirmed |
+| TC    | Description                                              | Type     | Result  | Notes                                          |
+| ----- | -------------------------------------------------------- | -------- | ------- | ---------------------------------------------- |
+| TC-01 | Guest redirected to login when submitting review         | Security | PASS ✅ | DB count = 0 confirmed                         |
+| TC-02 | Unpurchased user cannot submit review (error in session) | Security | PASS ✅ | `assertSessionHasErrors('review')`             |
+| TC-03 | Purchased user can submit a review (stored in DB)        | Happy    | PASS ✅ | `assertDatabaseHas` rating+comment confirmed   |
+| TC-04 | User cannot submit second review for same product        | Edge     | PASS ✅ | DB count stays at 1                            |
+| TC-05 | Review form shown on product page for eligible purchaser | Happy    | PASS ✅ | "Leave a Review" + form action URL present     |
+| TC-06 | Review form hidden for non-purchaser                     | Security | PASS ✅ | "Leave a Review" not in response               |
+| TC-07 | Rating of 0 fails validation                             | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
+| TC-08 | Rating of 6 fails validation                             | Edge     | PASS ✅ | `assertSessionHasErrors('rating')`             |
+| TC-09 | Comment is required                                      | Edge     | PASS ✅ | `assertSessionHasErrors('comment')`            |
+| TC-10 | Successful review redirects with success flash           | Happy    | PASS ✅ | `assertSessionHas('success', '...')`           |
+| TC-11 | Different users can each review the same product         | Happy    | PASS ✅ | DB count = 2, both rows confirmed              |
+| TC-12 | Reviewer's name and rating shown on product detail page  | Happy    | PASS ✅ | `assertSee('Alice Tester')` + rating confirmed |
 
 **Targeted Regression:** RV-001 (12) + SC-005 / CartCouponTest (12) + UP-002 / UserAddressTest (12) = **36/36 PASS** ✅ · 0 regressions
 
@@ -3080,3 +3080,87 @@ git push origin master --tags
 - RV-002 — Display all reviews for a product (average rating prominent, paginated 5/page)
 
 <!-- EVAL-RV-001 END -->
+
+---
+
+<!-- EVAL-RV-002 -->
+
+## EVAL-RV-002 · Review Listing
+
+**Story:** RV-002 — As a user, I want to see reviews on a product page so I can make informed decisions.
+
+**Sprint:** 7 | **Epic:** 7 — Product Reviews | **Points:** 2
+
+---
+
+### STEP 1 — Architecture Review
+
+- **`ProductController::show()`** — updated to additionally compute `$reviews` (`product->reviews()->with('user')->latest()->paginate(5)`) and `$averageRating` (`product->reviews()->avg('rating')`); both passed to view via `compact()`
+- **`ReviewController::store()`** — after inserting the new review, recalculates and saves `product.rating = round(avg(reviews.rating), 2)`, keeping the denormalised column in sync for the `scopeFilter` / `scopeSort` functionality
+- **`products/show.blade.php`** — Customer Reviews section overhauled:
+  - Average rating shown prominently with `number_format($averageRating, 1)` and review count
+  - "No reviews yet." message when `$reviews->isEmpty()`
+  - Paginated reviews list (name, rating, comment per item) with `$reviews->links()`
+  - `$userReview` separate block removed — user's own review appears naturally in the list
+  - RV-001 review submission form retained unchanged
+
+---
+
+### STEP 2 — Security Checklist
+
+- [x] Reviews visible to guests — no auth required for view (public product page)
+- [x] All output via `{{ }}` — XSS safe
+- [x] `avg()` returns `null` when no reviews; guarded with `@if ($averageRating !== null)` to prevent rendering errors
+- [x] Pagination uses Eloquent's `paginate()` — no raw SQL
+
+---
+
+### STEP 3 — Test Results
+
+| TC    | Description                                                       | Type  | Result  | Notes                                               |
+| ----- | ----------------------------------------------------------------- | ----- | ------- | --------------------------------------------------- |
+| TC-01 | Reviews section heading shown on product page                     | Happy | PASS ✅ | `assertSee('Customer Reviews')`                     |
+| TC-02 | Product with no reviews shows "No reviews yet"                    | Happy | PASS ✅ | `assertSee('No reviews yet')`                       |
+| TC-03 | Average rating shown prominently when reviews exist               | Happy | PASS ✅ | `assertSee('Average Rating')`                       |
+| TC-04 | Average rating calculated correctly (3+5=4.0)                     | Happy | PASS ✅ | `assertSee('Average Rating: 4.0')`                  |
+| TC-05 | Each review shows reviewer name                                   | Happy | PASS ✅ | `assertSee('Bob Reviewer')`                         |
+| TC-06 | Each review shows star rating                                     | Happy | PASS ✅ | `assertSee('Rating: 4 / 5')`                        |
+| TC-07 | Each review shows comment text                                    | Happy | PASS ✅ | Unique comment string found on page                 |
+| TC-08 | Reviews paginated 5/page — oldest not on page 1 with 6 reviews   | Happy | PASS ✅ | `assertDontSee('Oldest review goes to page two')`   |
+| TC-09 | Page 2 shows the remaining (oldest) review                        | Happy | PASS ✅ | `assertSee('Oldest review goes to page two')`       |
+| TC-10 | Guest can view reviews without authentication                     | Happy | PASS ✅ | Unauthenticated GET → 200 + review text visible     |
+| TC-11 | Single review — average equals that review's rating              | Edge  | PASS ✅ | `assertSee('Average Rating: 4.0')` for rating=4     |
+| TC-12 | `product.rating` updated after review submission via HTTP         | Happy | PASS ✅ | `assertDatabaseHas('products', ['rating' => 5.00])` |
+
+**Targeted Regression:** RV-002 (12) + RV-001 / ProductReviewTest (12) + UP-002 / UserAddressTest (12) + SC-005 / CartCouponTest (12) = **48/48 PASS** ✅ · 0 regressions
+
+**Full Suite (pre-commit hook):** 530/530 PASS ✅
+
+---
+
+### STEP 4 — Merge & Tag
+
+```
+git checkout master
+git merge --no-ff feature/RV-002 -m "merge: RV-002 review listing -- 48/48 targeted regression, 0 regressions"
+git tag v1.0-RV-002-stable
+git push origin master --tags
+```
+
+---
+
+### New Files
+
+- `tests/Feature/ProductReviewListTest.php` — 12 tests (`test_rv002_*`)
+
+### Modified Files
+
+- `app/Http/Controllers/ProductController.php` — `show()` additionally passes `$reviews` and `$averageRating` to view
+- `app/Http/Controllers/ReviewController.php` — `store()` now recalculates and updates `product.rating` after each review
+- `resources/views/products/show.blade.php` — Customer Reviews section rebuilt: average rating prominent, paginated reviews list, "No reviews yet" fallback
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-RV-002 END -->
