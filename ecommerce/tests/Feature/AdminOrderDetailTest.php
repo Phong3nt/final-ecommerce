@@ -22,7 +22,7 @@ class AdminOrderDetailTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'user',  'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     }
 
@@ -42,21 +42,21 @@ class AdminOrderDetailTest extends TestCase
 
     private function makeOrderWithItems(): Order
     {
-        $user  = User::factory()->create(['name' => 'Test Customer', 'email' => 'customer@example.com']);
+        $user = User::factory()->create(['name' => 'Test Customer', 'email' => 'customer@example.com']);
         $order = Order::factory()->create([
-            'user_id'       => $user->id,
-            'status'        => 'paid',
-            'subtotal'      => 100.00,
+            'user_id' => $user->id,
+            'status' => 'paid',
+            'subtotal' => 100.00,
             'shipping_cost' => 10.00,
-            'total'         => 110.00,
+            'total' => 110.00,
             'shipping_label' => 'Standard Shipping',
         ]);
         OrderItem::factory()->create([
-            'order_id'     => $order->id,
+            'order_id' => $order->id,
             'product_name' => 'Fancy Widget',
-            'quantity'     => 2,
-            'unit_price'   => 50.00,
-            'subtotal'     => 100.00,
+            'quantity' => 2,
+            'unit_price' => 50.00,
+            'subtotal' => 100.00,
         ]);
         return $order;
     }
@@ -168,11 +168,11 @@ class AdminOrderDetailTest extends TestCase
     // TC-11: Processing timestamp shown when order is in processing status
     public function test_om002_processing_timestamp_shown_for_processing_order(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $order = Order::factory()->create([
-            'user_id'        => $user->id,
-            'status'         => 'processing',
-            'processing_at'  => '2026-04-10 10:00:00',
+            'user_id' => $user->id,
+            'status' => 'processing',
+            'processing_at' => '2026-04-10 10:00:00',
         ]);
 
         $this->actingAs($this->makeAdmin())
