@@ -26,13 +26,20 @@ class ProductFactory extends Factory
             'price' => fake()->randomFloat(2, 1, 500),
             'stock' => fake()->numberBetween(0, 100),
             'image' => null,
+            'images' => null,
             'category_id' => null,
             'rating' => fake()->randomFloat(2, 1, 5),
+            'status' => 'published',
         ];
     }
 
     public function outOfStock(): static
     {
         return $this->state(['stock' => 0]);
+    }
+
+    public function draft(): static
+    {
+        return $this->state(['status' => 'draft']);
     }
 }

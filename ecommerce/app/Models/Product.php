@@ -9,13 +9,14 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'image', 'category_id', 'rating'];
+    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'image', 'images', 'category_id', 'rating', 'status'];
 
     protected $casts = [
         'price' => 'decimal:2',
         'stock' => 'integer',
         'rating' => 'float',
         'category_id' => 'integer',
+        'images' => 'array',
     ];
 
     public function getRouteKeyName(): string
@@ -78,5 +79,10 @@ class Product extends Model
             'rating' => $query->orderByDesc('rating'),
             default => $query->latest(), // newest
         };
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
     }
 }
