@@ -49,4 +49,13 @@ class OrderController extends Controller
 
         return view('admin.orders.index', compact('orders', 'statuses'));
     }
+
+    public function show(Order $order): View
+    {
+        $order->load('user', 'items');
+
+        $updatableStatuses = ['processing', 'shipped', 'delivered'];
+
+        return view('admin.orders.show', compact('order', 'updatableStatuses'));
+    }
 }
