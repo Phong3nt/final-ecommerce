@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\Admin\OrderStatusController;
@@ -32,6 +33,11 @@ Route::get('/products/search', [ProductController::class, 'search'])->name('prod
 
 // PC-005: Product detail page — SEO-friendly slug, no auth required
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+// RV-001: Submit a product review — auth required
+Route::post('/products/{product:slug}/reviews', [ReviewController::class, 'store'])
+    ->middleware('auth')
+    ->name('reviews.store');
 
 // SC-001: Add to cart — session-based, guest + auth allowed
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
