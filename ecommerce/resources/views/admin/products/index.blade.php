@@ -47,6 +47,21 @@
             font-weight: 600;
         }
 
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: inherit;
+            padding: 0;
+            margin-left: .75rem;
+            text-decoration: underline;
+        }
+
+        .btn-delete:hover {
+            color: #a71d2a;
+        }
+
         .badge-draft {
             color: #6c757d;
             font-weight: 600;
@@ -95,7 +110,15 @@
                     <td>{{ $product->category?->name ?? '—' }}</td>
                     <td><span class="badge-{{ $product->status }}">{{ ucfirst($product->status) }}</span></td>
                     <td>{{ $product->created_at->format('Y-m-d') }}</td>
-                    <td><a href="{{ route('admin.products.edit', $product) }}">Edit</a></td>
+                    <td>
+                        <a href="{{ route('admin.products.edit', $product) }}">Edit</a>
+                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" style="display:inline"
+                            data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-delete">Archive</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
                 <tr>
@@ -106,6 +129,16 @@
     </table>
 
     <div style="margin-top:1rem;">{{ $products->links() }}</div>
+
+    <script>
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (!confirm(form.dataset.confirm)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

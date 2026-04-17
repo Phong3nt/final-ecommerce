@@ -131,6 +131,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // PM-002: Admin product edit
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
     Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
+
+    // PM-003: Admin product delete (soft delete)
+    Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)
