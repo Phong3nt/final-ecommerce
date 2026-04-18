@@ -4183,3 +4183,58 @@ Migration adds `low_stock_threshold` (nullable unsigned int) and `low_stock_noti
 None at this time.
 
 <!-- EVAL-NT-003 END -->
+
+---
+
+## EVAL-NF-007 · Cloud Image Storage
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [NF-007](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                          | Type        | Result  | Notes |
+| ------------ | ----------------------------------------------------------------- | ----------- | ------- | ----- |
+| TC-01        | `filesystems.php` has `s3` disk configured                        | Config      | PASS ✅ |       |
+| TC-02        | S3 disk driver is `s3`                                            | Config      | PASS ✅ |       |
+| TC-03        | S3 disk has required AWS keys (key, secret, region, bucket)       | Config      | PASS ✅ |       |
+| TC-04        | `IMAGE_DISK` defaults to `s3` in source                          | Source      | PASS ✅ |       |
+| TC-05        | `image_disk` config key exists                                    | Config      | PASS ✅ |       |
+| TC-06        | `ProductController` uses configurable disk, not hardcoded public  | Source      | PASS ✅ |       |
+| TC-07        | `ProfileController` uses configurable disk, not hardcoded public  | Source      | PASS ✅ |       |
+| TC-08        | Product `store()` uploads image to `image_disk` (runtime)         | Happy Path  | PASS ✅ |       |
+| TC-09        | Product `update()` uploads image to `image_disk` (runtime)        | Happy Path  | PASS ✅ |       |
+| TC-10        | Avatar upload stores on `image_disk` (runtime)                   | Happy Path  | PASS ✅ |       |
+| TC-11        | S3 disk has `visibility: public`                                  | Config      | PASS ✅ |       |
+| TC-12        | `use_path_style_endpoint` configurable via env (S3-compat)        | Config      | PASS ✅ |       |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Regression:** All previous tests still PASS ✅ (785/785)
+
+### Quality Scores (1–5)
+
+| Dimension        | Score | Notes                                                                                   |
+| ---------------- | ----- | --------------------------------------------------------------------------------------- |
+| Correctness      | 5     | All 12 ACs covered; IMAGE_DISK=public in phpunit keeps existing upload tests green       |
+| Test Coverage    | 5     | Config, source, and runtime audits across both upload controllers                       |
+| Code Quality     | 5     | Single env var controls all image storage; no hardcoded disk names in controllers       |
+| Security         | 5     | S3 visibility:public ensures files are readable; no local public/ exposure              |
+| Performance      | 5     | No behavioral changes; existing tests unaffected                                        |
+
+**Overall: 5.0 / 5.0**
+
+### Bugs Found
+
+None.
+
+### Notes
+
+`IMAGE_DISK` env var (default: `s3`) controls all image/avatar uploads. Set `IMAGE_DISK=public` locally or in `phpunit.xml` to use local storage. `ProductController` and `ProfileController` updated to use `config('filesystems.image_disk', 's3')`. S3 disk has `visibility: public` and `use_path_style_endpoint` for MinIO/S3-compatible services.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NF-007 END -->
