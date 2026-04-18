@@ -3346,6 +3346,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-UM-004 END -->
 
 <!-- EVAL-RM-001 START -->
+
 ## EVAL-RM-001 · Admin Revenue Report by Period
 
 **Task:** RM-001 — As an admin, I want to see total revenue broken down by period so I can measure business performance.
@@ -3354,6 +3355,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 **Tag:** `v1.0-RM-001-stable`
 
 ### Acceptance Criteria Checklist
+
 - [x] Daily breakdown (last 7 days)
 - [x] Weekly breakdown (last 8 weeks)
 - [x] Monthly breakdown (last 12 months)
@@ -3365,39 +3367,97 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 - [x] Guest redirected to login; non-admin gets 403
 
 ### Files Changed
-| File | Change |
-|------|--------|
-| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | New — revenue report controller |
-| `ecommerce/resources/views/admin/revenue/index.blade.php` | New — revenue report Blade view |
-| `ecommerce/routes/web.php` | Added `GET /admin/revenue` route (RM-001) |
-| `ecommerce/tests/Feature/AdminRevenueReportTest.php` | New — 18 tests |
+
+| File                                                         | Change                                    |
+| ------------------------------------------------------------ | ----------------------------------------- |
+| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | New — revenue report controller           |
+| `ecommerce/resources/views/admin/revenue/index.blade.php`    | New — revenue report Blade view           |
+| `ecommerce/routes/web.php`                                   | Added `GET /admin/revenue` route (RM-001) |
+| `ecommerce/tests/Feature/AdminRevenueReportTest.php`         | New — 18 tests                            |
 
 ### Test Results
-| TC | Description | Result |
-|----|-------------|--------|
-| TC-01 | Guest redirected to login | ✅ Pass |
-| TC-02 | Non-admin gets 403 | ✅ Pass |
-| TC-03 | Admin gets 200 | ✅ Pass |
-| TC-04 | Default period is monthly (12 rows) | ✅ Pass |
-| TC-05 | Daily period returns 7 rows | ✅ Pass |
-| TC-06 | Weekly period returns 8 rows | ✅ Pass |
-| TC-07 | Monthly period returns 12 rows | ✅ Pass |
-| TC-08 | Custom range row count matches days | ✅ Pass |
+
+| TC    | Description                                | Result  |
+| ----- | ------------------------------------------ | ------- |
+| TC-01 | Guest redirected to login                  | ✅ Pass |
+| TC-02 | Non-admin gets 403                         | ✅ Pass |
+| TC-03 | Admin gets 200                             | ✅ Pass |
+| TC-04 | Default period is monthly (12 rows)        | ✅ Pass |
+| TC-05 | Daily period returns 7 rows                | ✅ Pass |
+| TC-06 | Weekly period returns 8 rows               | ✅ Pass |
+| TC-07 | Monthly period returns 12 rows             | ✅ Pass |
+| TC-08 | Custom range row count matches days        | ✅ Pass |
 | TC-09 | Custom range excludes orders outside range | ✅ Pass |
-| TC-10 | Gross only counts revenue-status orders | ✅ Pass |
-| TC-11 | Gross excludes non-revenue statuses | ✅ Pass |
-| TC-12 | Refunds summed from RefundTransaction | ✅ Pass |
-| TC-13 | Net = gross − refunds | ✅ Pass |
-| TC-14 | Zero revenue shown when no orders | ✅ Pass |
-| TC-15 | Invalid period falls back to monthly | ✅ Pass |
-| TC-16 | Page renders revenue breakdown table | ✅ Pass |
-| TC-17 | Summary totals match sum of rows | ✅ Pass |
-| TC-18 | Multiple refund transactions summed | ✅ Pass |
+| TC-10 | Gross only counts revenue-status orders    | ✅ Pass |
+| TC-11 | Gross excludes non-revenue statuses        | ✅ Pass |
+| TC-12 | Refunds summed from RefundTransaction      | ✅ Pass |
+| TC-13 | Net = gross − refunds                      | ✅ Pass |
+| TC-14 | Zero revenue shown when no orders          | ✅ Pass |
+| TC-15 | Invalid period falls back to monthly       | ✅ Pass |
+| TC-16 | Page renders revenue breakdown table       | ✅ Pass |
+| TC-17 | Summary totals match sum of rows           | ✅ Pass |
+| TC-18 | Multiple refund transactions summed        | ✅ Pass |
 
 **New Tests:** 18/18 ✅
 **Regression:** 686/686 ✅
 
 <!-- EVAL-RM-001 END -->
+
+<!-- EVAL-RM-002 START -->
+## EVAL-RM-002 · Admin Revenue by Product/Category
+
+**Task:** RM-002 — As an admin, I want to see revenue by category/product so I can identify bestsellers.
+
+**Branch:** `feature/RM-002` → merged to `master`
+**Tag:** `v1.0-RM-002-stable`
+
+### Acceptance Criteria Checklist
+- [x] Sortable table (product name, category, units sold, gross revenue)
+- [x] Sortable by any column with asc/desc toggle
+- [x] Filterable by category
+- [x] Filterable by date range (date_from / date_to)
+- [x] Exportable to CSV (with Content-Disposition attachment)
+- [x] Only revenue-status orders counted (paid/processing/shipped/delivered)
+- [x] Invalid sort column falls back to gross_revenue
+- [x] Guest redirected; non-admin gets 403
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | Added `products()`, `exportProducts()`, `buildProductRows()` |
+| `ecommerce/resources/views/admin/revenue/products.blade.php` | New — product revenue Blade view |
+| `ecommerce/routes/web.php` | Added `GET /admin/revenue/products` and `GET /admin/revenue/products/export` |
+| `ecommerce/tests/Feature/AdminProductRevenueTest.php` | New — 21 tests |
+
+### Test Results
+| TC | Description | Result |
+|----|-------------|--------|
+| TC-01 | Guest redirected to login (products page) | ✅ Pass |
+| TC-02 | Non-admin gets 403 (products page) | ✅ Pass |
+| TC-03 | Admin gets 200 | ✅ Pass |
+| TC-04 | Guest redirected for CSV export | ✅ Pass |
+| TC-05 | Non-admin gets 403 on CSV export | ✅ Pass |
+| TC-06 | Units sold and gross revenue summed correctly | ✅ Pass |
+| TC-07 | Only revenue-status orders counted | ✅ Pass |
+| TC-08 | Category name shown in table row | ✅ Pass |
+| TC-09 | Filter by category returns only matching products | ✅ Pass |
+| TC-10 | date_from excludes older orders | ✅ Pass |
+| TC-11 | date_to excludes newer orders | ✅ Pass |
+| TC-12 | Default sort is gross_revenue desc | ✅ Pass |
+| TC-13 | Sort by units_sold descending | ✅ Pass |
+| TC-14 | Sort by product_name ascending | ✅ Pass |
+| TC-15 | Invalid sort column falls back to gross_revenue | ✅ Pass |
+| TC-16 | Zero rows when no revenue orders | ✅ Pass |
+| TC-17 | CSV returns 200 with correct Content-Type | ✅ Pass |
+| TC-18 | CSV has correct header row | ✅ Pass |
+| TC-19 | CSV contains product data | ✅ Pass |
+| TC-20 | CSV Content-Disposition is attachment with .csv | ✅ Pass |
+| TC-21 | CSV respects category filter | ✅ Pass |
+
+**New Tests:** 21/21 ✅
+**Regression:** 707/707 ✅
+
+<!-- EVAL-RM-002 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
