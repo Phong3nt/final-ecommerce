@@ -4015,3 +4015,52 @@ git push origin master --tags
 None at this time.
 
 <!-- EVAL-RV-002 END -->
+
+---
+
+<!-- EVAL-NT-001 START -->
+
+## EVAL-NT-001 · Queued Order Email Notifications
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [NT-001](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                                          | Type        | Result  | Duration | Notes                                                       |
+| ------------ | --------------------------------------------------------------------------------- | ----------- | ------- | -------- | ----------------------------------------------------------- |
+| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`                            | Unit        | PASS ✅ | 0.41s    | Job queued, not run synchronously                           |
+| TC-02        | Status → `processing` dispatches `SendOrderStatusChangedEmail` via `Queue::fake` | Feature     | PASS ✅ | 0.14s    | `Queue::assertPushed` verified job payload                  |
+| TC-03        | Status → `shipped` dispatches `SendOrderStatusChangedEmail`                       | Feature     | PASS ✅ | 0.06s    | Job dispatched with correct order id                        |
+| TC-04        | Status → `delivered` dispatches `SendOrderStatusChangedEmail`                     | Feature     | PASS ✅ | 0.06s    | Delivery trigger covered                                    |
+| TC-05        | Status → `cancelled` dispatches `SendOrderStatusChangedEmail`                     | Feature     | PASS ✅ | 0.06s    | Cancellation trigger covered                                |
+| TC-06        | `SendOrderStatusChangedEmail::handle()` sends `OrderStatusChanged` to owner      | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check    |
+| TC-07        | `OrderStatusChanged` subject contains order id                                    | Unit        | PASS ✅ | 0.06s    | Envelope subject verified                                   |
+| TC-08        | `OrderStatusChanged` is addressed to order owner                                  | Unit        | PASS ✅ | 0.06s    | `hasTo($owner->email)` assertion                            |
+| TC-09        | Mail for `processing` status carries correct status on mailable                   | Unit        | PASS ✅ | 0.06s    | `$mail->order->status === 'processing'`                     |
+| TC-10        | Delivery trigger → admin sets `delivered` → `Mail::assertSent`                   | Integration | PASS ✅ | 0.10s    | QUEUE_CONNECTION=sync so job runs inline during test        |
+| TC-11        | Delivery mail content has `statusLabel = 'Delivered'`                            | Unit        | PASS ✅ | 0.06s    | `$mail->content()->with['statusLabel']` assertion           |
+| TC-12        | Cancelled mail content has `statusLabel = 'Cancelled'`                           | Unit        | PASS ✅ | 0.05s    | Consistent label mapping                                    |
+| TC-13        | `SendOrderConfirmationEmail` implements `ShouldQueue`                             | Unit        | PASS ✅ | 0.06s    | Order-placed trigger confirmed queued                       |
+| TC-14        | Order-placed webhook dispatches `SendOrderConfirmationEmail` via `Queue::fake`    | Feature     | PASS ✅ | 0.06s    | Mocked `PaymentServiceInterface` + `Queue::assertPushed`    |
+| TC-15        | `SendOrderConfirmationEmail::handle()` sends `OrderConfirmation` to owner        | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check    |
+
+**New Tests:** 15/15 ✅  
+**Regression:** 743/743 ✅
+
+### New Files
+
+- `app/Jobs/SendOrderStatusChangedEmail.php` — Queued job: loads `user` + `items`, sends `OrderStatusChanged` mailable
+- `tests/Feature/OrderNotificationTest.php` — 15 tests (`test_nt001_tc01_*` … `test_nt001_tc15_*`)
+
+### Modified Files
+
+- `app/Http/Controllers/Admin/OrderStatusController.php` — `update()` now calls `dispatch(new SendOrderStatusChangedEmail($order))` instead of synchronous `Mail::to()->send()`
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NT-001 END -->
