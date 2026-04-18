@@ -9,12 +9,14 @@ class Coupon extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'type', 'value', 'expires_at', 'is_active', 'times_used'];
+    protected $fillable = ['code', 'type', 'value', 'expires_at', 'is_active', 'usage_limit', 'min_order_amount', 'times_used'];
 
     protected $casts = [
         'value' => 'float',
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
+        'usage_limit' => 'integer',
+        'min_order_amount' => 'float',
         'times_used' => 'integer',
     ];
 
