@@ -3276,6 +3276,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-UM-003 END -->
 
 <!-- EVAL-UM-004 START -->
+
 ## EVAL-UM-004 · Admin Assign/Change User Roles
 
 **Version:** A  
@@ -3291,6 +3292,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 > As an admin, I want to assign or change user roles so I can promote users to admins.
 
 **Acceptance Criteria:**
+
 - Role dropdown: user / admin
 - Audit log records who changed the role and when
 
@@ -3298,14 +3300,15 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Implementation Summary
 
-| Area | File(s) |
-|---|---|
-| Controller | `ecommerce/app/Http/Controllers/Admin/UserController.php` (added `assignRole()`) |
-| View | `ecommerce/resources/views/admin/users/show.blade.php` (role dropdown + Save Role button) |
-| Route | `ecommerce/routes/web.php` (`PATCH /admin/users/{user}/assign-role` → `admin.users.assign-role`) |
-| Tests | `ecommerce/tests/Feature/AdminUserAssignRoleTest.php` |
+| Area       | File(s)                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| Controller | `ecommerce/app/Http/Controllers/Admin/UserController.php` (added `assignRole()`)                 |
+| View       | `ecommerce/resources/views/admin/users/show.blade.php` (role dropdown + Save Role button)        |
+| Route      | `ecommerce/routes/web.php` (`PATCH /admin/users/{user}/assign-role` → `admin.users.assign-role`) |
+| Tests      | `ecommerce/tests/Feature/AdminUserAssignRoleTest.php`                                            |
 
 **Key design decisions:**
+
 - `syncRoles([$newRole])` ensures user has exactly one role (replaces old role atomically)
 - Role validation: `in:user,admin` — only two valid values
 - Admin blocked from changing own role (returns error flash, no DB change)
@@ -3317,25 +3320,25 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Test Results
 
-| Test Case | Description | Result |
-|---|---|---|
-| TC-01 | Guest redirected to login on assign-role endpoint | ✅ Pass |
-| TC-02 | Non-admin gets 403 | ✅ Pass |
-| TC-03 | Admin can assign 'admin' role to a user | ✅ Pass |
-| TC-04 | Admin can assign 'user' role to an admin | ✅ Pass |
-| TC-05 | Invalid role value is rejected | ✅ Pass |
-| TC-06 | Missing role value is rejected | ✅ Pass |
-| TC-07 | Audit log created with correct action and subject | ✅ Pass |
-| TC-08 | Audit log stores old role in old_values | ✅ Pass |
-| TC-09 | Audit log stores new role in new_values | ✅ Pass |
-| TC-10 | Admin cannot change their own role | ✅ Pass |
-| TC-11 | Self-role change redirects with error flash | ✅ Pass |
-| TC-12 | Successful role change redirects with success flash | ✅ Pass |
-| TC-13 | Nonexistent user returns 404 | ✅ Pass |
-| TC-14 | Show page has role dropdown with user and admin options | ✅ Pass |
-| TC-15 | Show page pre-selects current role | ✅ Pass |
-| TC-16 | Role form has CSRF field | ✅ Pass |
-| TC-17 | Assign-role responds within 2 seconds | ✅ Pass |
+| Test Case | Description                                             | Result  |
+| --------- | ------------------------------------------------------- | ------- |
+| TC-01     | Guest redirected to login on assign-role endpoint       | ✅ Pass |
+| TC-02     | Non-admin gets 403                                      | ✅ Pass |
+| TC-03     | Admin can assign 'admin' role to a user                 | ✅ Pass |
+| TC-04     | Admin can assign 'user' role to an admin                | ✅ Pass |
+| TC-05     | Invalid role value is rejected                          | ✅ Pass |
+| TC-06     | Missing role value is rejected                          | ✅ Pass |
+| TC-07     | Audit log created with correct action and subject       | ✅ Pass |
+| TC-08     | Audit log stores old role in old_values                 | ✅ Pass |
+| TC-09     | Audit log stores new role in new_values                 | ✅ Pass |
+| TC-10     | Admin cannot change their own role                      | ✅ Pass |
+| TC-11     | Self-role change redirects with error flash             | ✅ Pass |
+| TC-12     | Successful role change redirects with success flash     | ✅ Pass |
+| TC-13     | Nonexistent user returns 404                            | ✅ Pass |
+| TC-14     | Show page has role dropdown with user and admin options | ✅ Pass |
+| TC-15     | Show page pre-selects current role                      | ✅ Pass |
+| TC-16     | Role form has CSRF field                                | ✅ Pass |
+| TC-17     | Assign-role responds within 2 seconds                   | ✅ Pass |
 
 **Targeted:** 17/17 ✅  
 **Regression:** 668/668 ✅

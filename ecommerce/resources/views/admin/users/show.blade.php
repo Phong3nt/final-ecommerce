@@ -305,19 +305,19 @@
 
         {{-- UM-004: Assign / change role --}}
         @if($user->id !== auth()->id())
-        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #dee2e6;">
-            <form method="POST" action="{{ route('admin.users.assign-role', $user) }}" class="role-form"
-                  onsubmit="return confirm('Change this user\'s role?')">
-                @csrf
-                @method('PATCH')
-                <label for="role_select" style="font-weight:600;font-size:.9rem;">Role:</label>
-                <select id="role_select" name="role" class="form-select">
-                    <option value="user" {{ $user->hasRole('user') ? 'selected' : '' }}>user</option>
-                    <option value="admin" {{ $user->hasRole('admin') ? 'selected' : '' }}>admin</option>
-                </select>
-                <button type="submit" class="btn btn-primary">Save Role</button>
-            </form>
-        </div>
+            <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #dee2e6;">
+                <form method="POST" action="{{ route('admin.users.assign-role', $user) }}" class="role-form"
+                    onsubmit="return confirm('Change this user\'s role?')">
+                    @csrf
+                    @method('PATCH')
+                    <label for="role_select" style="font-weight:600;font-size:.9rem;">Role:</label>
+                    <select id="role_select" name="role" class="form-select">
+                        <option value="user" {{ $user->hasRole('user') ? 'selected' : '' }}>user</option>
+                        <option value="admin" {{ $user->hasRole('admin') ? 'selected' : '' }}>admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Save Role</button>
+                </form>
+            </div>
         @endif
     </div>
 

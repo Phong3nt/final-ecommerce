@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -188,6 +189,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // UM-004: Admin assign or change user role
     Route::patch('/users/{user}/assign-role', [AdminUserController::class, 'assignRole'])->name('users.assign-role');
+
+    // RM-001: Admin revenue report by period
+    Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue.index');
 
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
