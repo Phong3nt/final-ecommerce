@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -33,5 +35,22 @@ class UserController extends Controller
         $orders = $user->orders()->latest()->take(10)->get();
 
         return view('admin.users.show', compact('user', 'orders'));
+    }
+
+    // UM-003: Admin toggle user active/suspended status
+    public function toggleStatus(User $user): RedirectResponse
+    {
+        // Prevent admin from suspending their own account
+        if ($user->id === Auth::id()) {
+            return redirect()->route('admin.users.show', $user)
+                ->with('error', 'You cannot suspend your own account.');
+        }
+
+        $user->update(['is_active' => ! $user->is_active]);
+
+        $action = $user->is_active ? 'activated' : 'suspended';
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', "Account {$action} successfully.");
     }
 }

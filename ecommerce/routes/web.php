@@ -183,6 +183,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // UM-002: Admin user profile and order history
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
 
+    // UM-003: Admin toggle user active/suspended status
+    Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
+
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');

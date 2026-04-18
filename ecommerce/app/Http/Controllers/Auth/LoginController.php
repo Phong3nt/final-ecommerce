@@ -35,6 +35,17 @@ class LoginController extends Controller
                 ->withErrors(['email' => __('auth.failed')]);
         }
 
+        // UM-003: Block suspended users from logging in
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Your account has been suspended. Please contact support.']);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
