@@ -4137,36 +4137,36 @@ None at this time.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                         | Type       | Result  | Notes |
-| ------------ | ---------------------------------------------------------------- | ---------- | ------- | ----- |
-| TC-01        | `NotifyAdminLowStock` implements `ShouldQueue`                   | Unit       | PASS ✅ |       |
-| TC-02        | Product model has `low_stock_threshold` in fillable              | Unit       | PASS ✅ |       |
-| TC-03        | Product model has `low_stock_notified` in fillable               | Unit       | PASS ✅ |       |
-| TC-04        | Admin can set `low_stock_threshold` via product update           | Happy Path | PASS ✅ |       |
-| TC-05        | Stock update below threshold dispatches `NotifyAdminLowStock`    | Happy Path | PASS ✅ |       |
-| TC-06        | Stock at exactly threshold level dispatches job (boundary)       | Edge       | PASS ✅ |       |
-| TC-07        | Stock above threshold does NOT dispatch job                      | Negative   | PASS ✅ |       |
-| TC-08        | Already-notified product does NOT dispatch again (same breach)   | Negative   | PASS ✅ |       |
-| TC-09        | Updating stock above threshold resets `low_stock_notified`       | Happy Path | PASS ✅ |       |
-| TC-10        | After flag reset, next below-threshold update dispatches again   | Edge       | PASS ✅ |       |
-| TC-11        | Product with null threshold never dispatches job                 | Negative   | PASS ✅ |       |
-| TC-12        | Job `handle()` creates an `AdminNotification` record in DB       | Happy Path | PASS ✅ |       |
-| TC-13        | `AdminNotification` message contains product name                | Happy Path | PASS ✅ |       |
-| TC-14        | `low_stock_notified` is `true` after breach                      | Happy Path | PASS ✅ |       |
-| TC-15        | Admin product edit form shows `low_stock_threshold` input field  | UI         | PASS ✅ |       |
+| Test Case ID | Scenario                                                        | Type       | Result  | Notes |
+| ------------ | --------------------------------------------------------------- | ---------- | ------- | ----- |
+| TC-01        | `NotifyAdminLowStock` implements `ShouldQueue`                  | Unit       | PASS ✅ |       |
+| TC-02        | Product model has `low_stock_threshold` in fillable             | Unit       | PASS ✅ |       |
+| TC-03        | Product model has `low_stock_notified` in fillable              | Unit       | PASS ✅ |       |
+| TC-04        | Admin can set `low_stock_threshold` via product update          | Happy Path | PASS ✅ |       |
+| TC-05        | Stock update below threshold dispatches `NotifyAdminLowStock`   | Happy Path | PASS ✅ |       |
+| TC-06        | Stock at exactly threshold level dispatches job (boundary)      | Edge       | PASS ✅ |       |
+| TC-07        | Stock above threshold does NOT dispatch job                     | Negative   | PASS ✅ |       |
+| TC-08        | Already-notified product does NOT dispatch again (same breach)  | Negative   | PASS ✅ |       |
+| TC-09        | Updating stock above threshold resets `low_stock_notified`      | Happy Path | PASS ✅ |       |
+| TC-10        | After flag reset, next below-threshold update dispatches again  | Edge       | PASS ✅ |       |
+| TC-11        | Product with null threshold never dispatches job                | Negative   | PASS ✅ |       |
+| TC-12        | Job `handle()` creates an `AdminNotification` record in DB      | Happy Path | PASS ✅ |       |
+| TC-13        | `AdminNotification` message contains product name               | Happy Path | PASS ✅ |       |
+| TC-14        | `low_stock_notified` is `true` after breach                     | Happy Path | PASS ✅ |       |
+| TC-15        | Admin product edit form shows `low_stock_threshold` input field | UI         | PASS ✅ |       |
 
 **Summary:** 15 Passed · 0 Failed · 0 Skipped  
 **Regression:** All previous tests still PASS ✅ (773/773)
 
 ### Quality Scores (1–5)
 
-| Dimension        | Score | Notes                                                                                   |
-| ---------------- | ----- | --------------------------------------------------------------------------------------- |
-| Correctness      | 5     | All 15 ACs fully covered; breach/reset/re-notification cycle verified                   |
-| Test Coverage    | 5     | 15 tests covering happy path, negative, edge, UI, and unit scenarios                    |
-| Code Quality     | 5     | Surgical additions; threshold logic isolated in controller; job thin and focused         |
-| Security         | 5     | Threshold validated as non-negative integer; no new attack surface                      |
-| Performance      | 5     | Notification dispatched as queued job; no blocking admin operations                     |
+| Dimension     | Score | Notes                                                                            |
+| ------------- | ----- | -------------------------------------------------------------------------------- |
+| Correctness   | 5     | All 15 ACs fully covered; breach/reset/re-notification cycle verified            |
+| Test Coverage | 5     | 15 tests covering happy path, negative, edge, UI, and unit scenarios             |
+| Code Quality  | 5     | Surgical additions; threshold logic isolated in controller; job thin and focused |
+| Security      | 5     | Threshold validated as non-negative integer; no new attack surface               |
+| Performance   | 5     | Notification dispatched as queued job; no blocking admin operations              |
 
 **Overall: 5.0 / 5.0**
 
@@ -4195,33 +4195,33 @@ None at this time.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                          | Type        | Result  | Notes |
-| ------------ | ----------------------------------------------------------------- | ----------- | ------- | ----- |
-| TC-01        | `filesystems.php` has `s3` disk configured                        | Config      | PASS ✅ |       |
-| TC-02        | S3 disk driver is `s3`                                            | Config      | PASS ✅ |       |
-| TC-03        | S3 disk has required AWS keys (key, secret, region, bucket)       | Config      | PASS ✅ |       |
-| TC-04        | `IMAGE_DISK` defaults to `s3` in source                          | Source      | PASS ✅ |       |
-| TC-05        | `image_disk` config key exists                                    | Config      | PASS ✅ |       |
-| TC-06        | `ProductController` uses configurable disk, not hardcoded public  | Source      | PASS ✅ |       |
-| TC-07        | `ProfileController` uses configurable disk, not hardcoded public  | Source      | PASS ✅ |       |
-| TC-08        | Product `store()` uploads image to `image_disk` (runtime)         | Happy Path  | PASS ✅ |       |
-| TC-09        | Product `update()` uploads image to `image_disk` (runtime)        | Happy Path  | PASS ✅ |       |
-| TC-10        | Avatar upload stores on `image_disk` (runtime)                   | Happy Path  | PASS ✅ |       |
-| TC-11        | S3 disk has `visibility: public`                                  | Config      | PASS ✅ |       |
-| TC-12        | `use_path_style_endpoint` configurable via env (S3-compat)        | Config      | PASS ✅ |       |
+| Test Case ID | Scenario                                                         | Type       | Result  | Notes |
+| ------------ | ---------------------------------------------------------------- | ---------- | ------- | ----- |
+| TC-01        | `filesystems.php` has `s3` disk configured                       | Config     | PASS ✅ |       |
+| TC-02        | S3 disk driver is `s3`                                           | Config     | PASS ✅ |       |
+| TC-03        | S3 disk has required AWS keys (key, secret, region, bucket)      | Config     | PASS ✅ |       |
+| TC-04        | `IMAGE_DISK` defaults to `s3` in source                          | Source     | PASS ✅ |       |
+| TC-05        | `image_disk` config key exists                                   | Config     | PASS ✅ |       |
+| TC-06        | `ProductController` uses configurable disk, not hardcoded public | Source     | PASS ✅ |       |
+| TC-07        | `ProfileController` uses configurable disk, not hardcoded public | Source     | PASS ✅ |       |
+| TC-08        | Product `store()` uploads image to `image_disk` (runtime)        | Happy Path | PASS ✅ |       |
+| TC-09        | Product `update()` uploads image to `image_disk` (runtime)       | Happy Path | PASS ✅ |       |
+| TC-10        | Avatar upload stores on `image_disk` (runtime)                   | Happy Path | PASS ✅ |       |
+| TC-11        | S3 disk has `visibility: public`                                 | Config     | PASS ✅ |       |
+| TC-12        | `use_path_style_endpoint` configurable via env (S3-compat)       | Config     | PASS ✅ |       |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Regression:** All previous tests still PASS ✅ (785/785)
 
 ### Quality Scores (1–5)
 
-| Dimension        | Score | Notes                                                                                   |
-| ---------------- | ----- | --------------------------------------------------------------------------------------- |
-| Correctness      | 5     | All 12 ACs covered; IMAGE_DISK=public in phpunit keeps existing upload tests green       |
-| Test Coverage    | 5     | Config, source, and runtime audits across both upload controllers                       |
-| Code Quality     | 5     | Single env var controls all image storage; no hardcoded disk names in controllers       |
-| Security         | 5     | S3 visibility:public ensures files are readable; no local public/ exposure              |
-| Performance      | 5     | No behavioral changes; existing tests unaffected                                        |
+| Dimension     | Score | Notes                                                                              |
+| ------------- | ----- | ---------------------------------------------------------------------------------- |
+| Correctness   | 5     | All 12 ACs covered; IMAGE_DISK=public in phpunit keeps existing upload tests green |
+| Test Coverage | 5     | Config, source, and runtime audits across both upload controllers                  |
+| Code Quality  | 5     | Single env var controls all image storage; no hardcoded disk names in controllers  |
+| Security      | 5     | S3 visibility:public ensures files are readable; no local public/ exposure         |
+| Performance   | 5     | No behavioral changes; existing tests unaffected                                   |
 
 **Overall: 5.0 / 5.0**
 
@@ -4238,3 +4238,58 @@ None.
 None at this time.
 
 <!-- EVAL-NF-007 END -->
+
+---
+
+## EVAL-NF-008 · Queued Heavy Operations
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [NF-008](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                           | Type       | Result  | Notes |
+| ------------ | ------------------------------------------------------------------ | ---------- | ------- | ----- |
+| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`             | Unit       | PASS ✅ |       |
+| TC-02        | `SendOrderConfirmationEmail` implements `ShouldQueue`              | Unit       | PASS ✅ |       |
+| TC-03        | `NotifyAdminOfNewOrder` implements `ShouldQueue`                   | Unit       | PASS ✅ |       |
+| TC-04        | `NotifyAdminLowStock` implements `ShouldQueue`                     | Unit       | PASS ✅ |       |
+| TC-05        | `ImportProductsCsvJob` implements `ShouldQueue`                    | Unit       | PASS ✅ |       |
+| TC-06        | All jobs use required queue traits                                 | Unit       | PASS ✅ |       |
+| TC-07        | Order status update dispatches `SendOrderStatusChangedEmail` job   | Happy Path | PASS ✅ |       |
+| TC-08        | Webhook dispatches `SendOrderConfirmationEmail` job                | Happy Path | PASS ✅ |       |
+| TC-09        | Webhook dispatches `NotifyAdminOfNewOrder` job                     | Happy Path | PASS ✅ |       |
+| TC-10        | CSV import dispatches `ImportProductsCsvJob`                       | Happy Path | PASS ✅ |       |
+| TC-11        | Controllers do not send mail directly (no `Mail::send` calls)      | Source     | PASS ✅ |       |
+| TC-12        | Queue connection is configurable via `QUEUE_CONNECTION` env        | Config     | PASS ✅ |       |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Regression:** All previous tests still PASS ✅ (797/797)
+
+### Quality Scores (1–5)
+
+| Dimension        | Score | Notes                                                                                   |
+| ---------------- | ----- | --------------------------------------------------------------------------------------- |
+| Correctness      | 5     | All 5 jobs verified as ShouldQueue; all dispatch points covered                         |
+| Test Coverage    | 5     | Unit, source, config, and runtime dispatch audits                                       |
+| Code Quality     | 5     | Audit-only task; no production code changes required                                    |
+| Security         | 5     | No new attack surface                                                                   |
+| Performance      | 5     | Confirms heavy operations (email, CSV import) are non-blocking                          |
+
+**Overall: 5.0 / 5.0**
+
+### Bugs Found
+
+None.
+
+### Notes
+
+All 5 jobs (`SendOrderStatusChangedEmail`, `SendOrderConfirmationEmail`, `NotifyAdminOfNewOrder`, `NotifyAdminLowStock`, `ImportProductsCsvJob`) already implement `ShouldQueue` and use the required queue traits. No production code changes were needed. Tests confirm dispatch from controllers and that no controller sends mail synchronously.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NF-008 END -->
