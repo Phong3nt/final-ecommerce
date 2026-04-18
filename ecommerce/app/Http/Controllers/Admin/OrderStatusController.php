@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OrderStatusChanged;
+use App\Jobs\SendOrderStatusChangedEmail;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class OrderStatusController extends Controller
@@ -35,7 +34,7 @@ class OrderStatusController extends Controller
             $timestampColumn => now(),
         ]);
 
-        Mail::to($order->user)->send(new OrderStatusChanged($order));
+        dispatch(new SendOrderStatusChangedEmail($order));
 
         return redirect()->back()->with('success', 'Order status updated to ' . $newStatus . '.');
     }
