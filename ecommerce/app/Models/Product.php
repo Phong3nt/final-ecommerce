@@ -11,11 +11,13 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'image', 'images', 'category_id', 'rating', 'status'];
+    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'low_stock_threshold', 'low_stock_notified', 'image', 'images', 'category_id', 'rating', 'status'];
 
     protected $casts = [
         'price' => 'decimal:2',
         'stock' => 'integer',
+        'low_stock_threshold' => 'integer',
+        'low_stock_notified' => 'boolean',
         'rating' => 'float',
         'category_id' => 'integer',
         'images' => 'array',

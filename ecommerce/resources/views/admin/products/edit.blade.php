@@ -111,6 +111,13 @@
         </div>
 
         <div class="form-group">
+            <label for="low_stock_threshold">Low Stock Threshold</label>
+            <input type="number" id="low_stock_threshold" name="low_stock_threshold"
+                value="{{ old('low_stock_threshold', $product->low_stock_threshold) }}" min="0" placeholder="Leave blank to disable">
+            @error('low_stock_threshold')<div class="error">{{ $message }}</div>@enderror
+        </div>
+
+        <div class="form-group">
             <label for="category_id">Category</label>
             <select id="category_id" name="category_id">
                 <option value="">— None —</option>
