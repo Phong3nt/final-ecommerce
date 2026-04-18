@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Image Storage Disk
+    |--------------------------------------------------------------------------
+    |
+    | Disk used for all user-facing image uploads (product images, avatars).
+    | Set IMAGE_DISK=public locally for development; use s3 in production.
+    |
+    */
+
+    'image_disk' => env('IMAGE_DISK', 's3'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -53,6 +65,7 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'public',
             'throw' => false,
         ],
 
