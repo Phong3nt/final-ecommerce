@@ -3404,6 +3404,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-RM-001 END -->
 
 <!-- EVAL-RM-002 START -->
+
 ## EVAL-RM-002 · Admin Revenue by Product/Category
 
 **Task:** RM-002 — As an admin, I want to see revenue by category/product so I can identify bestsellers.
@@ -3412,6 +3413,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 **Tag:** `v1.0-RM-002-stable`
 
 ### Acceptance Criteria Checklist
+
 - [x] Sortable table (product name, category, units sold, gross revenue)
 - [x] Sortable by any column with asc/desc toggle
 - [x] Filterable by category
@@ -3422,42 +3424,107 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 - [x] Guest redirected; non-admin gets 403
 
 ### Files Changed
-| File | Change |
-|------|--------|
-| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | Added `products()`, `exportProducts()`, `buildProductRows()` |
-| `ecommerce/resources/views/admin/revenue/products.blade.php` | New — product revenue Blade view |
-| `ecommerce/routes/web.php` | Added `GET /admin/revenue/products` and `GET /admin/revenue/products/export` |
-| `ecommerce/tests/Feature/AdminProductRevenueTest.php` | New — 21 tests |
+
+| File                                                         | Change                                                                       |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | Added `products()`, `exportProducts()`, `buildProductRows()`                 |
+| `ecommerce/resources/views/admin/revenue/products.blade.php` | New — product revenue Blade view                                             |
+| `ecommerce/routes/web.php`                                   | Added `GET /admin/revenue/products` and `GET /admin/revenue/products/export` |
+| `ecommerce/tests/Feature/AdminProductRevenueTest.php`        | New — 21 tests                                                               |
 
 ### Test Results
-| TC | Description | Result |
-|----|-------------|--------|
-| TC-01 | Guest redirected to login (products page) | ✅ Pass |
-| TC-02 | Non-admin gets 403 (products page) | ✅ Pass |
-| TC-03 | Admin gets 200 | ✅ Pass |
-| TC-04 | Guest redirected for CSV export | ✅ Pass |
-| TC-05 | Non-admin gets 403 on CSV export | ✅ Pass |
-| TC-06 | Units sold and gross revenue summed correctly | ✅ Pass |
-| TC-07 | Only revenue-status orders counted | ✅ Pass |
-| TC-08 | Category name shown in table row | ✅ Pass |
+
+| TC    | Description                                       | Result  |
+| ----- | ------------------------------------------------- | ------- |
+| TC-01 | Guest redirected to login (products page)         | ✅ Pass |
+| TC-02 | Non-admin gets 403 (products page)                | ✅ Pass |
+| TC-03 | Admin gets 200                                    | ✅ Pass |
+| TC-04 | Guest redirected for CSV export                   | ✅ Pass |
+| TC-05 | Non-admin gets 403 on CSV export                  | ✅ Pass |
+| TC-06 | Units sold and gross revenue summed correctly     | ✅ Pass |
+| TC-07 | Only revenue-status orders counted                | ✅ Pass |
+| TC-08 | Category name shown in table row                  | ✅ Pass |
 | TC-09 | Filter by category returns only matching products | ✅ Pass |
-| TC-10 | date_from excludes older orders | ✅ Pass |
-| TC-11 | date_to excludes newer orders | ✅ Pass |
-| TC-12 | Default sort is gross_revenue desc | ✅ Pass |
-| TC-13 | Sort by units_sold descending | ✅ Pass |
-| TC-14 | Sort by product_name ascending | ✅ Pass |
-| TC-15 | Invalid sort column falls back to gross_revenue | ✅ Pass |
-| TC-16 | Zero rows when no revenue orders | ✅ Pass |
-| TC-17 | CSV returns 200 with correct Content-Type | ✅ Pass |
-| TC-18 | CSV has correct header row | ✅ Pass |
-| TC-19 | CSV contains product data | ✅ Pass |
-| TC-20 | CSV Content-Disposition is attachment with .csv | ✅ Pass |
-| TC-21 | CSV respects category filter | ✅ Pass |
+| TC-10 | date_from excludes older orders                   | ✅ Pass |
+| TC-11 | date_to excludes newer orders                     | ✅ Pass |
+| TC-12 | Default sort is gross_revenue desc                | ✅ Pass |
+| TC-13 | Sort by units_sold descending                     | ✅ Pass |
+| TC-14 | Sort by product_name ascending                    | ✅ Pass |
+| TC-15 | Invalid sort column falls back to gross_revenue   | ✅ Pass |
+| TC-16 | Zero rows when no revenue orders                  | ✅ Pass |
+| TC-17 | CSV returns 200 with correct Content-Type         | ✅ Pass |
+| TC-18 | CSV has correct header row                        | ✅ Pass |
+| TC-19 | CSV contains product data                         | ✅ Pass |
+| TC-20 | CSV Content-Disposition is attachment with .csv   | ✅ Pass |
+| TC-21 | CSV respects category filter                      | ✅ Pass |
 
 **New Tests:** 21/21 ✅
 **Regression:** 707/707 ✅
 
 <!-- EVAL-RM-002 END -->
+
+<!-- EVAL-RM-003 START -->
+## EVAL-RM-003 · Admin Coupon Management
+
+**Task:** RM-003 — As an admin, I want to manage discount coupons so I can run promotions.
+
+**Branch:** `feature/RM-003` → merged to `master`
+**Tag:** `v1.0-RM-003-stable`
+
+### Acceptance Criteria Checklist
+- [x] CRUD for coupons (index, create, store, edit, update, destroy)
+- [x] Fields: code, type (percent/fixed), value, expiry, usage limit, min order amount
+- [x] Active/inactive toggle (`PATCH /coupons/{coupon}/toggle`)
+- [x] Code stored as upper case
+- [x] Code must be unique (update allows same code for self)
+- [x] Type validated as percent or fixed
+- [x] Value must be positive (> 0)
+- [x] Usage limit must be positive integer if provided
+- [x] Min order amount must be non-negative if provided
+- [x] Guest redirected; non-admin gets 403
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ecommerce/database/migrations/2026_04_18_000001_add_usage_limit_and_min_order_to_coupons_table.php` | New — adds usage_limit + min_order_amount columns |
+| `ecommerce/app/Models/Coupon.php` | Updated fillable + casts |
+| `ecommerce/database/factories/CouponFactory.php` | New — CouponFactory with percent/fixed/inactive/expired states |
+| `ecommerce/app/Http/Controllers/Admin/CouponController.php` | New — index/create/store/edit/update/destroy/toggle |
+| `ecommerce/resources/views/admin/coupons/index.blade.php` | New — listing with active/inactive badges |
+| `ecommerce/resources/views/admin/coupons/create.blade.php` | New — create form |
+| `ecommerce/resources/views/admin/coupons/edit.blade.php` | New — edit form |
+| `ecommerce/routes/web.php` | Added 7 admin coupon routes |
+| `ecommerce/tests/Feature/AdminCouponTest.php` | New — 21 tests |
+
+### Test Results
+| TC | Description | Result |
+|----|-------------|--------|
+| TC-01 | Guest redirected to login (index) | ✅ Pass |
+| TC-02 | Non-admin gets 403 (index) | ✅ Pass |
+| TC-03 | Admin can view coupon index | ✅ Pass |
+| TC-04 | Coupon appears in index listing | ✅ Pass |
+| TC-05 | Index shows active/inactive badge | ✅ Pass |
+| TC-06 | Admin can view create form | ✅ Pass |
+| TC-07 | Admin can create a valid coupon | ✅ Pass |
+| TC-08 | Code stored as upper case | ✅ Pass |
+| TC-09 | Code must be unique on create | ✅ Pass |
+| TC-10 | Type must be percent or fixed | ✅ Pass |
+| TC-11 | Value must be positive | ✅ Pass |
+| TC-12 | Usage limit must be positive integer | ✅ Pass |
+| TC-13 | Min order amount must be non-negative | ✅ Pass |
+| TC-14 | Admin can view edit form | ✅ Pass |
+| TC-15 | Admin can update a coupon | ✅ Pass |
+| TC-16 | Update allows same code for self | ✅ Pass |
+| TC-17 | Admin can delete a coupon | ✅ Pass |
+| TC-18 | Toggle active coupon becomes inactive | ✅ Pass |
+| TC-19 | Toggle inactive coupon becomes active | ✅ Pass |
+| TC-20 | Guest redirected on all mutating routes | ✅ Pass |
+| TC-21 | Coupon with all optional fields stored correctly | ✅ Pass |
+
+**New Tests:** 21/21 ✅
+**Regression:** 728/728 ✅
+
+<!-- EVAL-RM-003 END -->
 
 ## EVAL-OM-001 · Admin Order List with Filters
 
