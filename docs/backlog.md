@@ -293,4 +293,4 @@
 | NF-007  | Non-Functional                 | Done        | 7      | Agent       | [EVAL-NF-007](evaluation_history.md#eval-nf-007--cloud-image-storage)                                       | `v1.0-NF-007-stable` |       |
 | NF-008  | Non-Functional                 | Done        | 7      | Agent       | [EVAL-NF-008](evaluation_history.md#eval-nf-008--queued-heavy-operations)                                   | `v1.0-NF-008-stable` |       |
 | NF-009  | Non-Functional                 | Done        | 7      | Agent       | [EVAL-NF-009](evaluation_history.md#eval-nf-009--application-logging--monitoring)                          | `v1.0-NF-009-stable` |       |
-| NF-010  | Non-Functional                 | Not Started | 7      | —           | —                                                                                                           | —                    |       |
+| NF-010  | Non-Functional                 | Done        | 7      | Agent       | [EVAL-NF-010](evaluation_history.md#eval-nf-010--critical-flow-test-coverage-audit)                         | `v1.0-NF-010-stable` |       |
