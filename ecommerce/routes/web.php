@@ -193,6 +193,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // RM-001: Admin revenue report by period
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue.index');
 
+    // RM-002: Admin revenue by product/category — sortable table + CSV export
+    Route::get('/revenue/products', [RevenueController::class, 'products'])->name('revenue.products');
+    Route::get('/revenue/products/export', [RevenueController::class, 'exportProducts'])->name('revenue.products.export');
+
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
