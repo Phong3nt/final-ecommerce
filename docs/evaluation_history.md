@@ -4029,23 +4029,23 @@ None at this time.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                                          | Type        | Result  | Duration | Notes                                                       |
-| ------------ | --------------------------------------------------------------------------------- | ----------- | ------- | -------- | ----------------------------------------------------------- |
-| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`                            | Unit        | PASS ✅ | 0.41s    | Job queued, not run synchronously                           |
-| TC-02        | Status → `processing` dispatches `SendOrderStatusChangedEmail` via `Queue::fake` | Feature     | PASS ✅ | 0.14s    | `Queue::assertPushed` verified job payload                  |
-| TC-03        | Status → `shipped` dispatches `SendOrderStatusChangedEmail`                       | Feature     | PASS ✅ | 0.06s    | Job dispatched with correct order id                        |
-| TC-04        | Status → `delivered` dispatches `SendOrderStatusChangedEmail`                     | Feature     | PASS ✅ | 0.06s    | Delivery trigger covered                                    |
-| TC-05        | Status → `cancelled` dispatches `SendOrderStatusChangedEmail`                     | Feature     | PASS ✅ | 0.06s    | Cancellation trigger covered                                |
-| TC-06        | `SendOrderStatusChangedEmail::handle()` sends `OrderStatusChanged` to owner      | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check    |
-| TC-07        | `OrderStatusChanged` subject contains order id                                    | Unit        | PASS ✅ | 0.06s    | Envelope subject verified                                   |
-| TC-08        | `OrderStatusChanged` is addressed to order owner                                  | Unit        | PASS ✅ | 0.06s    | `hasTo($owner->email)` assertion                            |
-| TC-09        | Mail for `processing` status carries correct status on mailable                   | Unit        | PASS ✅ | 0.06s    | `$mail->order->status === 'processing'`                     |
-| TC-10        | Delivery trigger → admin sets `delivered` → `Mail::assertSent`                   | Integration | PASS ✅ | 0.10s    | QUEUE_CONNECTION=sync so job runs inline during test        |
-| TC-11        | Delivery mail content has `statusLabel = 'Delivered'`                            | Unit        | PASS ✅ | 0.06s    | `$mail->content()->with['statusLabel']` assertion           |
-| TC-12        | Cancelled mail content has `statusLabel = 'Cancelled'`                           | Unit        | PASS ✅ | 0.05s    | Consistent label mapping                                    |
-| TC-13        | `SendOrderConfirmationEmail` implements `ShouldQueue`                             | Unit        | PASS ✅ | 0.06s    | Order-placed trigger confirmed queued                       |
-| TC-14        | Order-placed webhook dispatches `SendOrderConfirmationEmail` via `Queue::fake`    | Feature     | PASS ✅ | 0.06s    | Mocked `PaymentServiceInterface` + `Queue::assertPushed`    |
-| TC-15        | `SendOrderConfirmationEmail::handle()` sends `OrderConfirmation` to owner        | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check    |
+| Test Case ID | Scenario                                                                         | Type        | Result  | Duration | Notes                                                    |
+| ------------ | -------------------------------------------------------------------------------- | ----------- | ------- | -------- | -------------------------------------------------------- |
+| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`                           | Unit        | PASS ✅ | 0.41s    | Job queued, not run synchronously                        |
+| TC-02        | Status → `processing` dispatches `SendOrderStatusChangedEmail` via `Queue::fake` | Feature     | PASS ✅ | 0.14s    | `Queue::assertPushed` verified job payload               |
+| TC-03        | Status → `shipped` dispatches `SendOrderStatusChangedEmail`                      | Feature     | PASS ✅ | 0.06s    | Job dispatched with correct order id                     |
+| TC-04        | Status → `delivered` dispatches `SendOrderStatusChangedEmail`                    | Feature     | PASS ✅ | 0.06s    | Delivery trigger covered                                 |
+| TC-05        | Status → `cancelled` dispatches `SendOrderStatusChangedEmail`                    | Feature     | PASS ✅ | 0.06s    | Cancellation trigger covered                             |
+| TC-06        | `SendOrderStatusChangedEmail::handle()` sends `OrderStatusChanged` to owner      | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check |
+| TC-07        | `OrderStatusChanged` subject contains order id                                   | Unit        | PASS ✅ | 0.06s    | Envelope subject verified                                |
+| TC-08        | `OrderStatusChanged` is addressed to order owner                                 | Unit        | PASS ✅ | 0.06s    | `hasTo($owner->email)` assertion                         |
+| TC-09        | Mail for `processing` status carries correct status on mailable                  | Unit        | PASS ✅ | 0.06s    | `$mail->order->status === 'processing'`                  |
+| TC-10        | Delivery trigger → admin sets `delivered` → `Mail::assertSent`                   | Integration | PASS ✅ | 0.10s    | QUEUE_CONNECTION=sync so job runs inline during test     |
+| TC-11        | Delivery mail content has `statusLabel = 'Delivered'`                            | Unit        | PASS ✅ | 0.06s    | `$mail->content()->with['statusLabel']` assertion        |
+| TC-12        | Cancelled mail content has `statusLabel = 'Cancelled'`                           | Unit        | PASS ✅ | 0.05s    | Consistent label mapping                                 |
+| TC-13        | `SendOrderConfirmationEmail` implements `ShouldQueue`                            | Unit        | PASS ✅ | 0.06s    | Order-placed trigger confirmed queued                    |
+| TC-14        | Order-placed webhook dispatches `SendOrderConfirmationEmail` via `Queue::fake`   | Feature     | PASS ✅ | 0.06s    | Mocked `PaymentServiceInterface` + `Queue::assertPushed` |
+| TC-15        | `SendOrderConfirmationEmail::handle()` sends `OrderConfirmation` to owner        | Unit        | PASS ✅ | 0.06s    | `Mail::fake()` + `Mail::assertSent` with recipient check |
 
 **New Tests:** 15/15 ✅  
 **Regression:** 743/743 ✅
@@ -4064,3 +4064,64 @@ None at this time.
 None at this time.
 
 <!-- EVAL-NT-001 END -->
+
+<!-- EVAL-NT-002 START -->
+
+## EVAL-NT-002 · Admin New Order Notification Bell
+
+**Date:** 2026-04-18
+**Tag:** `v1.0-NT-002-stable`
+**Branch:** `feature/NT-002`
+**Tests:** 758 / 758 passed (1763 assertions)
+
+---
+
+### Acceptance Criteria Checklist
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | In-app notification bell shows unread count | ✅ |
+| 2 | Bell dropdown lists recent notifications (latest 20) | ✅ |
+| 3 | New order triggers `NotifyAdminOfNewOrder` job via webhook | ✅ |
+| 4 | Job creates `AdminNotification` DB record (unread by default) | ✅ |
+| 5 | Job emails all admin users via `NewOrderAdminMail` | ✅ |
+| 6 | Admin can mark individual notification as read | ✅ |
+| 7 | Admin can mark all notifications as read | ✅ |
+| 8 | Non-admin gets 403 on notification endpoints | ✅ |
+| 9 | Guest is redirected from notification endpoints | ✅ |
+
+---
+
+### Test Coverage
+
+| Test File | Tests | Result |
+|-----------|-------|--------|
+| `AdminOrderNotificationTest.php` (TC-01 → TC-15) | 15 | ✅ All pass |
+| Full regression suite | 758 | ✅ All pass |
+
+---
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `ecommerce/database/migrations/2026_04_18_000003_create_admin_notifications_table.php` | New migration — `admin_notifications` table |
+| `ecommerce/app/Models/AdminNotification.php` | New model — `fillable`, `scopeUnread`, `belongsTo Order` |
+| `ecommerce/app/Jobs/NotifyAdminOfNewOrder.php` | New queued job — creates DB record + emails admins |
+| `ecommerce/app/Mail/NewOrderAdminMail.php` | New mailable — subject "New Order #{id} Received" |
+| `ecommerce/resources/views/mail/new-order-admin.blade.php` | Email template for `NewOrderAdminMail` |
+| `ecommerce/app/Http/Controllers/CheckoutController.php` | Added `NotifyAdminOfNewOrder::dispatch($order)` in webhook handler |
+| `ecommerce/app/Http/Controllers/Admin/AdminNotificationController.php` | New controller — `index`, `markRead`, `markAllRead` |
+| `ecommerce/routes/web.php` | Added 3 admin notification routes |
+| `ecommerce/resources/views/admin/partials/notification-bell.blade.php` | Reusable bell partial (HTML + JS) |
+| `ecommerce/tests/Feature/AdminOrderNotificationTest.php` | 15 feature tests (TC-01 → TC-15) |
+
+### Regression Note
+
+Fixed `NotifyAdminOfNewOrder::handle()` — replaced `User::role('admin')->get()` (Spatie scope that throws `RoleDoesNotExist` when role is absent) with `User::whereHas('roles', fn($q) => $q->where('name', 'admin'))->get()` to prevent 500 in tests without pre-seeded roles.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NT-002 END -->
