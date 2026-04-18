@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\NotifyAdminOfNewOrder;
 use App\Jobs\SendOrderConfirmationEmail;
 use App\Models\Order;
 use App\Models\UserAddress;
@@ -262,6 +263,7 @@ class CheckoutController extends Controller
                 if ($event->type === 'payment_intent.succeeded') {
                     $order->update(['status' => 'paid']);
                     SendOrderConfirmationEmail::dispatch($order);
+                    NotifyAdminOfNewOrder::dispatch($order);
                 } elseif ($event->type === 'payment_intent.payment_failed') {
                     $order->update(['status' => 'failed']);
                 }
