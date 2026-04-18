@@ -36,7 +36,7 @@ class LoginController extends Controller
         }
 
         // UM-003: Block suspended users from logging in
-        if (! Auth::user()->is_active) {
+        if (!Auth::user()->is_active) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

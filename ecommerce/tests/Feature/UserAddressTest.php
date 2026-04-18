@@ -27,13 +27,13 @@ class UserAddressTest extends TestCase
     private function validAddress(array $overrides = []): array
     {
         return array_merge([
-            'name'          => 'Jane Doe',
+            'name' => 'Jane Doe',
             'address_line1' => '123 Main St',
             'address_line2' => null,
-            'city'          => 'Springfield',
-            'state'         => 'IL',
-            'postal_code'   => '62701',
-            'country'       => 'US',
+            'city' => 'Springfield',
+            'state' => 'IL',
+            'postal_code' => '62701',
+            'country' => 'US',
         ], $overrides);
     }
 
@@ -77,9 +77,9 @@ class UserAddressTest extends TestCase
             ->assertRedirect(route('addresses.index'));
 
         $this->assertDatabaseHas('user_addresses', [
-            'user_id'       => $user->id,
+            'user_id' => $user->id,
             'address_line1' => '123 Main St',
-            'city'          => 'Springfield',
+            'city' => 'Springfield',
         ]);
     }
 
@@ -104,7 +104,7 @@ class UserAddressTest extends TestCase
             ->assertRedirect(route('addresses.index'));
 
         $this->assertDatabaseHas('user_addresses', [
-            'id'   => $address->id,
+            'id' => $address->id,
             'city' => 'Portland',
         ]);
     }
@@ -157,7 +157,7 @@ class UserAddressTest extends TestCase
             ->assertRedirect(route('addresses.index'));
 
         $this->assertDatabaseHas('user_addresses', [
-            'id'         => $address->id,
+            'id' => $address->id,
             'is_default' => true,
         ]);
     }
@@ -181,7 +181,7 @@ class UserAddressTest extends TestCase
     {
         $user = $this->makeUser();
         UserAddress::factory()->create(['user_id' => $user->id, 'is_default' => false, 'name' => 'Work']);
-        UserAddress::factory()->create(['user_id' => $user->id, 'is_default' => true,  'name' => 'Home Default']);
+        UserAddress::factory()->create(['user_id' => $user->id, 'is_default' => true, 'name' => 'Home Default']);
 
         $addresses = $user->addresses()->get();
 

@@ -186,6 +186,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // UM-003: Admin toggle user active/suspended status
     Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
 
+    // UM-004: Admin assign or change user role
+    Route::patch('/users/{user}/assign-role', [AdminUserController::class, 'assignRole'])->name('users.assign-role');
+
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');

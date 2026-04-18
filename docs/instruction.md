@@ -287,7 +287,14 @@ chore: cleanup A artifacts after A.1 upgrade — removed [list what was deleted]
    - Improvement proposals (do NOT implement)
 ```
 
-### Scenario B — "Sửa lỗi trong phần đánh giá của Task #ID"
+### Scenario B — Fixing a runtime error (with or without a known Task ID)
+
+> **Two entry points:**
+>
+> - **B1** — User says: _"Sửa lỗi trong Task #ID"_ → Task is known, go to B1 flow.
+> - **B2** — User describes an error message or screenshot WITHOUT specifying a Task ID → Must identify the task first, go to B2 flow.
+
+#### B1 — Task ID is known
 
 ```
 1. Open evaluation_history.md, find EVAL-#ID
@@ -303,6 +310,83 @@ chore: cleanup A artifacts after A.1 upgrade — removed [list what was deleted]
 6. Re-run ALL test cases for that task (old + any newly added cases)
 7. Append an updated sub-block EVAL-#ID (v2) to evaluation_history.md
 8. Update backlog.md status: "Done" only when ALL tests pass
+```
+
+#### B2 — Task ID is NOT known (user describes error or shares screenshot)
+
+```
+PHASE 1 — IDENTIFY (always do this before touching any file)
+
+1. Read the full error message and stack trace carefully.
+2. Identify the originating file:line from the stack trace.
+3. Search backlog.md Task Status Tracker: which Task ID produced that controller/service?
+   - Use grep_search or file_search on the originating file path
+   - Match to Task ID by epic and controller name (e.g. RegisterController → AU-001)
+4. If multiple tasks share the file, list all candidates.
+5. Read the EVAL block(s) for each candidate task in evaluation_history.md.
+6. Check: which TC should have caught this? Why did it pass?
+   → If a mock hid the error: mark as "Mock Gap"
+   → If the scenario was never tested: mark as "Test Gap"
+   → If it's a missing .env / unseeded DB / config: mark as "Environment Issue"
+
+PHASE 2 — CLASSIFY FIX TYPE
+
+Classify before writing any code:
+   Code bug    → logic error in a Done task's code
+   Environment → missing/wrong .env key or value
+   Data        → wrong value in production DB (fix with tinker)
+   Config      → wrong config/*.php, routes, or middleware
+   Deployment  → missing migrate / db:seed / config:clear
+
+PHASE 3 — APPLY FIX (use fix_template.md)
+
+1. Fill in a FIX-<NNN> block in fixlog.md (sequential number)
+2. Apply the minimal fix per the fix type:
+   - Code bug → fix code, do not touch tests
+   - Environment/Data/Config → fix config/DB, do not touch code unless necessary
+   - Deployment → run the missing artisan command, document it
+3. Batch related small fixes: if 2+ fixes arise in the same session from the same root
+   cause → fix all before committing; use one consolidated commit message.
+4. Do NOT commit a partial fix. Verify ALL related symptoms are resolved first.
+
+PHASE 4 — TEST
+
+1. Run tests for ALL identified parent tasks:
+   php artisan test --filter <ParentTask1>Test
+   php artisan test --filter <ParentTask2>Test
+2. Run full suite: php artisan test
+3. If any test newly fails → STOP — investigate regression before committing (Rule 4)
+4. If the same fix fails 3 times → STOP — report to user (Rule 6)
+
+PHASE 5 — COMMIT
+
+Commit only after all tests pass. Use format:
+   fix([TASK-IDs]): <short description>
+
+   - Root cause: <what caused it>
+   - Files changed: <list>
+   - Test gap: <TC that should have caught this, or "Environment-only">
+   - Ref: FIX-<NNN> in docs/fixlog.md
+
+Small related fixes in same session → ONE commit, not multiple.
+Big fixes spanning multiple epics → ONE commit per epic.
+
+PHASE 6 — DOCUMENT
+
+1. Append FIX-<NNN> block to docs/fixlog.md (full analysis)
+2. If a Done task's test did NOT catch the bug:
+   - Propose new TC in fixlog.md "Proposed new test cases" section
+   - Do NOT add the test yet — wait for user to say "add test for FIX-NNN"
+3. If fix changes behaviour of a Done task → treat like Scenario B1:
+   - Append EVAL-#ID (v2) sub-block to evaluation_history.md
+   - Update backlog.md status if needed
+4. Do NOT update backlog.md status to "Done" for a fix unless ALL tests pass
+
+BATCHING RULE — when to commit immediately vs. batch:
+   1 fix, 1 file, all tests pass           → commit now
+   2–4 small related fixes, same session   → batch into 1 commit at session end
+   5+ fixes or fixes across multiple epics → 1 commit per epic + tag hotfix/session-DATE
+   Fix caused regression                   → DO NOT commit, fix regression first
 ```
 
 ### Scenario C — "Thực hiện đề xuất cải tiến [TASK-ID].1"
@@ -391,7 +475,21 @@ git_workflow.md        security_checks.md        task_template.md
   └─ Rules G1–G6          └─ CSRF/XSS/SQLi          └─ Per-task fill-in form
   └─ Branch/tag/push       └─ Auth security          └─ Pre-task checklist
   └─ Pre-commit hook        └─ Security test table    └─ Git checklist
-                   ▲                                       ▲
+
+fixlog.md  ────────────────────────────────────────────────┐
+  └─ FIX-<NNN> blocks (runtime fixes outside task flow)    │
+  └─ Parent task mapping                                    │
+  └─ Test gap analysis                                      │
+  └─ Proposed follow-up TCs                                │
+  └─ Environment variables setup table                     │
+  └─ Commit strategy for fix batches                       │
+                                                           ▼
+fix_template.md                                 (feeds fixlog.md entries)
+  └─ 7-step fix workflow                          └─ FIX-<NNN> template
+  └─ Fix type classification                      └─ Commit message format
+  └─ Commit batching rules                        └─ Root cause checklist
+
+                   ▲
                    └──────── instruction.md ───────────────┘
                              (this file — the workflow)
 ```
