@@ -4078,43 +4078,43 @@ None at this time.
 
 ### Acceptance Criteria Checklist
 
-| # | Criterion | Status |
-|---|-----------|--------|
-| 1 | In-app notification bell shows unread count | ✅ |
-| 2 | Bell dropdown lists recent notifications (latest 20) | ✅ |
-| 3 | New order triggers `NotifyAdminOfNewOrder` job via webhook | ✅ |
-| 4 | Job creates `AdminNotification` DB record (unread by default) | ✅ |
-| 5 | Job emails all admin users via `NewOrderAdminMail` | ✅ |
-| 6 | Admin can mark individual notification as read | ✅ |
-| 7 | Admin can mark all notifications as read | ✅ |
-| 8 | Non-admin gets 403 on notification endpoints | ✅ |
-| 9 | Guest is redirected from notification endpoints | ✅ |
+| #   | Criterion                                                     | Status |
+| --- | ------------------------------------------------------------- | ------ |
+| 1   | In-app notification bell shows unread count                   | ✅     |
+| 2   | Bell dropdown lists recent notifications (latest 20)          | ✅     |
+| 3   | New order triggers `NotifyAdminOfNewOrder` job via webhook    | ✅     |
+| 4   | Job creates `AdminNotification` DB record (unread by default) | ✅     |
+| 5   | Job emails all admin users via `NewOrderAdminMail`            | ✅     |
+| 6   | Admin can mark individual notification as read                | ✅     |
+| 7   | Admin can mark all notifications as read                      | ✅     |
+| 8   | Non-admin gets 403 on notification endpoints                  | ✅     |
+| 9   | Guest is redirected from notification endpoints               | ✅     |
 
 ---
 
 ### Test Coverage
 
-| Test File | Tests | Result |
-|-----------|-------|--------|
-| `AdminOrderNotificationTest.php` (TC-01 → TC-15) | 15 | ✅ All pass |
-| Full regression suite | 758 | ✅ All pass |
+| Test File                                        | Tests | Result      |
+| ------------------------------------------------ | ----- | ----------- |
+| `AdminOrderNotificationTest.php` (TC-01 → TC-15) | 15    | ✅ All pass |
+| Full regression suite                            | 758   | ✅ All pass |
 
 ---
 
 ### Files Changed
 
-| File | Change |
-|------|--------|
-| `ecommerce/database/migrations/2026_04_18_000003_create_admin_notifications_table.php` | New migration — `admin_notifications` table |
-| `ecommerce/app/Models/AdminNotification.php` | New model — `fillable`, `scopeUnread`, `belongsTo Order` |
-| `ecommerce/app/Jobs/NotifyAdminOfNewOrder.php` | New queued job — creates DB record + emails admins |
-| `ecommerce/app/Mail/NewOrderAdminMail.php` | New mailable — subject "New Order #{id} Received" |
-| `ecommerce/resources/views/mail/new-order-admin.blade.php` | Email template for `NewOrderAdminMail` |
-| `ecommerce/app/Http/Controllers/CheckoutController.php` | Added `NotifyAdminOfNewOrder::dispatch($order)` in webhook handler |
-| `ecommerce/app/Http/Controllers/Admin/AdminNotificationController.php` | New controller — `index`, `markRead`, `markAllRead` |
-| `ecommerce/routes/web.php` | Added 3 admin notification routes |
-| `ecommerce/resources/views/admin/partials/notification-bell.blade.php` | Reusable bell partial (HTML + JS) |
-| `ecommerce/tests/Feature/AdminOrderNotificationTest.php` | 15 feature tests (TC-01 → TC-15) |
+| File                                                                                   | Change                                                             |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `ecommerce/database/migrations/2026_04_18_000003_create_admin_notifications_table.php` | New migration — `admin_notifications` table                        |
+| `ecommerce/app/Models/AdminNotification.php`                                           | New model — `fillable`, `scopeUnread`, `belongsTo Order`           |
+| `ecommerce/app/Jobs/NotifyAdminOfNewOrder.php`                                         | New queued job — creates DB record + emails admins                 |
+| `ecommerce/app/Mail/NewOrderAdminMail.php`                                             | New mailable — subject "New Order #{id} Received"                  |
+| `ecommerce/resources/views/mail/new-order-admin.blade.php`                             | Email template for `NewOrderAdminMail`                             |
+| `ecommerce/app/Http/Controllers/CheckoutController.php`                                | Added `NotifyAdminOfNewOrder::dispatch($order)` in webhook handler |
+| `ecommerce/app/Http/Controllers/Admin/AdminNotificationController.php`                 | New controller — `index`, `markRead`, `markAllRead`                |
+| `ecommerce/routes/web.php`                                                             | Added 3 admin notification routes                                  |
+| `ecommerce/resources/views/admin/partials/notification-bell.blade.php`                 | Reusable bell partial (HTML + JS)                                  |
+| `ecommerce/tests/Feature/AdminOrderNotificationTest.php`                               | 15 feature tests (TC-01 → TC-15)                                   |
 
 ### Regression Note
 
@@ -4125,3 +4125,61 @@ Fixed `NotifyAdminOfNewOrder::handle()` — replaced `User::role('admin')->get()
 None at this time.
 
 <!-- EVAL-NT-002 END -->
+
+---
+
+## EVAL-NT-003 · Admin Low-Stock Threshold Notification
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [NT-003](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                         | Type       | Result  | Notes |
+| ------------ | ---------------------------------------------------------------- | ---------- | ------- | ----- |
+| TC-01        | `NotifyAdminLowStock` implements `ShouldQueue`                   | Unit       | PASS ✅ |       |
+| TC-02        | Product model has `low_stock_threshold` in fillable              | Unit       | PASS ✅ |       |
+| TC-03        | Product model has `low_stock_notified` in fillable               | Unit       | PASS ✅ |       |
+| TC-04        | Admin can set `low_stock_threshold` via product update           | Happy Path | PASS ✅ |       |
+| TC-05        | Stock update below threshold dispatches `NotifyAdminLowStock`    | Happy Path | PASS ✅ |       |
+| TC-06        | Stock at exactly threshold level dispatches job (boundary)       | Edge       | PASS ✅ |       |
+| TC-07        | Stock above threshold does NOT dispatch job                      | Negative   | PASS ✅ |       |
+| TC-08        | Already-notified product does NOT dispatch again (same breach)   | Negative   | PASS ✅ |       |
+| TC-09        | Updating stock above threshold resets `low_stock_notified`       | Happy Path | PASS ✅ |       |
+| TC-10        | After flag reset, next below-threshold update dispatches again   | Edge       | PASS ✅ |       |
+| TC-11        | Product with null threshold never dispatches job                 | Negative   | PASS ✅ |       |
+| TC-12        | Job `handle()` creates an `AdminNotification` record in DB       | Happy Path | PASS ✅ |       |
+| TC-13        | `AdminNotification` message contains product name                | Happy Path | PASS ✅ |       |
+| TC-14        | `low_stock_notified` is `true` after breach                      | Happy Path | PASS ✅ |       |
+| TC-15        | Admin product edit form shows `low_stock_threshold` input field  | UI         | PASS ✅ |       |
+
+**Summary:** 15 Passed · 0 Failed · 0 Skipped  
+**Regression:** All previous tests still PASS ✅ (773/773)
+
+### Quality Scores (1–5)
+
+| Dimension        | Score | Notes                                                                                   |
+| ---------------- | ----- | --------------------------------------------------------------------------------------- |
+| Correctness      | 5     | All 15 ACs fully covered; breach/reset/re-notification cycle verified                   |
+| Test Coverage    | 5     | 15 tests covering happy path, negative, edge, UI, and unit scenarios                    |
+| Code Quality     | 5     | Surgical additions; threshold logic isolated in controller; job thin and focused         |
+| Security         | 5     | Threshold validated as non-negative integer; no new attack surface                      |
+| Performance      | 5     | Notification dispatched as queued job; no blocking admin operations                     |
+
+**Overall: 5.0 / 5.0**
+
+### Bugs Found
+
+None.
+
+### Notes
+
+Migration adds `low_stock_threshold` (nullable unsigned int) and `low_stock_notified` (boolean, default false) to products table. Controller logic: if new stock > threshold reset flag; if stock ≤ threshold and not yet notified, dispatch job and set flag. Null threshold skips all logic entirely.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NT-003 END -->
