@@ -3139,6 +3139,69 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 <!-- EVAL-UM-001 END -->
 
+<!-- EVAL-UM-002 START -->
+## EVAL-UM-002 · Admin View User Profile and Order History
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [UM-002](backlog.md)  
+**Tag:** `v1.0-UM-002-stable`
+
+---
+
+### Task Definition
+
+> As an admin, I want to view a user's profile and order history so I can handle support requests.
+
+**Acceptance Criteria:**
+- Read-only summary of profile + last 10 orders
+
+---
+
+### Implementation Summary
+
+| Area | File(s) |
+|---|---|
+| Controller | `ecommerce/app/Http/Controllers/Admin/UserController.php` (added `show()`) |
+| View | `ecommerce/resources/views/admin/users/show.blade.php` |
+| Route | `ecommerce/routes/web.php` (`GET /admin/users/{user}` → `admin.users.show`) |
+| Index update | `ecommerce/resources/views/admin/users/index.blade.php` (user name links to show page) |
+| Tests | `ecommerce/tests/Feature/AdminUserShowTest.php` |
+
+**Key design decisions:**
+- Route model binding (`User $user`) returns automatic 404 for non-existent IDs
+- `loadCount('orders')->load('roles')` avoids N+1 on the profile card
+- `orders()->latest()->take(10)->get()` fetches only the 10 most recent orders
+- Read-only view; no mutating actions on this page
+
+---
+
+### Test Results
+
+| Test Case | Description | Result |
+|---|---|---|
+| TC-01 | Guest redirected to login | ✅ Pass |
+| TC-02 | Non-admin gets 403 | ✅ Pass |
+| TC-03 | Admin gets 200 for valid user | ✅ Pass |
+| TC-04 | Profile shows user name | ✅ Pass |
+| TC-05 | Profile shows user email | ✅ Pass |
+| TC-06 | Profile shows user role | ✅ Pass |
+| TC-07 | Profile shows registration date | ✅ Pass |
+| TC-08 | Page contains Order History section | ✅ Pass |
+| TC-09 | At most 10 orders shown (capped) | ✅ Pass |
+| TC-10 | Order status shown in table | ✅ Pass |
+| TC-11 | Order total shown in table | ✅ Pass |
+| TC-12 | Order date shown in table | ✅ Pass |
+| TC-13 | User with no orders shows empty state | ✅ Pass |
+| TC-14 | Non-existent user returns 404 | ✅ Pass |
+| TC-15 | Page responds within 2 seconds | ✅ Pass |
+
+**Targeted:** 15/15 ✅  
+**Regression:** 634/634 ✅
+
+<!-- EVAL-UM-002 END -->
+
 ## EVAL-OM-001 · Admin Order List with Filters
 
 **Version:** A  
