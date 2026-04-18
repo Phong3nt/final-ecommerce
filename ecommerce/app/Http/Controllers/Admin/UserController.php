@@ -56,12 +56,12 @@ class UserController extends Controller
         $user->syncRoles([$newRole]);
 
         AuditLog::create([
-            'user_id'      => Auth::id(),
-            'action'       => 'user.role_changed',
+            'user_id' => Auth::id(),
+            'action' => 'user.role_changed',
             'subject_type' => 'User',
-            'subject_id'   => $user->id,
-            'old_values'   => ['role' => $oldRole],
-            'new_values'   => ['role' => $newRole],
+            'subject_id' => $user->id,
+            'old_values' => ['role' => $oldRole],
+            'new_values' => ['role' => $newRole],
         ]);
 
         return redirect()->route('admin.users.show', $user)
