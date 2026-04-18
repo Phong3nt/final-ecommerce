@@ -112,12 +112,35 @@
             text-transform: capitalize;
         }
 
-        .status-pending    { background: #fff3cd; color: #856404; }
-        .status-processing { background: #cfe2ff; color: #084298; }
-        .status-shipped    { background: #d1ecf1; color: #0c5460; }
-        .status-delivered  { background: #d1e7dd; color: #0f5132; }
-        .status-cancelled  { background: #f8d7da; color: #842029; }
-        .status-refunded   { background: #e2e3e5; color: #383d41; }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-shipped {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-delivered {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .status-refunded {
+            background: #e2e3e5;
+            color: #383d41;
+        }
 
         .empty {
             text-align: center;
@@ -158,8 +181,13 @@
             font-size: .9rem;
         }
 
-        .account-status.active  { color: #0f5132; }
-        .account-status.suspended { color: #842029; }
+        .account-status.active {
+            color: #0f5132;
+        }
+
+        .account-status.suspended {
+            color: #842029;
+        }
 
         .alert {
             padding: .75rem 1rem;
@@ -168,8 +196,37 @@
             font-size: .9rem;
         }
 
-        .alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #a3cfbb; }
-        .alert-danger  { background: #f8d7da; color: #842029; border: 1px solid #f1aeb5; }
+        .btn-primary {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        .role-form {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        select.form-select {
+            padding: .35rem .65rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: .9rem;
+            background: #fff;
+        }
+
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #a3cfbb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #842029;
+            border: 1px solid #f1aeb5;
+        }
     </style>
 </head>
 
@@ -234,7 +291,7 @@
         <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #dee2e6;">
             @if($user->id !== auth()->id())
                 <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}"
-                      onsubmit="return confirm('{{ $user->is_active ? 'Suspend this account? The user will not be able to log in.' : 'Activate this account? The user will be able to log in again.' }}')">
+                    onsubmit="return confirm('{{ $user->is_active ? 'Suspend this account? The user will not be able to log in.' : 'Activate this account? The user will be able to log in again.' }}')">
                     @csrf
                     @method('PATCH')
                     @if($user->is_active)
@@ -245,6 +302,23 @@
                 </form>
             @endif
         </div>
+
+        {{-- UM-004: Assign / change role --}}
+        @if($user->id !== auth()->id())
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #dee2e6;">
+            <form method="POST" action="{{ route('admin.users.assign-role', $user) }}" class="role-form"
+                  onsubmit="return confirm('Change this user\'s role?')">
+                @csrf
+                @method('PATCH')
+                <label for="role_select" style="font-weight:600;font-size:.9rem;">Role:</label>
+                <select id="role_select" name="role" class="form-select">
+                    <option value="user" {{ $user->hasRole('user') ? 'selected' : '' }}>user</option>
+                    <option value="admin" {{ $user->hasRole('admin') ? 'selected' : '' }}>admin</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Save Role</button>
+            </form>
+        </div>
+        @endif
     </div>
 
     {{-- Order History (last 10) --}}

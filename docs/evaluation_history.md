@@ -3206,6 +3206,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-UM-002 END -->
 
 <!-- EVAL-UM-003 START -->
+
 ## EVAL-UM-003 · Admin Activate/Suspend User Account
 
 **Version:** A  
@@ -3221,6 +3222,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 > As an admin, I want to activate or suspend a user account so I can enforce policies.
 
 **Acceptance Criteria:**
+
 - Suspended users cannot log in (error with explanation)
 - Status toggle with confirmation
 
@@ -3228,15 +3230,16 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Implementation Summary
 
-| Area | File(s) |
-|---|---|
-| Controller | `ecommerce/app/Http/Controllers/Admin/UserController.php` (added `toggleStatus()`) |
-| Login block | `ecommerce/app/Http/Controllers/Auth/LoginController.php` (is_active check after Auth::attempt) |
-| View | `ecommerce/resources/views/admin/users/show.blade.php` (status display + toggle button with JS confirm) |
-| Route | `ecommerce/routes/web.php` (`PATCH /admin/users/{user}/toggle-status` → `admin.users.toggle-status`) |
-| Tests | `ecommerce/tests/Feature/AdminUserToggleStatusTest.php` |
+| Area        | File(s)                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------- |
+| Controller  | `ecommerce/app/Http/Controllers/Admin/UserController.php` (added `toggleStatus()`)                      |
+| Login block | `ecommerce/app/Http/Controllers/Auth/LoginController.php` (is_active check after Auth::attempt)         |
+| View        | `ecommerce/resources/views/admin/users/show.blade.php` (status display + toggle button with JS confirm) |
+| Route       | `ecommerce/routes/web.php` (`PATCH /admin/users/{user}/toggle-status` → `admin.users.toggle-status`)    |
+| Tests       | `ecommerce/tests/Feature/AdminUserToggleStatusTest.php`                                                 |
 
 **Key design decisions:**
+
 - `toggleStatus()` uses `! $user->is_active` to flip the flag in one DB call
 - Admin is blocked from suspending their own account (returns error flash, no DB change)
 - Suspended login check: after `Auth::attempt()` succeeds, check `is_active`, log out immediately if false, redirect with `email` error
@@ -3247,25 +3250,25 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 ### Test Results
 
-| Test Case | Description | Result |
-|---|---|---|
-| TC-01 | Guest redirected to login on toggle endpoint | ✅ Pass |
-| TC-02 | Non-admin gets 403 | ✅ Pass |
-| TC-03 | Admin can suspend active user | ✅ Pass |
-| TC-04 | Admin can reactivate suspended user | ✅ Pass |
-| TC-05 | Suspended user cannot log in | ✅ Pass |
-| TC-06 | Suspended login returns error with "suspended" | ✅ Pass |
-| TC-07 | Admin cannot suspend own account | ✅ Pass |
-| TC-08 | Self-suspension redirects with error flash | ✅ Pass |
-| TC-09 | Successful toggle redirects with success flash | ✅ Pass |
-| TC-10 | Show page displays "Active" for active user | ✅ Pass |
-| TC-11 | Show page displays "Suspended" for suspended user | ✅ Pass |
-| TC-12 | Show page has "Suspend Account" button for active user | ✅ Pass |
-| TC-13 | Show page has "Activate Account" button for suspended user | ✅ Pass |
-| TC-14 | Active user can log in normally | ✅ Pass |
-| TC-15 | Non-existent user returns 404 on toggle | ✅ Pass |
-| TC-16 | Toggle form has CSRF field | ✅ Pass |
-| TC-17 | Toggle responds within 2 seconds | ✅ Pass |
+| Test Case | Description                                                | Result  |
+| --------- | ---------------------------------------------------------- | ------- |
+| TC-01     | Guest redirected to login on toggle endpoint               | ✅ Pass |
+| TC-02     | Non-admin gets 403                                         | ✅ Pass |
+| TC-03     | Admin can suspend active user                              | ✅ Pass |
+| TC-04     | Admin can reactivate suspended user                        | ✅ Pass |
+| TC-05     | Suspended user cannot log in                               | ✅ Pass |
+| TC-06     | Suspended login returns error with "suspended"             | ✅ Pass |
+| TC-07     | Admin cannot suspend own account                           | ✅ Pass |
+| TC-08     | Self-suspension redirects with error flash                 | ✅ Pass |
+| TC-09     | Successful toggle redirects with success flash             | ✅ Pass |
+| TC-10     | Show page displays "Active" for active user                | ✅ Pass |
+| TC-11     | Show page displays "Suspended" for suspended user          | ✅ Pass |
+| TC-12     | Show page has "Suspend Account" button for active user     | ✅ Pass |
+| TC-13     | Show page has "Activate Account" button for suspended user | ✅ Pass |
+| TC-14     | Active user can log in normally                            | ✅ Pass |
+| TC-15     | Non-existent user returns 404 on toggle                    | ✅ Pass |
+| TC-16     | Toggle form has CSRF field                                 | ✅ Pass |
+| TC-17     | Toggle responds within 2 seconds                           | ✅ Pass |
 
 **Targeted:** 17/17 ✅  
 **Regression:** 651/651 ✅

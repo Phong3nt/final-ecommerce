@@ -181,7 +181,8 @@
                 @foreach($users as $user)
                     <tr>
                         <td>{{ $user->id }}</td>
-                        <td><a href="{{ route('admin.users.show', $user) }}" style="color:#0d6efd;text-decoration:none;">{{ $user->name }}</a></td>
+                        <td><a href="{{ route('admin.users.show', $user) }}"
+                                style="color:#0d6efd;text-decoration:none;">{{ $user->name }}</a></td>
                         <td>{{ $user->email }}</td>
                         <td>
                             @foreach($user->roles as $role)
