@@ -84,7 +84,7 @@ class ProductController extends Controller
         $imagePaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $imagePaths[] = $file->store('products', 'public');
+                $imagePaths[] = $file->store('products', config('filesystems.image_disk', 's3'));
             }
         }
 
@@ -161,14 +161,14 @@ class ProductController extends Controller
         $imagePaths = $product->images ?? [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $imagePaths[] = $file->store('products', 'public');
+                $imagePaths[] = $file->store('products', config('filesystems.image_disk', 's3'));
             }
         }
 
-        $oldValues    = $product->only(['name', 'slug', 'description', 'price', 'stock', 'category_id', 'status']);
-        $wasNotified  = $product->low_stock_notified;
+        $oldValues = $product->only(['name', 'slug', 'description', 'price', 'stock', 'category_id', 'status']);
+        $wasNotified = $product->low_stock_notified;
         $newThreshold = isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : null;
-        $newStock     = (int) $validated['stock'];
+        $newStock = (int) $validated['stock'];
 
         $product->update([
             'name' => $validated['name'],
