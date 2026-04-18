@@ -5,6 +5,7 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -175,6 +176,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');
     Route::post('/products/{product}/images/thumbnail', [AdminProductController::class, 'setThumbnail'])->name('products.images.thumbnail');
     Route::delete('/products/{product}/images/{index}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy')->where('index', '[0-9]+');
+
+    // UM-001: Admin user list
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+
+    // UM-002: Admin user profile and order history
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
 
     // PM-004: Admin category CRUD
     Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
