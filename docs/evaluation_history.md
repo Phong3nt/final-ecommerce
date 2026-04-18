@@ -4250,33 +4250,33 @@ None at this time.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                           | Type       | Result  | Notes |
-| ------------ | ------------------------------------------------------------------ | ---------- | ------- | ----- |
-| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`             | Unit       | PASS ✅ |       |
-| TC-02        | `SendOrderConfirmationEmail` implements `ShouldQueue`              | Unit       | PASS ✅ |       |
-| TC-03        | `NotifyAdminOfNewOrder` implements `ShouldQueue`                   | Unit       | PASS ✅ |       |
-| TC-04        | `NotifyAdminLowStock` implements `ShouldQueue`                     | Unit       | PASS ✅ |       |
-| TC-05        | `ImportProductsCsvJob` implements `ShouldQueue`                    | Unit       | PASS ✅ |       |
-| TC-06        | All jobs use required queue traits                                 | Unit       | PASS ✅ |       |
-| TC-07        | Order status update dispatches `SendOrderStatusChangedEmail` job   | Happy Path | PASS ✅ |       |
-| TC-08        | Webhook dispatches `SendOrderConfirmationEmail` job                | Happy Path | PASS ✅ |       |
-| TC-09        | Webhook dispatches `NotifyAdminOfNewOrder` job                     | Happy Path | PASS ✅ |       |
-| TC-10        | CSV import dispatches `ImportProductsCsvJob`                       | Happy Path | PASS ✅ |       |
-| TC-11        | Controllers do not send mail directly (no `Mail::send` calls)      | Source     | PASS ✅ |       |
-| TC-12        | Queue connection is configurable via `QUEUE_CONNECTION` env        | Config     | PASS ✅ |       |
+| Test Case ID | Scenario                                                         | Type       | Result  | Notes |
+| ------------ | ---------------------------------------------------------------- | ---------- | ------- | ----- |
+| TC-01        | `SendOrderStatusChangedEmail` implements `ShouldQueue`           | Unit       | PASS ✅ |       |
+| TC-02        | `SendOrderConfirmationEmail` implements `ShouldQueue`            | Unit       | PASS ✅ |       |
+| TC-03        | `NotifyAdminOfNewOrder` implements `ShouldQueue`                 | Unit       | PASS ✅ |       |
+| TC-04        | `NotifyAdminLowStock` implements `ShouldQueue`                   | Unit       | PASS ✅ |       |
+| TC-05        | `ImportProductsCsvJob` implements `ShouldQueue`                  | Unit       | PASS ✅ |       |
+| TC-06        | All jobs use required queue traits                               | Unit       | PASS ✅ |       |
+| TC-07        | Order status update dispatches `SendOrderStatusChangedEmail` job | Happy Path | PASS ✅ |       |
+| TC-08        | Webhook dispatches `SendOrderConfirmationEmail` job              | Happy Path | PASS ✅ |       |
+| TC-09        | Webhook dispatches `NotifyAdminOfNewOrder` job                   | Happy Path | PASS ✅ |       |
+| TC-10        | CSV import dispatches `ImportProductsCsvJob`                     | Happy Path | PASS ✅ |       |
+| TC-11        | Controllers do not send mail directly (no `Mail::send` calls)    | Source     | PASS ✅ |       |
+| TC-12        | Queue connection is configurable via `QUEUE_CONNECTION` env      | Config     | PASS ✅ |       |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Regression:** All previous tests still PASS ✅ (797/797)
 
 ### Quality Scores (1–5)
 
-| Dimension        | Score | Notes                                                                                   |
-| ---------------- | ----- | --------------------------------------------------------------------------------------- |
-| Correctness      | 5     | All 5 jobs verified as ShouldQueue; all dispatch points covered                         |
-| Test Coverage    | 5     | Unit, source, config, and runtime dispatch audits                                       |
-| Code Quality     | 5     | Audit-only task; no production code changes required                                    |
-| Security         | 5     | No new attack surface                                                                   |
-| Performance      | 5     | Confirms heavy operations (email, CSV import) are non-blocking                          |
+| Dimension     | Score | Notes                                                           |
+| ------------- | ----- | --------------------------------------------------------------- |
+| Correctness   | 5     | All 5 jobs verified as ShouldQueue; all dispatch points covered |
+| Test Coverage | 5     | Unit, source, config, and runtime dispatch audits               |
+| Code Quality  | 5     | Audit-only task; no production code changes required            |
+| Security      | 5     | No new attack surface                                           |
+| Performance   | 5     | Confirms heavy operations (email, CSV import) are non-blocking  |
 
 **Overall: 5.0 / 5.0**
 
@@ -4293,3 +4293,56 @@ All 5 jobs (`SendOrderStatusChangedEmail`, `SendOrderConfirmationEmail`, `Notify
 None at this time.
 
 <!-- EVAL-NF-008 END -->
+
+## EVAL-NF-009 · Application Logging & Monitoring
+
+**Version:** A  
+**Date:** 2026-04-18  
+**Status in Backlog:** Done  
+**Linked Task:** [NF-009](backlog.md)
+
+### Test Results
+
+| Test Case ID | Scenario                                                                | Type   | Result  | Notes |
+| ------------ | ----------------------------------------------------------------------- | ------ | ------- | ----- |
+| TC-01        | `laravel/telescope` package present in `require-dev`                    | Config | PASS ✅ |       |
+| TC-02        | `config/telescope.php` config file exists                               | Config | PASS ✅ |       |
+| TC-03        | Telescope config has `enabled` key                                      | Config | PASS ✅ |       |
+| TC-04        | `phpunit.xml` sets `TELESCOPE_ENABLED=false` to skip DB writes in tests | Config | PASS ✅ |       |
+| TC-05        | `App\Providers\TelescopeServiceProvider` class exists                   | Source | PASS ✅ |       |
+| TC-06        | `TelescopeServiceProvider` registered in `config/app.php` providers     | Config | PASS ✅ |       |
+| TC-07        | Telescope path configurable via `TELESCOPE_PATH` env                    | Config | PASS ✅ |       |
+| TC-08        | `sentry/sentry-laravel` package present in `require`                    | Config | PASS ✅ |       |
+| TC-09        | `config/sentry.php` config file exists                                  | Config | PASS ✅ |       |
+| TC-10        | Sentry DSN references `SENTRY_LARAVEL_DSN` env variable                 | Config | PASS ✅ |       |
+| TC-11        | `sentry_logs` logging channel configured in `config/logging.php`        | Config | PASS ✅ |       |
+| TC-12        | Default logging channel references `LOG_CHANNEL` env (stack-based)      | Config | PASS ✅ |       |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped  
+**Regression:** All previous tests still PASS ✅ (809/809)
+
+### Quality Scores (1–5)
+
+| Dimension     | Score | Notes                                                                               |
+| ------------- | ----- | ----------------------------------------------------------------------------------- |
+| Correctness   | 5     | Telescope (dev) + Sentry (prod) both installed and configured correctly             |
+| Test Coverage | 5     | Config, source, and env-based audits cover all ACs                                  |
+| Code Quality  | 5     | TelescopeServiceProvider published; Sentry reporting added to ExceptionHandler      |
+| Security      | 5     | `TELESCOPE_ENABLED=false` in tests prevents test data leakage; Sentry DSN env-based |
+| Performance   | 5     | Telescope disabled in tests; Sentry async reporting in production                   |
+
+**Overall: 5.0 / 5.0**
+
+### Bugs Found
+
+None.
+
+### Notes
+
+Laravel Telescope v5.20 installed as `require-dev`; `TelescopeServiceProvider` published and registered in `config/app.php`. `TELESCOPE_ENABLED=false` already present in `phpunit.xml` preventing telescope from writing to DB during tests. `sentry/sentry-laravel` v4.25 installed as production dependency; `config/sentry.php` published with `SENTRY_LARAVEL_DSN` env key. `sentry_logs` logging channel added to `config/logging.php`. Sentry exception reporting integrated in `app/Exceptions/Handler.php` via `app('sentry')->captureException()`.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-NF-009 END -->
