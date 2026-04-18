@@ -3464,6 +3464,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 <!-- EVAL-RM-002 END -->
 
 <!-- EVAL-RM-003 START -->
+
 ## EVAL-RM-003 · Admin Coupon Management
 
 **Task:** RM-003 — As an admin, I want to manage discount coupons so I can run promotions.
@@ -3472,6 +3473,7 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 **Tag:** `v1.0-RM-003-stable`
 
 ### Acceptance Criteria Checklist
+
 - [x] CRUD for coupons (index, create, store, edit, update, destroy)
 - [x] Fields: code, type (percent/fixed), value, expiry, usage limit, min order amount
 - [x] Active/inactive toggle (`PATCH /coupons/{coupon}/toggle`)
@@ -3484,41 +3486,43 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 - [x] Guest redirected; non-admin gets 403
 
 ### Files Changed
-| File | Change |
-|------|--------|
-| `ecommerce/database/migrations/2026_04_18_000001_add_usage_limit_and_min_order_to_coupons_table.php` | New — adds usage_limit + min_order_amount columns |
-| `ecommerce/app/Models/Coupon.php` | Updated fillable + casts |
-| `ecommerce/database/factories/CouponFactory.php` | New — CouponFactory with percent/fixed/inactive/expired states |
-| `ecommerce/app/Http/Controllers/Admin/CouponController.php` | New — index/create/store/edit/update/destroy/toggle |
-| `ecommerce/resources/views/admin/coupons/index.blade.php` | New — listing with active/inactive badges |
-| `ecommerce/resources/views/admin/coupons/create.blade.php` | New — create form |
-| `ecommerce/resources/views/admin/coupons/edit.blade.php` | New — edit form |
-| `ecommerce/routes/web.php` | Added 7 admin coupon routes |
-| `ecommerce/tests/Feature/AdminCouponTest.php` | New — 21 tests |
+
+| File                                                                                                 | Change                                                         |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `ecommerce/database/migrations/2026_04_18_000001_add_usage_limit_and_min_order_to_coupons_table.php` | New — adds usage_limit + min_order_amount columns              |
+| `ecommerce/app/Models/Coupon.php`                                                                    | Updated fillable + casts                                       |
+| `ecommerce/database/factories/CouponFactory.php`                                                     | New — CouponFactory with percent/fixed/inactive/expired states |
+| `ecommerce/app/Http/Controllers/Admin/CouponController.php`                                          | New — index/create/store/edit/update/destroy/toggle            |
+| `ecommerce/resources/views/admin/coupons/index.blade.php`                                            | New — listing with active/inactive badges                      |
+| `ecommerce/resources/views/admin/coupons/create.blade.php`                                           | New — create form                                              |
+| `ecommerce/resources/views/admin/coupons/edit.blade.php`                                             | New — edit form                                                |
+| `ecommerce/routes/web.php`                                                                           | Added 7 admin coupon routes                                    |
+| `ecommerce/tests/Feature/AdminCouponTest.php`                                                        | New — 21 tests                                                 |
 
 ### Test Results
-| TC | Description | Result |
-|----|-------------|--------|
-| TC-01 | Guest redirected to login (index) | ✅ Pass |
-| TC-02 | Non-admin gets 403 (index) | ✅ Pass |
-| TC-03 | Admin can view coupon index | ✅ Pass |
-| TC-04 | Coupon appears in index listing | ✅ Pass |
-| TC-05 | Index shows active/inactive badge | ✅ Pass |
-| TC-06 | Admin can view create form | ✅ Pass |
-| TC-07 | Admin can create a valid coupon | ✅ Pass |
-| TC-08 | Code stored as upper case | ✅ Pass |
-| TC-09 | Code must be unique on create | ✅ Pass |
-| TC-10 | Type must be percent or fixed | ✅ Pass |
-| TC-11 | Value must be positive | ✅ Pass |
-| TC-12 | Usage limit must be positive integer | ✅ Pass |
-| TC-13 | Min order amount must be non-negative | ✅ Pass |
-| TC-14 | Admin can view edit form | ✅ Pass |
-| TC-15 | Admin can update a coupon | ✅ Pass |
-| TC-16 | Update allows same code for self | ✅ Pass |
-| TC-17 | Admin can delete a coupon | ✅ Pass |
-| TC-18 | Toggle active coupon becomes inactive | ✅ Pass |
-| TC-19 | Toggle inactive coupon becomes active | ✅ Pass |
-| TC-20 | Guest redirected on all mutating routes | ✅ Pass |
+
+| TC    | Description                                      | Result  |
+| ----- | ------------------------------------------------ | ------- |
+| TC-01 | Guest redirected to login (index)                | ✅ Pass |
+| TC-02 | Non-admin gets 403 (index)                       | ✅ Pass |
+| TC-03 | Admin can view coupon index                      | ✅ Pass |
+| TC-04 | Coupon appears in index listing                  | ✅ Pass |
+| TC-05 | Index shows active/inactive badge                | ✅ Pass |
+| TC-06 | Admin can view create form                       | ✅ Pass |
+| TC-07 | Admin can create a valid coupon                  | ✅ Pass |
+| TC-08 | Code stored as upper case                        | ✅ Pass |
+| TC-09 | Code must be unique on create                    | ✅ Pass |
+| TC-10 | Type must be percent or fixed                    | ✅ Pass |
+| TC-11 | Value must be positive                           | ✅ Pass |
+| TC-12 | Usage limit must be positive integer             | ✅ Pass |
+| TC-13 | Min order amount must be non-negative            | ✅ Pass |
+| TC-14 | Admin can view edit form                         | ✅ Pass |
+| TC-15 | Admin can update a coupon                        | ✅ Pass |
+| TC-16 | Update allows same code for self                 | ✅ Pass |
+| TC-17 | Admin can delete a coupon                        | ✅ Pass |
+| TC-18 | Toggle active coupon becomes inactive            | ✅ Pass |
+| TC-19 | Toggle inactive coupon becomes active            | ✅ Pass |
+| TC-20 | Guest redirected on all mutating routes          | ✅ Pass |
 | TC-21 | Coupon with all optional fields stored correctly | ✅ Pass |
 
 **New Tests:** 21/21 ✅
