@@ -3345,6 +3345,60 @@ As an admin, I want to export orders to CSV so I can share data with logistics p
 
 <!-- EVAL-UM-004 END -->
 
+<!-- EVAL-RM-001 START -->
+## EVAL-RM-001 · Admin Revenue Report by Period
+
+**Task:** RM-001 — As an admin, I want to see total revenue broken down by period so I can measure business performance.
+
+**Branch:** `feature/RM-001` → merged to `master`
+**Tag:** `v1.0-RM-001-stable`
+
+### Acceptance Criteria Checklist
+- [x] Daily breakdown (last 7 days)
+- [x] Weekly breakdown (last 8 weeks)
+- [x] Monthly breakdown (last 12 months)
+- [x] Custom date range (date_from / date_to)
+- [x] Shows gross revenue (sum of totals for paid/processing/shipped/delivered orders)
+- [x] Shows refunds (sum of RefundTransaction amounts for orders in period)
+- [x] Shows net revenue (gross − refunds)
+- [x] Invalid period value falls back to monthly default
+- [x] Guest redirected to login; non-admin gets 403
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ecommerce/app/Http/Controllers/Admin/RevenueController.php` | New — revenue report controller |
+| `ecommerce/resources/views/admin/revenue/index.blade.php` | New — revenue report Blade view |
+| `ecommerce/routes/web.php` | Added `GET /admin/revenue` route (RM-001) |
+| `ecommerce/tests/Feature/AdminRevenueReportTest.php` | New — 18 tests |
+
+### Test Results
+| TC | Description | Result |
+|----|-------------|--------|
+| TC-01 | Guest redirected to login | ✅ Pass |
+| TC-02 | Non-admin gets 403 | ✅ Pass |
+| TC-03 | Admin gets 200 | ✅ Pass |
+| TC-04 | Default period is monthly (12 rows) | ✅ Pass |
+| TC-05 | Daily period returns 7 rows | ✅ Pass |
+| TC-06 | Weekly period returns 8 rows | ✅ Pass |
+| TC-07 | Monthly period returns 12 rows | ✅ Pass |
+| TC-08 | Custom range row count matches days | ✅ Pass |
+| TC-09 | Custom range excludes orders outside range | ✅ Pass |
+| TC-10 | Gross only counts revenue-status orders | ✅ Pass |
+| TC-11 | Gross excludes non-revenue statuses | ✅ Pass |
+| TC-12 | Refunds summed from RefundTransaction | ✅ Pass |
+| TC-13 | Net = gross − refunds | ✅ Pass |
+| TC-14 | Zero revenue shown when no orders | ✅ Pass |
+| TC-15 | Invalid period falls back to monthly | ✅ Pass |
+| TC-16 | Page renders revenue breakdown table | ✅ Pass |
+| TC-17 | Summary totals match sum of rows | ✅ Pass |
+| TC-18 | Multiple refund transactions summed | ✅ Pass |
+
+**New Tests:** 18/18 ✅
+**Regression:** 686/686 ✅
+
+<!-- EVAL-RM-001 END -->
+
 ## EVAL-OM-001 · Admin Order List with Filters
 
 **Version:** A  
