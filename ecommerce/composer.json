@@ -12,6 +12,7 @@
         "laravel/socialite": "^5.26",
         "laravel/tinker": "^2.8",
         "maatwebsite/excel": "3.1.48",
+        "sentry/sentry-laravel": "^4.25",
         "spatie/laravel-permission": "6.0",
         "stripe/stripe-php": "^20.0"
     },
@@ -19,6 +20,7 @@
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
+        "laravel/telescope": "^5.20",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
         "phpunit/phpunit": "^10.1",

@@ -31,6 +31,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="SENTRY_LARAVEL_DSN" value=""/>
         <env name="STRIPE_KEY" value="pk_test_fake"/>
         <env name="STRIPE_SECRET" value="sk_test_fake"/>
         <env name="STRIPE_WEBHOOK_SECRET" value="whsec_fake"/>
