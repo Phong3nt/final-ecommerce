@@ -139,6 +139,37 @@
             background: #6c757d;
             color: #fff;
         }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #198754;
+            color: #fff;
+        }
+
+        .account-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-weight: 600;
+            font-size: .9rem;
+        }
+
+        .account-status.active  { color: #0f5132; }
+        .account-status.suspended { color: #842029; }
+
+        .alert {
+            padding: .75rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: .9rem;
+        }
+
+        .alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #a3cfbb; }
+        .alert-danger  { background: #f8d7da; color: #842029; border: 1px solid #f1aeb5; }
     </style>
 </head>
 
@@ -148,6 +179,14 @@
     </div>
 
     <h1>User Profile</h1>
+
+    {{-- Flash messages --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     {{-- Profile Summary --}}
     <div class="card">
@@ -179,6 +218,32 @@
                 <div class="label">Total Orders</div>
                 <div class="value">{{ $user->orders_count }}</div>
             </div>
+            <div>
+                <div class="label">Account Status</div>
+                <div class="value">
+                    @if($user->is_active)
+                        <span class="account-status active">&#10003; Active</span>
+                    @else
+                        <span class="account-status suspended">&#9888; Suspended</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- UM-003: Toggle status button --}}
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #dee2e6;">
+            @if($user->id !== auth()->id())
+                <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}"
+                      onsubmit="return confirm('{{ $user->is_active ? 'Suspend this account? The user will not be able to log in.' : 'Activate this account? The user will be able to log in again.' }}')">
+                    @csrf
+                    @method('PATCH')
+                    @if($user->is_active)
+                        <button type="submit" class="btn btn-danger">Suspend Account</button>
+                    @else
+                        <button type="submit" class="btn btn-success">Activate Account</button>
+                    @endif
+                </form>
+            @endif
         </div>
     </div>
 
