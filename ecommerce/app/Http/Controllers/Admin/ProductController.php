@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportProductsCsvJob;
+use App\Jobs\NotifyAdminLowStock;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Product;
@@ -71,6 +72,7 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
             'stock' => ['required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'status' => ['required', 'in:draft,published'],
             'images' => ['nullable', 'array'],
@@ -92,6 +94,7 @@ class ProductController extends Controller
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'stock' => (int) $validated['stock'],
+            'low_stock_threshold' => isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : null,
             'category_id' => $validated['category_id'] ?? null,
             'status' => $validated['status'],
             'images' => $imagePaths ?: null,
@@ -143,6 +146,7 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0.01'],
             'stock' => ['required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'status' => ['required', 'in:draft,published'],
             'images' => ['nullable', 'array'],
@@ -161,19 +165,34 @@ class ProductController extends Controller
             }
         }
 
-        $oldValues = $product->only(['name', 'slug', 'description', 'price', 'stock', 'category_id', 'status']);
+        $oldValues    = $product->only(['name', 'slug', 'description', 'price', 'stock', 'category_id', 'status']);
+        $wasNotified  = $product->low_stock_notified;
+        $newThreshold = isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : null;
+        $newStock     = (int) $validated['stock'];
 
         $product->update([
             'name' => $validated['name'],
             'slug' => $slug,
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
-            'stock' => (int) $validated['stock'],
+            'stock' => $newStock,
+            'low_stock_threshold' => $newThreshold,
             'category_id' => $validated['category_id'] ?? null,
             'status' => $validated['status'],
             'images' => $imagePaths ?: null,
             'image' => $imagePaths[0] ?? $product->image,
         ]);
+
+        // NT-003: Low-stock threshold notification (once per breach, reset on restock)
+        if ($newThreshold !== null) {
+            if ($newStock > $newThreshold) {
+                $product->update(['low_stock_notified' => false]);
+            } elseif ($newStock <= $newThreshold && !$wasNotified) {
+                $product->refresh();
+                NotifyAdminLowStock::dispatch($product);
+                $product->update(['low_stock_notified' => true]);
+            }
+        }
 
         AuditLog::create([
             'user_id' => auth()->id(),
