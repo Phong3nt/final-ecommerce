@@ -4783,6 +4783,7 @@ No regressions. All existing auth checkout tests unaffected.
 <!-- EVAL-IMP-005 END -->
 
 <!-- EVAL-IMP-006 START -->
+
 ## EVAL-IMP-006 · Eliminate N+1 Queries via Eager-Loading
 
 **Version:** A
@@ -4795,16 +4796,16 @@ No regressions. All existing auth checkout tests unaffected.
 
 ### Improvement Header
 
-| Field           | Value                                              |
-|-----------------|----------------------------------------------------|
-| Improvement ID  | IMP-006                                            |
-| Name            | Eliminate N+1 queries via eager-loading            |
-| Scope           | `[LOGIC_MODE]`                                     |
-| Target Task IDs | PC-001, OH-001, OH-002, OM-001, OM-002             |
-| Epic(s)         | Product Catalog · Order History · Order Mgmt       |
-| Priority        | 2 — High                                           |
-| Points          | 3                                                  |
-| Date            | 2026-04-19                                         |
+| Field           | Value                                        |
+| --------------- | -------------------------------------------- |
+| Improvement ID  | IMP-006                                      |
+| Name            | Eliminate N+1 queries via eager-loading      |
+| Scope           | `[LOGIC_MODE]`                               |
+| Target Task IDs | PC-001, OH-001, OH-002, OM-001, OM-002       |
+| Epic(s)         | Product Catalog · Order History · Order Mgmt |
+| Priority        | 2 — High                                     |
+| Points          | 3                                            |
+| Date            | 2026-04-19                                   |
 
 ### Architectural Impact
 
@@ -4812,13 +4813,13 @@ No regressions. All existing auth checkout tests unaffected.
 
 ### N+1 Audit Results
 
-| Controller Method                   | Task  | N+1 Found? | Fix Applied |
-|-------------------------------------|-------|------------|-------------|
-| `ProductController::index`          | PC-001 | **YES** — `$product->category->name` accessed in loop without eager load | Added `->with('category')` |
-| `OrderController::index`            | OH-001 | No — view only accesses scalar order columns | No change needed |
-| `OrderController::show`             | OH-002 | No — `$order->load('items')` already present | No change needed |
-| `Admin\OrderController::index`      | OM-001 | No — `Order::with('user')` already present | No change needed |
-| `Admin\OrderController::show`       | OM-002 | No — `$order->load('user', 'items', 'refundTransactions')` already present | No change needed |
+| Controller Method              | Task   | N+1 Found?                                                                 | Fix Applied                |
+| ------------------------------ | ------ | -------------------------------------------------------------------------- | -------------------------- |
+| `ProductController::index`     | PC-001 | **YES** — `$product->category->name` accessed in loop without eager load   | Added `->with('category')` |
+| `OrderController::index`       | OH-001 | No — view only accesses scalar order columns                               | No change needed           |
+| `OrderController::show`        | OH-002 | No — `$order->load('items')` already present                               | No change needed           |
+| `Admin\OrderController::index` | OM-001 | No — `Order::with('user')` already present                                 | No change needed           |
+| `Admin\OrderController::show`  | OM-002 | No — `$order->load('user', 'items', 'refundTransactions')` already present | No change needed           |
 
 ### Changes Made
 
@@ -4834,35 +4835,35 @@ No regressions. All existing auth checkout tests unaffected.
 
 ### Test Results
 
-| Test Case ID    | Scenario                                                     | Type       | Result  | Notes |
-|-----------------|--------------------------------------------------------------|------------|---------|-------|
-| imp006-tc01     | Product index renders correct category name                  | Happy Path | PASS ✅ | `assertSee('Electronics')` |
-| imp006-tc02     | Category query count ≤2 with 12 products (N+1 guard)         | Performance| PASS ✅ | `assertLessThanOrEqual(2, $categoryQueryCount)` |
-| imp006-tc03     | Product with `null` category_id renders without error        | Edge       | PASS ✅ | Graceful null handling |
-| imp006-tc04     | `relationLoaded('category')` is true on all products         | Unit       | PASS ✅ | Direct model assertion |
-| imp006-tc05     | 12 products with 3 different categories → all names visible, queries bounded | Performance | PASS ✅ | |
-| imp006-tc06     | User order history (OH-001) renders within bounded queries   | Regression | PASS ✅ | No N+1 confirmed |
-| imp006-tc07     | User order detail (OH-002) items correctly loaded            | Regression | PASS ✅ | `$order->load('items')` verified |
-| imp006-tc08     | Admin order list (OM-001) user queries bounded               | Regression | PASS ✅ | `Order::with('user')` verified |
-| imp006-tc09     | Admin order detail (OM-002) renders user + items             | Regression | PASS ✅ | All relations confirmed loaded |
-| imp006-tc10     | Admin order detail (OM-002) ≤2 order_items queries           | Performance| PASS ✅ | Eager load verified via query log |
+| Test Case ID | Scenario                                                                     | Type        | Result  | Notes                                           |
+| ------------ | ---------------------------------------------------------------------------- | ----------- | ------- | ----------------------------------------------- |
+| imp006-tc01  | Product index renders correct category name                                  | Happy Path  | PASS ✅ | `assertSee('Electronics')`                      |
+| imp006-tc02  | Category query count ≤2 with 12 products (N+1 guard)                         | Performance | PASS ✅ | `assertLessThanOrEqual(2, $categoryQueryCount)` |
+| imp006-tc03  | Product with `null` category_id renders without error                        | Edge        | PASS ✅ | Graceful null handling                          |
+| imp006-tc04  | `relationLoaded('category')` is true on all products                         | Unit        | PASS ✅ | Direct model assertion                          |
+| imp006-tc05  | 12 products with 3 different categories → all names visible, queries bounded | Performance | PASS ✅ |                                                 |
+| imp006-tc06  | User order history (OH-001) renders within bounded queries                   | Regression  | PASS ✅ | No N+1 confirmed                                |
+| imp006-tc07  | User order detail (OH-002) items correctly loaded                            | Regression  | PASS ✅ | `$order->load('items')` verified                |
+| imp006-tc08  | Admin order list (OM-001) user queries bounded                               | Regression  | PASS ✅ | `Order::with('user')` verified                  |
+| imp006-tc09  | Admin order detail (OM-002) renders user + items                             | Regression  | PASS ✅ | All relations confirmed loaded                  |
+| imp006-tc10  | Admin order detail (OM-002) ≤2 order_items queries                           | Performance | PASS ✅ | Eager load verified via query log               |
 
 **Summary:** 10 verified · 0 Failed · 0 Skipped
 **Regression:** All 857 previous tests PASS + 10 new = **867/867 total** ✅
 
 ### Quality Scores (1–5)
 
-| Dimension     | Score | Comment |
-|---------------|-------|---------|
-| Simplicity    | 5/5   | Single `->with('category')` addition; no new abstractions |
-| Security      | 5/5   | Eager loading has no security implications |
-| Performance   | 5/5   | Eliminates O(N) queries; now O(1) for category fetch |
+| Dimension     | Score | Comment                                                                          |
+| ------------- | ----- | -------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Single `->with('category')` addition; no new abstractions                        |
+| Security      | 5/5   | Eager loading has no security implications                                       |
+| Performance   | 5/5   | Eliminates O(N) queries; now O(1) for category fetch                             |
 | Test Coverage | 5/5   | N+1 regression guard added; query count assertions will catch future regressions |
 
 ### Bugs / Side Effects Found
 
 | Bug ID | Description | Severity | Status |
-|--------|-------------|----------|--------|
+| ------ | ----------- | -------- | ------ |
 | —      | None        | —        | —      |
 
 ### Upgrade Proposals
@@ -4870,3 +4871,66 @@ No regressions. All existing auth checkout tests unaffected.
 - IMP-006.1: Add `->with('category')` to `ProductController::search` (currently no category shown in search view, but if category badges are added in future IMP-010/IMP-013, it would be needed)
 
 <!-- EVAL-IMP-006 END -->
+
+<!-- EVAL-IMP-007 START -->
+
+## EVAL — IMP-007: Alpine.js micro-interactions on all cart actions
+
+| Field             | Value                                         |
+| ----------------- | --------------------------------------------- |
+| Improvement ID    | IMP-007                                       |
+| Scope             | `[UIUX_MODE]`                                 |
+| Target Task IDs   | SC-001, SC-002, SC-003, SC-004                |
+| Git Branch        | improve/IMP-007                               |
+| Git Tag           | v1.0-IMP-007-stable                           |
+| Date              | 2026-04-19                                    |
+| Tests Before      | 867 / 2005 assertions                         |
+| Tests After       | 877 / 2031 assertions (+10 new IMP-007 tests) |
+| Regression Status | ✅ 0 regressions — all 877 tests pass         |
+
+### Changes Made
+
+#### `ecommerce/resources/views/products/show.blade.php` (SC-001)
+
+- Added Alpine.js 3.14.1 CDN script tag (with `defer`) to `<head>`
+- Added IMP-007 CSS: `.atc-spinner` keyframe animation, `.add-to-cart.atc-success` (green), `.add-to-cart.atc-error` (red + shake animation)
+- Replaced static add-to-cart form with Alpine `x-data="imp007AddToCart(config)"` wrapper
+- Button states: "Add to Cart" → spinning "Adding…" (loading) → "✓ Added" (success, 2 s) → "Try Again" (error, 2 s)
+- Button `:disabled` during loading; `:class` bindings for success/error visual states
+- Replaced previous vanilla `DOMContentLoaded` AJAX listener with async Alpine `submit()` method
+- Preserved all `imp005*` helper functions (`imp005UpdateBadge`, `imp005OpenDrawer`, `imp005EscHtml`) — called from Alpine submit on success
+- Fixed implicit bug: quantity now bound via `x-model.number="quantity"` instead of manual DOM read
+
+#### `ecommerce/resources/views/cart/index.blade.php` (SC-002, SC-003, SC-004)
+
+- Added Alpine.js 3.14.1 CDN script tag (with `defer`) and `<style>` block to `<head>`
+- IMP-007 CSS: `.imp007-spinner` keyframe, `.cart-item.imp007-removing` fade+slide-out transition, `.qty-saved` green tick, `.imp007-toast-area` fixed top-right toast container
+- Added toast notification area `<div x-data="imp007ToastManager()">` before `<h1>` — shows "Cart updated" / "Item removed from cart" toasts
+- Each `<tr class="cart-item">` wrapped with `x-data="imp007CartRow(productId, qty)"` and `:class="{ 'imp007-removing': removing }"` for SC-004 fade-out
+- SC-003 qty form: `x-on:submit.prevent="updateQty($el.closest('form'))"` — button shows spinner while saving, "✓" tick on success (1.5 s)
+- SC-004 remove form: `x-on:submit.prevent="removeItem($el.closest('form'))"` — CSS fade-out triggers before DELETE fetch; row DOM-removed after response
+- **Fixed typo** `inpu t.value` → `input.value` (existing vanilla JS bug eliminated by Alpine replacement)
+- Replaced entire vanilla JS `<script>` block with Alpine `alpine:init` components (`imp007ToastManager`, `imp007CartRow`)
+- All totals/subtotals update logic preserved from original vanilla implementation
+
+#### `ecommerce/tests/Feature/AlpineCartMicroInteractionsTest.php` (new — 10 tests)
+
+- TC01/TC02: Alpine.js CDN present on `products/show` and `cart/index`
+- TC03/TC04: `imp007AddToCart` and `imp007CartRow` `x-data` attributes rendered
+- TC05/TC06: `updateQty` and `removeItem` Alpine submit handlers present on forms
+- TC07: Toast notification area (`imp007ToastManager`) rendered on cart page
+- TC08/TC09: IMP-007 CSS class names present in both pages
+- TC10: SC-001 add-to-cart AJAX endpoint regression — JSON response includes `cart_count` integer
+
+### Dashboard Formatter Fix
+
+- Auto-formatter split `"No sales in this period."` across two lines (recurring issue) — fixed to single line before commit
+
+### Evaluation Summary
+
+- All IMP-007 acceptance criteria met within `[UIUX_MODE]` constraints
+- No controllers, services, models, routes, or DB touched
+- Alpine.js loaded via CDN — no new npm/composer dependencies
+- Micro-interactions: spinner, success/error states (SC-001), row fade-out (SC-004), saving spinner + tick (SC-003), toast notifications (SC-002)
+- Full regression pass: 877/877 tests
+<!-- EVAL-IMP-007 END -->

@@ -8,6 +8,8 @@
     <meta name="description" content="{{ Str::limit($product->description, 160) }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <!-- IMP-007: Alpine.js micro-interactions -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <style>
         .product-main-image {
             max-width: 100%;
@@ -175,6 +177,51 @@
         .pagination {
             margin-top: 1rem;
         }
+
+        /* IMP-007: Add-to-cart button micro-interactions */
+        .atc-spinner {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: imp007spin 0.55s linear infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes imp007spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .add-to-cart.atc-success {
+            background: #198754;
+            transition: background 0.25s ease;
+        }
+
+        .add-to-cart.atc-error {
+            background: #dc3545;
+            animation: imp007shake 0.35s ease;
+        }
+
+        @keyframes imp007shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25%,
+            75% {
+                transform: translateX(-4px);
+            }
+
+            50% {
+                transform: translateX(4px);
+            }
+        }
     </style>
 </head>
 
@@ -261,15 +308,30 @@
                 @endif
 
                 @if ($product->stock > 0)
-                    <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <label for="quantity">Qty:</label>
-                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ $product->stock }}"
-                            class="qty-input">
-                        <button type="submit" class="add-to-cart">Add to Cart</button>
-                    </form>
-                    <span id="cart-badge" class="cart-badge"></span>
+                    <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
+                                 productId: {{ $product->id }},
+                                 productName: @json($product->name),
+                                 productPrice: {{ (float) $product->price }},
+                                 productSlug: @json($product->slug),
+                                 cartStoreUrl: '{{ route('cart.store') }}'
+                             })">
+                        <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
+                            x-on:submit.prevent="submit">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <label for="quantity">Qty:</label>
+                            <input type="number" id="quantity" name="quantity" min="1" max="{{ $product->stock }}"
+                                class="qty-input" x-model.number="quantity">
+                            <button type="submit" class="add-to-cart" :disabled="loading"
+                                :class="{ 'atc-success': success, 'atc-error': hasError }">
+                                <span x-show="!loading && !success && !hasError">Add to Cart</span>
+                                <span x-show="loading" style="display:none"><span class="atc-spinner"></span> Adding…</span>
+                                <span x-show="success" style="display:none">✓ Added</span>
+                                <span x-show="hasError" style="display:none">Try Again</span>
+                            </button>
+                        </form>
+                        <span id="cart-badge" class="cart-badge" x-text="badgeText"></span>
+                    </div>
                 @else
                     <button class="add-to-cart" disabled>Add to Cart</button>
                 @endif
@@ -446,44 +508,54 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var form = document.getElementById('add-to-cart-form');
-            if (!form) return;
-            // IMP-005: product data for drawer update
-            var productData = {
-                name: @json($product->name),
-                price: {{ (float) $product->price }},
-                slug: @json($product->slug),
-            };
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                var token = form.querySelector('[name="_token"]').value;
-                var productId = parseInt(form.querySelector('[name="product_id"]').value);
-                var quantity = parseInt(form.querySelector('[name="quantity"]').value);
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                    },
-                    body: JSON.stringify({ product_id: productId, quantity: quantity }),
-                })
-                    .then(function (res) { return res.json(); })
-                    .then(function (json) {
-                        // Legacy badge text
-                        var badge = document.getElementById('cart-badge');
-                        if (badge && json.cart_count !== undefined) {
-                            badge.textContent = json.cart_count + ' item(s) in cart';
+        /* IMP-007: Alpine.js component for add-to-cart micro-interactions */
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('imp007AddToCart', (config) => ({
+                loading: false,
+                success: false,
+                hasError: false,
+                badgeText: '',
+                quantity: 1,
+                async submit() {
+                    if (this.loading) return;
+                    this.loading = true;
+                    this.success = false;
+                    this.hasError = false;
+                    const token = document.querySelector('meta[name="csrf-token"]').content;
+                    try {
+                        const res = await fetch(config.cartStoreUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token,
+                            },
+                            body: JSON.stringify({ product_id: config.productId, quantity: this.quantity }),
+                        });
+                        const json = await res.json();
+                        this.loading = false;
+                        if (res.ok) {
+                            this.success = true;
+                            if (json.cart_count !== undefined) {
+                                this.badgeText = json.cart_count + ' item(s) in cart';
+                                imp005UpdateBadge(json.cart_count);
+                                imp005OpenDrawer(
+                                    { name: config.productName, price: config.productPrice, slug: config.productSlug },
+                                    this.quantity
+                                );
+                            }
+                            setTimeout(() => { this.success = false; }, 2000);
+                        } else {
+                            this.hasError = true;
+                            setTimeout(() => { this.hasError = false; }, 2000);
                         }
-                        // IMP-005: update navbar badge + open drawer
-                        if (json.cart_count !== undefined) {
-                            imp005UpdateBadge(json.cart_count);
-                            imp005OpenDrawer(productData, quantity);
-                        }
-                    })
-                    .catch(function () { });
-            });
+                    } catch (_e) {
+                        this.loading = false;
+                        this.hasError = true;
+                        setTimeout(() => { this.hasError = false; }, 2000);
+                    }
+                },
+            }));
         });
 
         function imp005UpdateBadge(count) {
