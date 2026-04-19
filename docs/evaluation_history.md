@@ -4532,20 +4532,20 @@ Applied shimmer skeleton screens to all genuinely async-loading UI areas across 
 
 ## EVAL-IMP-003 — One-Page Checkout (collapse multi-step to single view)
 
-| Field             | Value                                                  |
-|-------------------|--------------------------------------------------------|
-| Evaluation ID     | EVAL-IMP-003                                           |
-| Improvement ID    | IMP-003                                                |
-| Improvement Name  | One-Page Checkout (collapse multi-step to single view) |
-| Scope             | `[FULL_STACK_MODE]`                                    |
-| Target Task IDs   | CP-001, CP-002, CP-003                                 |
-| Epic              | Checkout & Payment                                     |
-| Priority          | 2 — High                                               |
-| Points            | 5                                                      |
-| Date              | 2026-04-19                                             |
-| Git Tag           | v1.0-IMP-003-stable                                    |
-| Branch            | improve/IMP-003                                        |
-| Based On          | improve/IMP-002                                        |
+| Field            | Value                                                  |
+| ---------------- | ------------------------------------------------------ |
+| Evaluation ID    | EVAL-IMP-003                                           |
+| Improvement ID   | IMP-003                                                |
+| Improvement Name | One-Page Checkout (collapse multi-step to single view) |
+| Scope            | `[FULL_STACK_MODE]`                                    |
+| Target Task IDs  | CP-001, CP-002, CP-003                                 |
+| Epic             | Checkout & Payment                                     |
+| Priority         | 2 — High                                               |
+| Points           | 5                                                      |
+| Date             | 2026-04-19                                             |
+| Git Tag          | v1.0-IMP-003-stable                                    |
+| Branch           | improve/IMP-003                                        |
+| Based On         | improve/IMP-002                                        |
 
 ### Summary
 
@@ -4566,7 +4566,7 @@ The existing multi-step routes (`/checkout/address`, `/checkout/shipping`, `/che
 - **`showCheckout()`** — Returns `checkout.index` view with `$cart`, `$addresses`, `$shippingOptions`, and `$subtotal`. Pure read — no side effects.
 - **`storeSession()`** — AJAX endpoint that accepts either `address_id` (existing saved address) or a full address payload (new address — validated + persisted), plus `method` (validated against known shipping keys). Writes `checkout.address` and `checkout.shipping` to session and returns `{ok, subtotal, shipping_cost, discount, total}` JSON. The existing `placeOrder()` endpoint is called second by the frontend using the now-populated session — no changes to `placeOrder()`.
 
-#### `ecommerce/resources/views/checkout/index.blade.php` *(new file)*
+#### `ecommerce/resources/views/checkout/index.blade.php` _(new file)_
 
 - Bootstrap 5 two-column layout: left column = address fields + shipping radios + "Review & Pay" CTA; right column = order summary table + live shipping/total update + payment panel.
 - Saved addresses rendered as radio buttons (with "Enter a new address" option to toggle the form fields).
@@ -4574,7 +4574,7 @@ The existing multi-step routes (`/checkout/address`, `/checkout/shipping`, `/che
 - `<meta name="csrf-token">` used for all AJAX headers — no plain-text token in JS strings.
 - All server-side output uses `{{ }}` (XSS-safe); no `{!! !!}`.
 
-#### `ecommerce/tests/Feature/OnePageCheckoutTest.php` *(new file)*
+#### `ecommerce/tests/Feature/OnePageCheckoutTest.php` _(new file)_
 
 - 18 test cases covering: GET 200 / guest redirect / cart items / address fields / shipping options / saved addresses / Stripe.js CDN / delivery info / POST with new address / POST with saved address_id / address persisted to DB / totals in response / standard cost / express cost / missing address → 422 / invalid method → 422 / guest POST → 401 / total arithmetic.
 

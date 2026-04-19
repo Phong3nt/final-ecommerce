@@ -32,14 +32,14 @@ class OnePageCheckoutTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'name'          => 'Jane Doe',
+            'name' => 'Jane Doe',
             'address_line1' => '123 Main St',
             'address_line2' => null,
-            'city'          => 'Springfield',
-            'state'         => 'IL',
-            'postal_code'   => '62701',
-            'country'       => 'US',
-            'method'        => 'standard',
+            'city' => 'Springfield',
+            'state' => 'IL',
+            'postal_code' => '62701',
+            'country' => 'US',
+            'method' => 'standard',
         ], $overrides);
     }
 
@@ -127,7 +127,7 @@ class OnePageCheckoutTest extends TestCase
     /** @test */
     public function imp003_checkout_page_shows_saved_addresses(): void
     {
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         UserAddress::factory()->create(['user_id' => $user->id, 'name' => 'John Smith']);
 
         $this->actingAs($user)
@@ -195,14 +195,14 @@ class OnePageCheckoutTest extends TestCase
     /** @test */
     public function imp003_store_session_with_saved_address(): void
     {
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $address = UserAddress::factory()->create(['user_id' => $user->id]);
 
         $this->actingAs($user)
             ->withSession($this->cartSession())
             ->postJson(route('checkout.session.store'), [
                 'address_id' => $address->id,
-                'method'     => 'express',
+                'method' => 'express',
             ])
             ->assertOk()
             ->assertJsonFragment(['ok' => true]);
@@ -225,7 +225,7 @@ class OnePageCheckoutTest extends TestCase
             ->postJson(route('checkout.session.store'), $this->validPayload());
 
         $this->assertDatabaseHas('user_addresses', [
-            'user_id'       => $user->id,
+            'user_id' => $user->id,
             'address_line1' => '123 Main St',
         ]);
     }

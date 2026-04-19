@@ -53,10 +53,10 @@ class CheckoutController extends Controller
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
         return view('checkout.index', [
-            'cart'            => $cart,
-            'addresses'       => $addresses,
+            'cart' => $cart,
+            'addresses' => $addresses,
             'shippingOptions' => self::SHIPPING_OPTIONS,
-            'subtotal'        => $subtotal,
+            'subtotal' => $subtotal,
         ]);
     }
 
@@ -77,13 +77,13 @@ class CheckoutController extends Controller
         } else {
             // Validate and save new address
             $data = $request->validate([
-                'name'          => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'address_line1' => 'required|string|max:255',
                 'address_line2' => 'nullable|string|max:255',
-                'city'          => 'required|string|max:100',
-                'state'         => 'required|string|max:100',
-                'postal_code'   => 'required|string|max:20',
-                'country'       => 'required|string|max:100',
+                'city' => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+                'postal_code' => 'required|string|max:20',
+                'country' => 'required|string|max:100',
             ]);
 
             $address = $user->addresses()->create($data);
@@ -98,34 +98,34 @@ class CheckoutController extends Controller
         $option = self::SHIPPING_OPTIONS[$method];
 
         session()->put('checkout.address', [
-            'id'            => $address->id,
-            'name'          => $address->name,
+            'id' => $address->id,
+            'name' => $address->name,
             'address_line1' => $address->address_line1,
             'address_line2' => $address->address_line2,
-            'city'          => $address->city,
-            'state'         => $address->state,
-            'postal_code'   => $address->postal_code,
-            'country'       => $address->country,
+            'city' => $address->city,
+            'state' => $address->state,
+            'postal_code' => $address->postal_code,
+            'country' => $address->country,
         ]);
 
         session()->put('checkout.shipping', [
             'method' => $method,
-            'label'  => $option['label'],
-            'cost'   => $option['cost'],
+            'label' => $option['label'],
+            'cost' => $option['cost'],
         ]);
 
-        $cart     = session('cart', []);
-        $coupon   = session('checkout.coupon');
+        $cart = session('cart', []);
+        $coupon = session('checkout.coupon');
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
         $discount = self::computeCouponDiscount($subtotal, $coupon);
-        $total    = $subtotal + $option['cost'] - $discount;
+        $total = $subtotal + $option['cost'] - $discount;
 
         return response()->json([
-            'ok'            => true,
-            'subtotal'      => $subtotal,
+            'ok' => true,
+            'subtotal' => $subtotal,
             'shipping_cost' => $option['cost'],
-            'discount'      => $discount,
-            'total'         => $total,
+            'discount' => $discount,
+            'total' => $total,
         ]);
     }
 
