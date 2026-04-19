@@ -80,6 +80,50 @@
             color: #fff;
             border-color: #333;
         }
+
+        /* ── Skeleton Shimmer ────────────────────────────────── */
+        @keyframes skel-shimmer {
+            0% {
+                background-position: -600px 0;
+            }
+
+            100% {
+                background-position: 600px 0;
+            }
+        }
+
+        /* KPI card value: shimmer shown while page paints, removed by JS on DOMContentLoaded */
+        .kpi-card.kpi-loading .kpi-value,
+        .kpi-card.kpi-loading .kpi-label {
+            background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f4 50%, #e2e5e7 75%);
+            background-size: 600px 100%;
+            animation: skel-shimmer 1.4s ease infinite;
+            color: transparent;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        /* Chart skeleton overlay */
+        .skel-chart-wrap {
+            position: relative;
+            line-height: 0;
+        }
+
+        #chart-skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f4 50%, #e2e5e7 75%);
+            background-size: 600px 100%;
+            animation: skel-shimmer 1.4s ease infinite;
+            border-radius: 4px;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        #chart-skeleton.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -88,19 +132,19 @@
     <p class="welcome">Welcome, {{ auth()->user()->name }}</p>
 
     <div class="kpi-grid">
-        <div class="kpi-card">
+        <div class="kpi-card kpi-loading">
             <div class="kpi-value" id="kpi-total-revenue">${{ number_format($totalRevenue, 2) }}</div>
             <div class="kpi-label">Total Revenue</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card kpi-loading">
             <div class="kpi-value" id="kpi-orders-today">{{ $ordersToday }}</div>
             <div class="kpi-label">Orders Today</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card kpi-loading">
             <div class="kpi-value" id="kpi-new-users-today">{{ $newUsersToday }}</div>
             <div class="kpi-label">New Users Today</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card kpi-loading">
             <div class="kpi-value" id="kpi-low-stock">{{ $lowStockProducts }}</div>
             <div class="kpi-label">Low-Stock Products</div>
         </div>
@@ -113,7 +157,10 @@
             <button class="range-btn" data-range="weekly">Weekly</button>
             <button class="range-btn" data-range="monthly">Monthly</button>
         </div>
-        <canvas id="revenue-chart" width="760" height="300"></canvas>
+        <div class="skel-chart-wrap">
+            <div id="chart-skeleton"></div>
+            <canvas id="revenue-chart" width="760" height="300"></canvas>
+        </div>
     </div>
 
     <div class="chart-section" id="top-selling-section" style="margin-top:2.5rem;">
@@ -204,7 +251,19 @@
         let currentRange = 'daily';
         let chart = null;
 
+        // Remove KPI loading skeleton once DOM is fully painted
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.kpi-card.kpi-loading').forEach(function (card) {
+                card.classList.remove('kpi-loading');
+            });
+        });
+
         async function loadChart(range) {
+            const skeleton = document.getElementById('chart-skeleton');
+
+            // Show skeleton while fetching
+            skeleton.classList.remove('hidden');
+
             const res = await fetch(chartDataUrl + '?range=' + range);
             const data = await res.json();
 
@@ -240,6 +299,9 @@
                     },
                 },
             });
+
+            // Hide skeleton after chart renders
+            skeleton.classList.add('hidden');
         }
 
         document.querySelectorAll('.range-btn').forEach(btn => {

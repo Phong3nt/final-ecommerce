@@ -4401,3 +4401,297 @@ None.
 None at this time.
 
 <!-- EVAL-NF-010 END -->
+
+---
+
+<!-- EVAL-IMP-001 START -->
+
+## EVAL-IMP-001 · Bento Grid Layout for Product Catalog
+
+**Improvement ID:** IMP-001
+**Scope:** `[UIUX_MODE]`
+**Version:** A
+**Date:** 2026-04-19
+**Status in Backlog:** Done
+**Target Task IDs:** PC-001
+**Git Tag:** v1.0-IMP-001-stable
+
+### What Was Changed
+
+- Replaced the bare-HTML `products/index.blade.php` with a full Bootstrap 5 page
+- Added a sticky left sidebar (col-lg-3) containing the filter form (`id="filter-form"` preserved)
+- Replaced the plain `<div class="product-grid">` with a CSS-Grid **Bento layout** (3-col desktop, 2-col tablet, 1-col mobile)
+- First product card is the **featured hero** cell — spans 2 columns × 2 rows with a taller image (340 px)
+- All remaining cards are standard cells with 180 px images and consistent Bootstrap card markup
+- Added Bootstrap 5 navbar with search bar, Cart, Orders, Login/Register/Logout links
+- Added category badges, star rating display (full/half/empty), In Stock / Out of Stock status badges
+- Empty state upgraded from `<p>` to Bootstrap `.alert.alert-info`
+- Pagination wrapped in `.d-flex.justify-content-center`
+- All Blade output remains `{{ }}` — XSS-safe (OWASP §2 verified)
+
+### Test Results
+
+**New PHPUnit tests:** N/A — `[UIUX_MODE]` scope, no server-side logic changed
+**Regression suite:** 821/821 ✅ (run on `master` before branch creation — commit `ffccd94`)
+
+### Acceptance Criteria Check
+
+| Criterion                                                                    | Status |
+| ---------------------------------------------------------------------------- | ------ |
+| `id="filter-form"` preserved on filter form                                  | ✅     |
+| Sort options `newest`, `oldest`, `price_asc`, `price_desc`, `rating` present | ✅     |
+| `selected` attribute on active sort option                                   | ✅     |
+| `No products available` text in empty state                                  | ✅     |
+| `In Stock` / `Out of Stock` stock status text                                | ✅     |
+| XSS: all output via `{{ }}`                                                  | ✅     |
+| Bootstrap 5 only — no Tailwind, no Vue/React                                 | ✅     |
+| No new PHP libraries required                                                | ✅     |
+| Mobile-first responsive (col-lg-3 sidebar + 3/2/1-col bento grid)            | ✅     |
+
+### Risk / Regression Notes
+
+- No controller, model, route, or migration touched
+- All filter/sort/pagination logic unchanged
+- PHPUnit feature tests for `ProductBrowseTest`, `ProductFilterTest`, `ProductSortTest` make no assertions on CSS class names — safe
+
+### Upgrade Proposals
+
+- IMP-002: Add skeleton screen loading state to the bento grid for async-load areas
+- IMP-010: Add product image lightbox + zoom on the detail card
+
+<!-- EVAL-IMP-001 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-002 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-002 — Skeleton Screen for all async-load areas
+
+| Field            | Value                                    |
+| ---------------- | ---------------------------------------- |
+| Evaluation ID    | EVAL-IMP-002                             |
+| Improvement ID   | IMP-002                                  |
+| Improvement Name | Skeleton Screen for all async-load areas |
+| Scope            | `[UIUX_MODE]`                            |
+| Target Task IDs  | PC-001, AD-001, AD-002                   |
+| Epic             | Product Catalog · Admin                  |
+| Priority         | 3 — Medium                               |
+| Points           | 3                                        |
+| Date             | 2026-04-19                               |
+| Git Tag          | v1.0-IMP-002-stable                      |
+| Branch           | improve/IMP-002                          |
+| Based On         | improve/IMP-001 (Bento Grid base)        |
+
+### Summary
+
+Applied shimmer skeleton screens to all genuinely async-loading UI areas across the product catalog and admin dashboard, using pure CSS `@keyframes` + vanilla JS — no new libraries.
+
+### Changes Made
+
+#### `ecommerce/resources/views/products/index.blade.php`
+
+- Added `@keyframes skel-shimmer` + `.skel-img` CSS rule in the `<style>` block (placed before the responsive breakpoints section).
+- Changed `<img class="card-img-top">` → `<img class="card-img-top skel-img" loading="lazy" onload="this.classList.remove('skel-img')">` for all product images.
+- The shimmer gradient is visible while the browser fetches the image; `onload` fires and removes the class the moment the image has decoded, giving a clean progressive reveal.
+
+#### `ecommerce/resources/views/admin/dashboard.blade.php`
+
+- Added `@keyframes skel-shimmer`, `.kpi-card.kpi-loading .kpi-value / .kpi-label` rules, `.skel-chart-wrap`, `#chart-skeleton`, and `#chart-skeleton.hidden` CSS to the `<style>` block.
+- Added `kpi-loading` class to all 4 `.kpi-card` elements in HTML; a `DOMContentLoaded` JS listener removes it immediately once the DOM is ready — so values are always present in the HTML source (test-safe) but visually shimmer for the ~0 ms until JS runs.
+- Wrapped `<canvas id="revenue-chart">` inside `<div class="skel-chart-wrap">` and injected `<div id="chart-skeleton">` as a sibling before the canvas.
+- Updated `loadChart(range)` to call `skeleton.classList.remove('hidden')` at the top of the function (before `fetch`) and `skeleton.classList.add('hidden')` after `new Chart(...)` renders, so the shimmer covers the blank canvas on every range switch.
+
+### Test Regression Assessment
+
+- `[UIUX_MODE]` — no PHPUnit test changes required.
+- All existing test constraints preserved:
+  - `id="revenue-chart"` canvas attribute unchanged.
+  - `data-range="daily"/"weekly"/"monthly"` buttons unchanged.
+  - `cdn.jsdelivr.net/npm/chart.js` CDN script unchanged.
+  - `assertSee('Total Revenue')` etc. — KPI labels remain in source.
+  - `assertSee('250.00')` — KPI values are server-rendered into `class="kpi-value"` divs; `color: transparent` is CSS-only and invisible to PHPUnit's HTML parser.
+  - `id="filter-form"`, sort options, `No products available`, `In Stock`/`Out of Stock` — all unchanged in `products/index.blade.php`.
+- Full PHPUnit suite (821 tests) will run at commit; no regressions anticipated.
+
+### Security Notes
+
+- All Blade output uses `{{ }}` (HTML-escaped). No `{!! !!}` introduced.
+- `onload` handler on `<img>` only calls `this.classList.remove(...)` — no user data involved.
+- No new HTTP endpoints, no controller/model/route changes.
+
+### Upgrade Proposals
+
+- IMP-003: Lazy-load below-the-fold bento cards with Intersection Observer
+- IMP-010: Product image lightbox + zoom on the detail card
+
+<!-- EVAL-IMP-002 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-003 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-003 — One-Page Checkout (collapse multi-step to single view)
+
+| Field            | Value                                                  |
+| ---------------- | ------------------------------------------------------ |
+| Evaluation ID    | EVAL-IMP-003                                           |
+| Improvement ID   | IMP-003                                                |
+| Improvement Name | One-Page Checkout (collapse multi-step to single view) |
+| Scope            | `[FULL_STACK_MODE]`                                    |
+| Target Task IDs  | CP-001, CP-002, CP-003                                 |
+| Epic             | Checkout & Payment                                     |
+| Priority         | 2 — High                                               |
+| Points           | 5                                                      |
+| Date             | 2026-04-19                                             |
+| Git Tag          | v1.0-IMP-003-stable                                    |
+| Branch           | improve/IMP-003                                        |
+| Based On         | improve/IMP-002                                        |
+
+### Summary
+
+Collapsed the three-step checkout flow (Address → Shipping → Review) into a single `/checkout` page. The user fills address and shipping on one screen, clicks **Review & Pay**, which saves both to session via a lightweight AJAX endpoint, initialises a Stripe PaymentIntent, and mounts the Stripe Payment Element inline — all without any page navigation.
+
+The existing multi-step routes (`/checkout/address`, `/checkout/shipping`, `/checkout/review`) are **preserved unchanged** for backward-compatibility and existing test coverage.
+
+### Changes Made
+
+#### `ecommerce/routes/web.php`
+
+- Added `GET /checkout` → `CheckoutController@showCheckout` (name: `checkout.index`)
+- Added `POST /checkout/session` → `CheckoutController@storeSession` (name: `checkout.session.store`)
+- Both routes sit inside the existing `auth` middleware group, adjacent to the existing checkout routes.
+
+#### `ecommerce/app/Http/Controllers/CheckoutController.php`
+
+- **`showCheckout()`** — Returns `checkout.index` view with `$cart`, `$addresses`, `$shippingOptions`, and `$subtotal`. Pure read — no side effects.
+- **`storeSession()`** — AJAX endpoint that accepts either `address_id` (existing saved address) or a full address payload (new address — validated + persisted), plus `method` (validated against known shipping keys). Writes `checkout.address` and `checkout.shipping` to session and returns `{ok, subtotal, shipping_cost, discount, total}` JSON. The existing `placeOrder()` endpoint is called second by the frontend using the now-populated session — no changes to `placeOrder()`.
+
+#### `ecommerce/resources/views/checkout/index.blade.php` _(new file)_
+
+- Bootstrap 5 two-column layout: left column = address fields + shipping radios + "Review & Pay" CTA; right column = order summary table + live shipping/total update + payment panel.
+- Saved addresses rendered as radio buttons (with "Enter a new address" option to toggle the form fields).
+- JS flow: `collectFormData()` → POST to `checkout.session.store` → update summary → POST to `checkout.place-order` → mount `stripe.elements()` → reveal `#payment-section` → on "Pay" click, `stripe.confirmPayment()` with `return_url: /checkout/success`.
+- `<meta name="csrf-token">` used for all AJAX headers — no plain-text token in JS strings.
+- All server-side output uses `{{ }}` (XSS-safe); no `{!! !!}`.
+
+#### `ecommerce/tests/Feature/OnePageCheckoutTest.php` _(new file)_
+
+- 18 test cases covering: GET 200 / guest redirect / cart items / address fields / shipping options / saved addresses / Stripe.js CDN / delivery info / POST with new address / POST with saved address_id / address persisted to DB / totals in response / standard cost / express cost / missing address → 422 / invalid method → 422 / guest POST → 401 / total arithmetic.
+
+### Test Results
+
+```
+Tests\Feature\OnePageCheckoutTest — 18 passed (42 assertions)
+Full suite baseline (pre-IMP-003): 821 passed
+Full suite post-IMP-003: 839 passed (821 + 18 new)
+```
+
+No regressions. All existing CP-001/CP-002/CP-003 tests continue to pass — multi-step routes untouched.
+
+### Security Notes
+
+- CSRF protected via `X-CSRF-TOKEN` header read from `<meta name="csrf-token">` (not embedded in JS string).
+- `address_id` is scoped `WHERE user_id = auth()->id()` to prevent IDOR.
+- No card data touches the server — Stripe tokenisation entirely client-side via Stripe.js (same pattern as existing CP-003).
+- All `{{ }}` used in Blade — no `{!! !!}`.
+- Validation applied to all user-submitted fields before any database write.
+
+### Upgrade Proposals
+
+- IMP-004: Guest Checkout (complete order without login)
+- IMP-005: Apply `coupon` input field on the one-page checkout to replace the separate coupon step
+
+<!-- EVAL-IMP-003 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-004 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-004 — Guest Checkout (complete order without login)
+
+| Field            | Value                                         |
+| ---------------- | --------------------------------------------- |
+| Evaluation ID    | EVAL-IMP-004                                  |
+| Improvement ID   | IMP-004                                       |
+| Improvement Name | Guest Checkout (complete order without login) |
+| Scope            | `[FULL_STACK_MODE]`                           |
+| Target Task IDs  | CP-001, SC-001                                |
+| Epic             | Checkout & Payment                            |
+| Priority         | 2 — High                                      |
+| Points           | 5                                             |
+| Date             | 2026-04-19                                    |
+| Git Tag          | v1.0-IMP-004-stable                           |
+| Branch           | improve/IMP-004                               |
+| Based On         | improve/IMP-003                               |
+
+### Summary
+
+Added a complete guest checkout flow accessible at `/checkout/guest` — no login required. Guests supply their email address, shipping address, and shipping method on a single page. A Stripe PaymentIntent is created server-side; card tokenisation happens entirely client-side via Stripe.js. Guest orders are stored with `user_id = NULL` and `guest_email` set for confirmation and lookup.
+
+All existing authenticated checkout routes and tests are untouched.
+
+### Changes Made
+
+#### `ecommerce/database/migrations/2026_04_19_000001_make_user_id_nullable_add_guest_email_to_orders.php` _(new)_
+
+- Makes `user_id` nullable on the `orders` table (guest orders have no account).
+- Adds `guest_email VARCHAR(255) NULL` for order confirmation and guest tracking.
+- Uses raw `DB::statement()` SQL to avoid `doctrine/dbal` dependency.
+- SQLite (test DB) uses a full table-rebuild path (`PRAGMA foreign_keys OFF` → `CREATE TABLE orders_new` → `INSERT … SELECT` → `DROP` → `RENAME`) because SQLite does not support `ALTER TABLE MODIFY COLUMN`.
+
+#### `ecommerce/app/Models/Order.php`
+
+- Added `guest_email` to `$fillable`.
+
+#### `ecommerce/routes/web.php`
+
+- Added four guest routes **outside** the `auth` middleware group:
+  - `GET /checkout/guest` → `showGuestCheckout` (name: `checkout.guest.index`)
+  - `POST /checkout/guest/session` → `storeGuestSession` (name: `checkout.guest.session.store`)
+  - `POST /checkout/guest/order` → `placeGuestOrder` (name: `checkout.guest.place-order`)
+  - `GET /checkout/guest/success` → `showGuestSuccess` (name: `checkout.guest.success`)
+
+#### `ecommerce/app/Http/Controllers/CheckoutController.php`
+
+- **`showGuestCheckout()`** — Renders `checkout.guest` with cart, shipping options, and subtotal. Redirects authenticated users to `checkout.index`.
+- **`storeGuestSession()`** — Validates `guest_email`, full address, and `method`; stores all three in session; returns JSON totals `{ok, subtotal, shipping_cost, discount, total}`.
+- **`placeGuestOrder()`** — Creates `Order` with `user_id = null` and `guest_email`; creates `OrderItem`s; calls `PaymentService::createPaymentIntent`; stores `checkout.guest_order_id` in session for ownership verification; returns `{client_secret, order_id}`.
+- **`showGuestSuccess()`** — Verifies ownership via `session(checkout.guest_order_id)` + `whereNull('user_id')` scope; clears checkout session keys on success.
+
+#### `ecommerce/resources/views/checkout/guest.blade.php` _(new)_
+
+- Bootstrap 5 two-column layout matching the auth checkout style.
+- Left column: Contact (email) card → Shipping Address card → Shipping Method card → "Review & Pay" CTA.
+- Right column: Order Summary table + live totals + Payment panel (hidden until Review & Pay completes).
+- JS flow: "Review & Pay" → POST `checkout.guest.session.store` → POST `checkout.guest.place-order` → mount `stripe.elements()` → reveal `#payment-section` → "Pay" → `stripe.confirmPayment()` → `/checkout/guest/success`.
+- "Sign in" link in page header for users who already have an account.
+- All server output uses `{{ }}` (XSS-safe).
+
+#### `ecommerce/tests/Feature/GuestCheckoutTest.php` _(new)_
+
+- 18 test cases covering: GET 200 for guest / auth redirect / cart items / email field / address fields / shipping options / Stripe.js CDN / JSON totals / session population / standard cost / express cost / total arithmetic / missing email → 422 / invalid email → 422 / missing address → 422 / invalid method → 422 / guest order stored with null user_id / missing session → 422.
+
+### Test Results
+
+```
+Tests\Feature\GuestCheckoutTest — 18 passed (34 assertions)
+Full suite baseline (pre-IMP-004): 839 passed
+Full suite post-IMP-004: 857 passed (839 + 18 new)
+```
+
+No regressions. All existing auth checkout tests unaffected.
+
+### Security Notes
+
+- Guest orders are scoped by `session('checkout.guest_order_id')` + `whereNull('user_id')` in `showGuestSuccess()` — prevents a malicious user from accessing another guest's order via intent ID enumeration.
+- `guest_email` is validated as `email|max:255` before any use.
+- Card data never touches the server — Stripe tokenisation is client-side only.
+- All `{{ }}` in Blade; no `{!! !!}`.
+- CSRF token read from `<meta name="csrf-token">` — not embedded as a JS string.
+
+### Upgrade Proposals
+
+- IMP-005: Off-canvas cart drawer (mobile-first slide-in)
+- IMP-006: Persist guest email in cart session so guest checkout is pre-filled after "add to cart"
+
+<!-- EVAL-IMP-004 END -->

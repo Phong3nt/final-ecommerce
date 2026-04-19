@@ -122,6 +122,10 @@ Route::middleware(['auth'])->group(function () {
     // OH-004: Cancel order
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+    // IMP-003: One-Page Checkout — single view + session-save endpoint
+    Route::get('/checkout', [CheckoutController::class, 'showCheckout'])->name('checkout.index');
+    Route::post('/checkout/session', [CheckoutController::class, 'storeSession'])->name('checkout.session.store');
+
     // CP-001: Checkout — shipping address
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
@@ -138,6 +142,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/success', [CheckoutController::class, 'showSuccess'])->name('checkout.success');
 
 });
+
+// IMP-004: Guest Checkout — no auth required; guests supply email for order tracking
+Route::get('/checkout/guest', [CheckoutController::class, 'showGuestCheckout'])->name('checkout.guest.index');
+Route::post('/checkout/guest/session', [CheckoutController::class, 'storeGuestSession'])->name('checkout.guest.session.store');
+Route::post('/checkout/guest/order', [CheckoutController::class, 'placeGuestOrder'])->name('checkout.guest.place-order');
+Route::get('/checkout/guest/success', [CheckoutController::class, 'showGuestSuccess'])->name('checkout.guest.success');
 
 // AU-006: Admin routes — auth + role:admin required
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
