@@ -124,6 +124,12 @@
             opacity: 0;
             pointer-events: none;
         }
+
+        .tbl-empty {
+            padding: 0.5rem 1rem;
+            text-align: center;
+            color: #888;
+        }
     </style>
 </head>
 
@@ -197,7 +203,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="padding:0.5rem 1rem;text-align:center;color:#888;">No sales in this period.</td>
+                            <td colspan="4" class="tbl-empty">No sales in this period.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -237,7 +243,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="padding:0.5rem 1rem;text-align:center;color:#888;">No recent orders.</td>
+                            <td colspan="6" class="tbl-empty">No recent orders.</td>
                         </tr>
                     @endforelse
                 </tbody>
