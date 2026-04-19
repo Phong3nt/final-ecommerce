@@ -4401,3 +4401,62 @@ None.
 None at this time.
 
 <!-- EVAL-NF-010 END -->
+
+---
+
+<!-- EVAL-IMP-001 START -->
+
+## EVAL-IMP-001 · Bento Grid Layout for Product Catalog
+
+**Improvement ID:** IMP-001
+**Scope:** `[UIUX_MODE]`
+**Version:** A
+**Date:** 2026-04-19
+**Status in Backlog:** Done
+**Target Task IDs:** PC-001
+**Git Tag:** v1.0-IMP-001-stable
+
+### What Was Changed
+
+- Replaced the bare-HTML `products/index.blade.php` with a full Bootstrap 5 page
+- Added a sticky left sidebar (col-lg-3) containing the filter form (`id="filter-form"` preserved)
+- Replaced the plain `<div class="product-grid">` with a CSS-Grid **Bento layout** (3-col desktop, 2-col tablet, 1-col mobile)
+- First product card is the **featured hero** cell — spans 2 columns × 2 rows with a taller image (340 px)
+- All remaining cards are standard cells with 180 px images and consistent Bootstrap card markup
+- Added Bootstrap 5 navbar with search bar, Cart, Orders, Login/Register/Logout links
+- Added category badges, star rating display (full/half/empty), In Stock / Out of Stock status badges
+- Empty state upgraded from `<p>` to Bootstrap `.alert.alert-info`
+- Pagination wrapped in `.d-flex.justify-content-center`
+- All Blade output remains `{{ }}` — XSS-safe (OWASP §2 verified)
+
+### Test Results
+
+**New PHPUnit tests:** N/A — `[UIUX_MODE]` scope, no server-side logic changed
+**Regression suite:** 821/821 ✅ (run on `master` before branch creation — commit `ffccd94`)
+
+### Acceptance Criteria Check
+
+| Criterion | Status |
+|-----------|--------|
+| `id="filter-form"` preserved on filter form | ✅ |
+| Sort options `newest`, `oldest`, `price_asc`, `price_desc`, `rating` present | ✅ |
+| `selected` attribute on active sort option | ✅ |
+| `No products available` text in empty state | ✅ |
+| `In Stock` / `Out of Stock` stock status text | ✅ |
+| XSS: all output via `{{ }}` | ✅ |
+| Bootstrap 5 only — no Tailwind, no Vue/React | ✅ |
+| No new PHP libraries required | ✅ |
+| Mobile-first responsive (col-lg-3 sidebar + 3/2/1-col bento grid) | ✅ |
+
+### Risk / Regression Notes
+
+- No controller, model, route, or migration touched
+- All filter/sort/pagination logic unchanged
+- PHPUnit feature tests for `ProductBrowseTest`, `ProductFilterTest`, `ProductSortTest` make no assertions on CSS class names — safe
+
+### Upgrade Proposals
+
+- IMP-002: Add skeleton screen loading state to the bento grid for async-load areas
+- IMP-010: Add product image lightbox + zoom on the detail card
+
+<!-- EVAL-IMP-001 END -->
