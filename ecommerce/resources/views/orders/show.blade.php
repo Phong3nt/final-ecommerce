@@ -139,6 +139,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
 
     <h1>Order #{{ $order->id }}</h1>
     <p class="meta">
@@ -237,10 +238,6 @@
                 Cancel Order
             </button>
         </form>
-    @endif
-
-    @if (session('error'))
-        <p style="color:#dc2626;margin-top:1rem">{{ session('error') }}</p>
     @endif
 
 </body>

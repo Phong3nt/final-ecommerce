@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Shipping Address</h1>
 
     <a href="{{ route('cart.index') }}">&larr; Back to Cart</a>

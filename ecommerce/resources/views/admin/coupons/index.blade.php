@@ -93,11 +93,8 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Coupons</h1>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
 
     <a href="{{ route('admin.coupons.create') }}" class="btn">+ New Coupon</a>
 

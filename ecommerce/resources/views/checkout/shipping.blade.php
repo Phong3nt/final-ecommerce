@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Shipping Method</h1>
 
     <a href="{{ route('checkout.address') }}">&larr; Back to Address</a>
@@ -20,10 +21,6 @@
         </ul>
     @endif
 
-    @if (session('error'))
-        <p class="error">{{ session('error') }}</p>
-    @endif
-
     <form method="POST" action="{{ route('checkout.shipping.store') }}">
         @csrf
 
@@ -32,12 +29,7 @@
 
             @foreach ($shippingOptions as $key => $option)
                 <label>
-                    <input
-                        type="radio"
-                        name="method"
-                        value="{{ $key }}"
-                        {{ $selected === $key ? 'checked' : '' }}
-                    >
+                    <input type="radio" name="method" value="{{ $key }}" {{ $selected === $key ? 'checked' : '' }}>
                     {{ $option['label'] }}
                     — ${{ number_format($option['cost'], 2) }}
                     ({{ $option['days'] }})
@@ -58,17 +50,17 @@
     <script>
         (function () {
             const costs = @json(array_column($shippingOptions, 'cost', null));
-            const keys  = @json(array_keys($shippingOptions));
+            const keys = @json(array_keys($shippingOptions));
             const costMap = {};
             keys.forEach((k, i) => { costMap[k] = costs[i]; });
 
             const subtotal = {{ $orderTotal }};
             const shippingEl = document.getElementById('shipping-cost');
-            const grandEl    = document.getElementById('grand-total');
+            const grandEl = document.getElementById('grand-total');
 
             function updateTotals(cost) {
                 shippingEl.textContent = '$' + cost.toFixed(2);
-                grandEl.textContent    = '$' + (subtotal + cost).toFixed(2);
+                grandEl.textContent = '$' + (subtotal + cost).toFixed(2);
             }
 
             document.querySelectorAll('input[name="method"]').forEach(function (radio) {

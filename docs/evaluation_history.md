@@ -4997,3 +4997,85 @@ No regressions. All existing auth checkout tests unaffected.
 - [x] All 887 tests pass; 0 regressions
 - [x] `[INFRA_MODE]` constraints respected throughout
 <!-- EVAL-IMP-008 END -->
+
+<!-- EVAL-IMP-009 START -->
+## EVAL-IMP-009 — Global Toast Notification System (Replace Bare Flash)
+
+| Field              | Value                                                         |
+|--------------------|---------------------------------------------------------------|
+| Improvement ID     | IMP-009                                                       |
+| Mode               | `[UIUX_MODE]`                                                 |
+| Scope              | Blade view UX messaging only                                  |
+| Target Tasks       | AU-001–004, SC-001–004, CP-005                                |
+| Git Tag            | `v1.0-IMP-009-stable`                                         |
+| Branch             | `improve/IMP-009`                                             |
+| Date               | 2026-04-19                                                    |
+| Tests Added        | 10 (GlobalToastNotificationTest)                              |
+| Test Baseline      | 887 → 897                                                     |
+| Assertions         | 2114                                                          |
+
+### Changes Made
+
+| File                                                            | Change                                                                 |
+|-----------------------------------------------------------------|------------------------------------------------------------------------|
+| `ecommerce/resources/views/partials/toast.blade.php`            | New global toast partial (shared styles + event-driven renderer)       |
+| `ecommerce/resources/views/auth/login.blade.php`                | Added shared toast include                                              |
+| `ecommerce/resources/views/auth/forgot-password.blade.php`      | Replaced inline status flash with shared toast include                  |
+| `ecommerce/resources/views/dashboard.blade.php`                 | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/profile/show.blade.php`              | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/cart/index.blade.php`                | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/products/show.blade.php`             | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/checkout/address.blade.php`          | Added shared toast include for prerequisite flash errors                |
+| `ecommerce/resources/views/checkout/shipping.blade.php`         | Replaced inline error flash with shared toast include                   |
+| `ecommerce/resources/views/checkout/review.blade.php`           | Replaced inline error flash with shared toast include                   |
+| `ecommerce/resources/views/orders/index.blade.php`              | Added shared toast include for cancellation success flash               |
+| `ecommerce/resources/views/orders/show.blade.php`               | Replaced inline error flash with shared toast include                   |
+| `ecommerce/resources/views/user/addresses/index.blade.php`      | Replaced inline success/error flash with shared toast include           |
+| `ecommerce/resources/views/admin/categories/index.blade.php`    | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/admin/coupons/index.blade.php`       | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/admin/orders/index.blade.php`        | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/admin/orders/show.blade.php`         | Replaced inline success/error flash with shared toast include           |
+| `ecommerce/resources/views/admin/products/index.blade.php`      | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/admin/products/images.blade.php`     | Replaced inline success flash with shared toast include                 |
+| `ecommerce/resources/views/admin/users/show.blade.php`          | Replaced inline success/error flash with shared toast include           |
+| `ecommerce/tests/Feature/GlobalToastNotificationTest.php`       | New feature test suite (10 test cases)                                 |
+
+### IMP-007 Safety Fix Included
+
+- Restored Alpine.js CDN script tags in `cart/index.blade.php` and `products/show.blade.php`.
+- This preserves IMP-007 micro-interactions while adding IMP-009 global toasts.
+
+### Test Coverage (GlobalToastNotificationTest — 10 tests)
+
+| TC   | Description                                                                  | Result |
+|------|------------------------------------------------------------------------------|--------|
+| TC01 | Shared toast partial exists and supports success/error/status                | PASS   |
+| TC02 | Forgot password view uses shared toast include                              | PASS   |
+| TC03 | Login view uses shared toast include                                         | PASS   |
+| TC04 | Checkout shipping removed inline flash and uses shared toast                 | PASS   |
+| TC05 | Checkout review removed inline flash and uses shared toast                   | PASS   |
+| TC06 | Checkout address includes shared toast for redirected flash errors           | PASS   |
+| TC07 | Cart view removed inline success flash and uses shared toast                 | PASS   |
+| TC08 | Product detail removed inline success flash and uses shared toast            | PASS   |
+| TC09 | Orders index includes shared toast for cancellation success                  | PASS   |
+| TC10 | Admin flash pages all use shared toast and no inline session flash remains   | PASS   |
+
+### Regression
+
+- Targeted regressions passed:
+  - `GlobalToastNotificationTest` (10)
+  - `AlpineCartMicroInteractionsTest` (10)
+  - `CheckoutShippingTest` (12)
+  - `CheckoutReviewTest` (12)
+- Full suite passed: **897 tests / 2114 assertions**
+
+### Acceptance Criteria
+
+- [x] Global toast partial created and reusable across pages
+- [x] Bare session flash blocks replaced in target flows (AU, SC, CP)
+- [x] Existing IMP-007 Alpine micro-interactions preserved
+- [x] No controller/service/model/database changes
+- [x] 10 new IMP-009 tests added and passing
+- [x] Full regression suite passes with zero failures
+- [x] `[UIUX_MODE]` constraints respected
+<!-- EVAL-IMP-009 END -->

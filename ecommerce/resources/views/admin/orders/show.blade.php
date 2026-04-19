@@ -224,6 +224,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
 
     <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary btn-sm" style="margin-bottom:1rem;">&larr; All
         Orders</a>
@@ -233,13 +234,6 @@
         Placed {{ $order->created_at->format('d M Y, H:i') }}
         &mdash; <span class="badge badge-{{ $order->status }}">{{ $order->status }}</span>
     </p>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert-error">{{ session('error') }}</div>
-    @endif
 
     <div class="grid">
         {{-- Customer --}}

@@ -96,6 +96,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>My Orders</h1>
 
     @if ($orders->isEmpty())

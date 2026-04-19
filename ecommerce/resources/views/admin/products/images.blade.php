@@ -152,16 +152,14 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Manage Images: {{ $product->name }}</h1>
 
     <p>
         <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-secondary">← Back to Edit</a>
-        <a href="{{ route('admin.products.index') }}" class="btn btn-secondary" style="margin-left:.5rem;">Products List</a>
+        <a href="{{ route('admin.products.index') }}" class="btn btn-secondary" style="margin-left:.5rem;">Products
+            List</a>
     </p>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
 
     @if($errors->any())
         <div class="alert-error">
@@ -174,7 +172,8 @@
     <div class="card">
         <h2>Current Images</h2>
         <p style="font-size:.875rem;color:#555;margin:.25rem 0 1rem;">
-            Drag rows to reorder. The <span class="badge-thumbnail">thumbnail</span> image is used as the primary product image.
+            Drag rows to reorder. The <span class="badge-thumbnail">thumbnail</span> image is used as the primary
+            product image.
         </p>
 
         @if($product->images && count($product->images) > 0)
@@ -188,11 +187,8 @@
                     @foreach($product->images as $i => $path)
                         <li data-path="{{ $path }}">
                             <span class="drag-handle" title="Drag to reorder">&#8597;</span>
-                            <img
-                                src="{{ Storage::disk('public')->exists($path) ? Storage::url($path) : 'https://placehold.co/72x72?text=No+Image' }}"
-                                alt="Product image {{ $i + 1 }}"
-                                class="{{ $product->image === $path ? 'is-thumbnail' : '' }}"
-                            >
+                            <img src="{{ Storage::disk('public')->exists($path) ? Storage::url($path) : 'https://placehold.co/72x72?text=No+Image' }}"
+                                alt="Product image {{ $i + 1 }}" class="{{ $product->image === $path ? 'is-thumbnail' : '' }}">
                             <div class="image-meta">
                                 @if($product->image === $path)
                                     <span class="badge-thumbnail">Thumbnail</span>
@@ -201,14 +197,15 @@
                             </div>
                             <div class="image-actions">
                                 @if($product->image !== $path)
-                                    <form method="POST" action="{{ route('admin.products.images.thumbnail', $product) }}" style="display:inline;">
+                                    <form method="POST" action="{{ route('admin.products.images.thumbnail', $product) }}"
+                                        style="display:inline;">
                                         @csrf
                                         <input type="hidden" name="thumbnail_index" value="{{ $i }}">
                                         <button type="submit" class="btn btn-success">Set Thumbnail</button>
                                     </form>
                                 @endif
-                                <form method="POST" action="{{ route('admin.products.images.destroy', [$product, $i]) }}" style="display:inline;"
-                                      onsubmit="return confirm('Remove this image?');">
+                                <form method="POST" action="{{ route('admin.products.images.destroy', [$product, $i]) }}"
+                                    style="display:inline;" onsubmit="return confirm('Remove this image?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">Remove</button>
@@ -222,7 +219,8 @@
                 </div>
             </form>
         @else
-            <p class="empty-state">No images uploaded yet. <a href="{{ route('admin.products.edit', $product) }}">Go to Edit</a> to upload images.</p>
+            <p class="empty-state">No images uploaded yet. <a href="{{ route('admin.products.edit', $product) }}">Go to
+                    Edit</a> to upload images.</p>
         @endif
     </div>
 
@@ -231,18 +229,18 @@
         if (list) {
             let dragged = null;
 
-            list.addEventListener('dragstart', function(e) {
+            list.addEventListener('dragstart', function (e) {
                 dragged = e.target.closest('li');
                 if (dragged) dragged.classList.add('dragging');
             });
 
-            list.addEventListener('dragend', function() {
+            list.addEventListener('dragend', function () {
                 if (dragged) dragged.classList.remove('dragging');
                 dragged = null;
                 syncHiddenInputs();
             });
 
-            list.addEventListener('dragover', function(e) {
+            list.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 const target = e.target.closest('li');
                 if (target && dragged && target !== dragged) {
@@ -255,7 +253,7 @@
             function syncHiddenInputs() {
                 const form = document.getElementById('reorder-form');
                 form.querySelectorAll('input[name="image_order[]"]').forEach(el => el.remove());
-                list.querySelectorAll('li[data-path]').forEach(function(li) {
+                list.querySelectorAll('li[data-path]').forEach(function (li) {
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'image_order[]';
@@ -265,7 +263,7 @@
             }
 
             // Set draggable on li items
-            list.querySelectorAll('li').forEach(function(li) {
+            list.querySelectorAll('li').forEach(function (li) {
                 li.setAttribute('draggable', 'true');
             });
         }

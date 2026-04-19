@@ -75,6 +75,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <!-- IMP-007: Toast notification area -->
     <div class="imp007-toast-area" x-data="imp007ToastManager()" x-on:imp007-toast.window="show($event.detail)">
         <template x-for="t in toasts" :key="t.id">
@@ -85,10 +86,6 @@
     <h1>Your Cart</h1>
 
     <a href="{{ route('products.index') }}">&larr; Continue Shopping</a>
-
-    @if (session('success'))
-        <p class="alert-success">{{ session('success') }}</p>
-    @endif
 
     @if ($errors->has('coupon'))
         <p class="alert-error">{{ $errors->first('coupon') }}</p>

@@ -7,6 +7,7 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Login</h1>
 
     @if ($errors->any())

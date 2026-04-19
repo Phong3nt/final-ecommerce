@@ -146,18 +146,12 @@
 </head>
 
 <body>
+    @include('partials.toast')
 
     <a href="{{ route('profile.show') }}" class="btn btn-secondary" style="margin-bottom:1rem;">&larr; Back to
         Profile</a>
 
     <h1>Saved Addresses</h1>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert-error">{{ session('error') }}</div>
-    @endif
 
     @if($addresses->isEmpty())
         <p>You have no saved addresses yet.</p>

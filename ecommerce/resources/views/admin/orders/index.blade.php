@@ -186,11 +186,8 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Orders</h1>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
 
     {{-- Filter Form --}}
     <form method="GET" action="{{ route('admin.orders.index') }}" class="filter-form">

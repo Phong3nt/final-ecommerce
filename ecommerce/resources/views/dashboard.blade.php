@@ -34,11 +34,8 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h2>Welcome, {{ auth()->user()->name }}!</h2>
-
-    @if (session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
 
     @if (!auth()->user()->hasVerifiedEmail())
         <div class="alert-warning">

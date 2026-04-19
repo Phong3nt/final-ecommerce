@@ -8,11 +8,8 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>My Profile</h1>
-
-    @if (session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
 
     @if ($user->avatar)
         <img src="{{ Storage::url($user->avatar) }}" alt="Avatar" width="120">

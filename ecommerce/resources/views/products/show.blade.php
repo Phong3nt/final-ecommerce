@@ -226,6 +226,7 @@
 </head>
 
 <body class="bg-light">
+    @include('partials.toast')
     <!-- IMP-005: Bootstrap navbar with cart drawer trigger -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-xl">
@@ -299,22 +300,18 @@
                 </div>
 
                 {{-- SC-001: Add to Cart --}}
-                @if (session('success'))
-                    <p class="alert-success">{{ session('success') }}</p>
-                @endif
-
                 @if ($errors->has('quantity'))
                     <p class="alert-error">{{ $errors->first('quantity') }}</p>
                 @endif
 
                 @if ($product->stock > 0)
                     <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
-                                 productId: {{ $product->id }},
-                                 productName: @json($product->name),
-                                 productPrice: {{ (float) $product->price }},
-                                 productSlug: @json($product->slug),
-                                 cartStoreUrl: '{{ route('cart.store') }}'
-                             })">
+                                         productId: {{ $product->id }},
+                                         productName: @json($product->name),
+                                         productPrice: {{ (float) $product->price }},
+                                         productSlug: @json($product->slug),
+                                         cartStoreUrl: '{{ route('cart.store') }}'
+                                     })">
                         <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
                             x-on:submit.prevent="submit">
                             @csrf

@@ -9,13 +9,10 @@
 </head>
 
 <body>
+    @include('partials.toast')
     <h1>Order Review</h1>
 
     <a href="{{ route('checkout.shipping') }}">&larr; Back to Shipping</a>
-
-    @if (session('error'))
-        <p class="error">{{ session('error') }}</p>
-    @endif
 
     <section id="address-summary">
         <h2>Shipping Address</h2>
