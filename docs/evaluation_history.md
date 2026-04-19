@@ -4525,3 +4525,80 @@ Applied shimmer skeleton screens to all genuinely async-loading UI areas across 
 - IMP-010: Product image lightbox + zoom on the detail card
 
 <!-- EVAL-IMP-002 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-003 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-003 — One-Page Checkout (collapse multi-step to single view)
+
+| Field             | Value                                                  |
+|-------------------|--------------------------------------------------------|
+| Evaluation ID     | EVAL-IMP-003                                           |
+| Improvement ID    | IMP-003                                                |
+| Improvement Name  | One-Page Checkout (collapse multi-step to single view) |
+| Scope             | `[FULL_STACK_MODE]`                                    |
+| Target Task IDs   | CP-001, CP-002, CP-003                                 |
+| Epic              | Checkout & Payment                                     |
+| Priority          | 2 — High                                               |
+| Points            | 5                                                      |
+| Date              | 2026-04-19                                             |
+| Git Tag           | v1.0-IMP-003-stable                                    |
+| Branch            | improve/IMP-003                                        |
+| Based On          | improve/IMP-002                                        |
+
+### Summary
+
+Collapsed the three-step checkout flow (Address → Shipping → Review) into a single `/checkout` page. The user fills address and shipping on one screen, clicks **Review & Pay**, which saves both to session via a lightweight AJAX endpoint, initialises a Stripe PaymentIntent, and mounts the Stripe Payment Element inline — all without any page navigation.
+
+The existing multi-step routes (`/checkout/address`, `/checkout/shipping`, `/checkout/review`) are **preserved unchanged** for backward-compatibility and existing test coverage.
+
+### Changes Made
+
+#### `ecommerce/routes/web.php`
+
+- Added `GET /checkout` → `CheckoutController@showCheckout` (name: `checkout.index`)
+- Added `POST /checkout/session` → `CheckoutController@storeSession` (name: `checkout.session.store`)
+- Both routes sit inside the existing `auth` middleware group, adjacent to the existing checkout routes.
+
+#### `ecommerce/app/Http/Controllers/CheckoutController.php`
+
+- **`showCheckout()`** — Returns `checkout.index` view with `$cart`, `$addresses`, `$shippingOptions`, and `$subtotal`. Pure read — no side effects.
+- **`storeSession()`** — AJAX endpoint that accepts either `address_id` (existing saved address) or a full address payload (new address — validated + persisted), plus `method` (validated against known shipping keys). Writes `checkout.address` and `checkout.shipping` to session and returns `{ok, subtotal, shipping_cost, discount, total}` JSON. The existing `placeOrder()` endpoint is called second by the frontend using the now-populated session — no changes to `placeOrder()`.
+
+#### `ecommerce/resources/views/checkout/index.blade.php` *(new file)*
+
+- Bootstrap 5 two-column layout: left column = address fields + shipping radios + "Review & Pay" CTA; right column = order summary table + live shipping/total update + payment panel.
+- Saved addresses rendered as radio buttons (with "Enter a new address" option to toggle the form fields).
+- JS flow: `collectFormData()` → POST to `checkout.session.store` → update summary → POST to `checkout.place-order` → mount `stripe.elements()` → reveal `#payment-section` → on "Pay" click, `stripe.confirmPayment()` with `return_url: /checkout/success`.
+- `<meta name="csrf-token">` used for all AJAX headers — no plain-text token in JS strings.
+- All server-side output uses `{{ }}` (XSS-safe); no `{!! !!}`.
+
+#### `ecommerce/tests/Feature/OnePageCheckoutTest.php` *(new file)*
+
+- 18 test cases covering: GET 200 / guest redirect / cart items / address fields / shipping options / saved addresses / Stripe.js CDN / delivery info / POST with new address / POST with saved address_id / address persisted to DB / totals in response / standard cost / express cost / missing address → 422 / invalid method → 422 / guest POST → 401 / total arithmetic.
+
+### Test Results
+
+```
+Tests\Feature\OnePageCheckoutTest — 18 passed (42 assertions)
+Full suite baseline (pre-IMP-003): 821 passed
+Full suite post-IMP-003: 839 passed (821 + 18 new)
+```
+
+No regressions. All existing CP-001/CP-002/CP-003 tests continue to pass — multi-step routes untouched.
+
+### Security Notes
+
+- CSRF protected via `X-CSRF-TOKEN` header read from `<meta name="csrf-token">` (not embedded in JS string).
+- `address_id` is scoped `WHERE user_id = auth()->id()` to prevent IDOR.
+- No card data touches the server — Stripe tokenisation entirely client-side via Stripe.js (same pattern as existing CP-003).
+- All `{{ }}` used in Blade — no `{!! !!}`.
+- Validation applied to all user-submitted fields before any database write.
+
+### Upgrade Proposals
+
+- IMP-004: Guest Checkout (complete order without login)
+- IMP-005: Apply `coupon` input field on the one-page checkout to replace the separate coupon step
+
+<!-- EVAL-IMP-003 END -->

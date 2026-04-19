@@ -43,6 +43,93 @@ class CheckoutController extends Controller
     }
 
     /**
+     * IMP-003: Show the one-page checkout view.
+     * Combines address, shipping, and payment steps in a single page.
+     */
+    public function showCheckout(): View|RedirectResponse
+    {
+        $cart = session('cart', []);
+        $addresses = auth()->user()->addresses;
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        return view('checkout.index', [
+            'cart'            => $cart,
+            'addresses'       => $addresses,
+            'shippingOptions' => self::SHIPPING_OPTIONS,
+            'subtotal'        => $subtotal,
+        ]);
+    }
+
+    /**
+     * IMP-003: Save address + shipping selection to session in a single AJAX call.
+     * Returns JSON with updated totals so the frontend can refresh the summary.
+     * Accepts either an existing address_id or a new address payload.
+     */
+    public function storeSession(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+
+        if ($request->filled('address_id')) {
+            // Use existing saved address
+            $address = UserAddress::where('id', $request->input('address_id'))
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+        } else {
+            // Validate and save new address
+            $data = $request->validate([
+                'name'          => 'required|string|max:255',
+                'address_line1' => 'required|string|max:255',
+                'address_line2' => 'nullable|string|max:255',
+                'city'          => 'required|string|max:100',
+                'state'         => 'required|string|max:100',
+                'postal_code'   => 'required|string|max:20',
+                'country'       => 'required|string|max:100',
+            ]);
+
+            $address = $user->addresses()->create($data);
+        }
+
+        // Validate shipping method
+        $request->validate([
+            'method' => ['required', 'in:' . implode(',', array_keys(self::SHIPPING_OPTIONS))],
+        ]);
+
+        $method = $request->input('method');
+        $option = self::SHIPPING_OPTIONS[$method];
+
+        session()->put('checkout.address', [
+            'id'            => $address->id,
+            'name'          => $address->name,
+            'address_line1' => $address->address_line1,
+            'address_line2' => $address->address_line2,
+            'city'          => $address->city,
+            'state'         => $address->state,
+            'postal_code'   => $address->postal_code,
+            'country'       => $address->country,
+        ]);
+
+        session()->put('checkout.shipping', [
+            'method' => $method,
+            'label'  => $option['label'],
+            'cost'   => $option['cost'],
+        ]);
+
+        $cart     = session('cart', []);
+        $coupon   = session('checkout.coupon');
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $discount = self::computeCouponDiscount($subtotal, $coupon);
+        $total    = $subtotal + $option['cost'] - $discount;
+
+        return response()->json([
+            'ok'            => true,
+            'subtotal'      => $subtotal,
+            'shipping_cost' => $option['cost'],
+            'discount'      => $discount,
+            'total'         => $total,
+        ]);
+    }
+
+    /**
      * CP-001: Show the checkout address step.
      * Auth users see their saved addresses + a new address form.
      */

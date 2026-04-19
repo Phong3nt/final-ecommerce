@@ -122,6 +122,10 @@ Route::middleware(['auth'])->group(function () {
     // OH-004: Cancel order
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+    // IMP-003: One-Page Checkout — single view + session-save endpoint
+    Route::get('/checkout', [CheckoutController::class, 'showCheckout'])->name('checkout.index');
+    Route::post('/checkout/session', [CheckoutController::class, 'storeSession'])->name('checkout.session.store');
+
     // CP-001: Checkout — shipping address
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
