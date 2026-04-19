@@ -17,7 +17,7 @@ class ProductController extends Controller
         $categories = Category::orderBy('name')->get();
         $sort = $filters['sort'] ?? 'newest';
 
-        $products = Product::published()->filter($filters)->sort($sort)->paginate(12)->withQueryString();
+        $products = Product::published()->with('category')->filter($filters)->sort($sort)->paginate(12)->withQueryString();
 
         return view('products.index', compact('products', 'filters', 'categories'));
     }
@@ -42,7 +42,7 @@ class ProductController extends Controller
         }
 
         // RV-002: paginated reviews list + average rating
-        $reviews       = $product->reviews()->with('user')->latest()->paginate(5);
+        $reviews = $product->reviews()->with('user')->latest()->paginate(5);
         $averageRating = $product->reviews()->avg('rating');
 
         return view('products.show', compact('product', 'related', 'canReview', 'userReview', 'reviews', 'averageRating'));
