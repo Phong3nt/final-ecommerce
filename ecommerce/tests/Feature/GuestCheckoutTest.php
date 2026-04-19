@@ -35,15 +35,15 @@ class GuestCheckoutTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'guest_email'   => 'guest@example.com',
-            'name'          => 'Jane Guest',
+            'guest_email' => 'guest@example.com',
+            'name' => 'Jane Guest',
             'address_line1' => '10 Guest Lane',
             'address_line2' => null,
-            'city'          => 'Springfield',
-            'state'         => 'IL',
-            'postal_code'   => '62701',
-            'country'       => 'US',
-            'method'        => 'standard',
+            'city' => 'Springfield',
+            'state' => 'IL',
+            'postal_code' => '62701',
+            'country' => 'US',
+            'method' => 'standard',
         ], $overrides);
     }
 
@@ -212,9 +212,9 @@ class GuestCheckoutTest extends TestCase
             ->postJson(route('checkout.guest.session.store'), $this->validPayload(['method' => 'standard']));
 
         $response->assertOk()->assertJson([
-            'subtotal'      => 40.0,
+            'subtotal' => 40.0,
             'shipping_cost' => 5.0,
-            'total'         => 45.0,
+            'total' => 45.0,
         ]);
     }
 
@@ -277,12 +277,12 @@ class GuestCheckoutTest extends TestCase
 
         $sessionData = array_merge($this->cartSession(), [
             'checkout.address' => [
-                'name'          => 'Jane Guest',
+                'name' => 'Jane Guest',
                 'address_line1' => '10 Guest Lane',
-                'city'          => 'Springfield',
-                'state'         => 'IL',
-                'postal_code'   => '62701',
-                'country'       => 'US',
+                'city' => 'Springfield',
+                'state' => 'IL',
+                'postal_code' => '62701',
+                'country' => 'US',
             ],
             'checkout.shipping' => ['method' => 'standard', 'label' => 'Standard Shipping', 'cost' => 5.00],
             'checkout.guest_email' => 'guest@example.com',
@@ -294,7 +294,7 @@ class GuestCheckoutTest extends TestCase
             ->assertJsonStructure(['client_secret', 'order_id']);
 
         $this->assertDatabaseHas('orders', [
-            'user_id'     => null,
+            'user_id' => null,
             'guest_email' => 'guest@example.com',
         ]);
     }

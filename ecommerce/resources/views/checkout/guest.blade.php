@@ -50,9 +50,8 @@
                     <div class="card-body">
                         <div class="mb-2">
                             <label for="guest_email" class="form-label small">Email address</label>
-                            <input type="email" class="form-control form-control-sm" id="guest_email"
-                                   name="guest_email" autocomplete="email"
-                                   placeholder="you@example.com">
+                            <input type="email" class="form-control form-control-sm" id="guest_email" name="guest_email"
+                                autocomplete="email" placeholder="you@example.com">
                             <div class="form-text">Your order confirmation will be sent here.</div>
                         </div>
                     </div>
@@ -66,41 +65,42 @@
                     <div class="card-body">
                         <div class="mb-2">
                             <label for="name" class="form-label small">Recipient Name</label>
-                            <input type="text" class="form-control form-control-sm" id="name"
-                                   name="name" autocomplete="name">
+                            <input type="text" class="form-control form-control-sm" id="name" name="name"
+                                autocomplete="name">
                         </div>
                         <div class="mb-2">
                             <label for="address_line1" class="form-label small">Address Line 1</label>
                             <input type="text" class="form-control form-control-sm" id="address_line1"
-                                   name="address_line1" autocomplete="address-line1">
+                                name="address_line1" autocomplete="address-line1">
                         </div>
                         <div class="mb-2">
-                            <label for="address_line2" class="form-label small">Address Line 2 <span class="text-muted">(optional)</span></label>
+                            <label for="address_line2" class="form-label small">Address Line 2 <span
+                                    class="text-muted">(optional)</span></label>
                             <input type="text" class="form-control form-control-sm" id="address_line2"
-                                   name="address_line2" autocomplete="address-line2">
+                                name="address_line2" autocomplete="address-line2">
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-6">
                                 <label for="city" class="form-label small">City</label>
-                                <input type="text" class="form-control form-control-sm" id="city"
-                                       name="city" autocomplete="address-level2">
+                                <input type="text" class="form-control form-control-sm" id="city" name="city"
+                                    autocomplete="address-level2">
                             </div>
                             <div class="col-6">
                                 <label for="state" class="form-label small">State / Province</label>
-                                <input type="text" class="form-control form-control-sm" id="state"
-                                       name="state" autocomplete="address-level1">
+                                <input type="text" class="form-control form-control-sm" id="state" name="state"
+                                    autocomplete="address-level1">
                             </div>
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-6">
                                 <label for="postal_code" class="form-label small">Postal Code</label>
                                 <input type="text" class="form-control form-control-sm" id="postal_code"
-                                       name="postal_code" autocomplete="postal-code">
+                                    name="postal_code" autocomplete="postal-code">
                             </div>
                             <div class="col-6">
                                 <label for="country" class="form-label small">Country</label>
-                                <input type="text" class="form-control form-control-sm" id="country"
-                                       name="country" autocomplete="country-name">
+                                <input type="text" class="form-control form-control-sm" id="country" name="country"
+                                    autocomplete="country-name">
                             </div>
                         </div>
                     </div>
@@ -114,12 +114,8 @@
                     <div class="card-body">
                         @foreach ($shippingOptions as $key => $option)
                             <div class="form-check mb-2">
-                                <input class="form-check-input shipping-radio"
-                                       type="radio"
-                                       name="method"
-                                       id="method-{{ $key }}"
-                                       value="{{ $key }}"
-                                       {{ $loop->first ? 'checked' : '' }}>
+                                <input class="form-check-input shipping-radio" type="radio" name="method"
+                                    id="method-{{ $key }}" value="{{ $key }}" {{ $loop->first ? 'checked' : '' }}>
                                 <label class="form-check-label" for="method-{{ $key }}">
                                     <strong>{{ $option['label'] }}</strong>
                                     &mdash; ${{ number_format($option['cost'], 2) }}
@@ -160,7 +156,8 @@
                                     <tr>
                                         <td class="ps-3">{{ $item['name'] }}</td>
                                         <td class="text-center">{{ $item['quantity'] }}</td>
-                                        <td class="text-end pe-3">${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                                        <td class="text-end pe-3">
+                                            ${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -208,11 +205,11 @@
 
     <script>
         (function () {
-            const sessionUrl    = "{{ route('checkout.guest.session.store') }}";
+            const sessionUrl = "{{ route('checkout.guest.session.store') }}";
             const placeOrderUrl = "{{ route('checkout.guest.place-order') }}";
-            const successUrl    = "{{ route('checkout.guest.success') }}";
-            const stripeKey     = "{{ config('services.stripe.key') }}";
-            const csrfToken     = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const successUrl = "{{ route('checkout.guest.success') }}";
+            const stripeKey = "{{ config('services.stripe.key') }}";
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             const stripe = stripeKey ? Stripe(stripeKey) : null;
             let elements;
@@ -230,8 +227,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN':  csrfToken,
-                            'Accept':        'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
                         },
                         body: JSON.stringify(collectFormData()),
                     });
@@ -252,8 +249,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN':  csrfToken,
-                            'Accept':        'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
                         },
                     });
 
@@ -320,17 +317,17 @@
             // ── Helpers ──────────────────────────────────────────────────────────
             function collectFormData() {
                 return {
-                    guest_email:   document.getElementById('guest_email').value,
-                    name:          document.getElementById('name').value,
+                    guest_email: document.getElementById('guest_email').value,
+                    name: document.getElementById('name').value,
                     address_line1: document.getElementById('address_line1').value,
                     address_line2: document.getElementById('address_line2').value || null,
-                    city:          document.getElementById('city').value,
-                    state:         document.getElementById('state').value,
-                    postal_code:   document.getElementById('postal_code').value,
-                    country:       document.getElementById('country').value,
-                    method:        document.querySelector('input[name="method"]:checked')
-                                       ? document.querySelector('input[name="method"]:checked').value
-                                       : '',
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    postal_code: document.getElementById('postal_code').value,
+                    country: document.getElementById('country').value,
+                    method: document.querySelector('input[name="method"]:checked')
+                        ? document.querySelector('input[name="method"]:checked').value
+                        : '',
                 };
             }
 

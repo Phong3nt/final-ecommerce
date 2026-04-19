@@ -4609,20 +4609,20 @@ No regressions. All existing CP-001/CP-002/CP-003 tests continue to pass — mul
 
 ## EVAL-IMP-004 — Guest Checkout (complete order without login)
 
-| Field             | Value                                                  |
-|-------------------|--------------------------------------------------------|
-| Evaluation ID     | EVAL-IMP-004                                           |
-| Improvement ID    | IMP-004                                                |
-| Improvement Name  | Guest Checkout (complete order without login)          |
-| Scope             | `[FULL_STACK_MODE]`                                    |
-| Target Task IDs   | CP-001, SC-001                                         |
-| Epic              | Checkout & Payment                                     |
-| Priority          | 2 — High                                               |
-| Points            | 5                                                      |
-| Date              | 2026-04-19                                             |
-| Git Tag           | v1.0-IMP-004-stable                                    |
-| Branch            | improve/IMP-004                                        |
-| Based On          | improve/IMP-003                                        |
+| Field            | Value                                         |
+| ---------------- | --------------------------------------------- |
+| Evaluation ID    | EVAL-IMP-004                                  |
+| Improvement ID   | IMP-004                                       |
+| Improvement Name | Guest Checkout (complete order without login) |
+| Scope            | `[FULL_STACK_MODE]`                           |
+| Target Task IDs  | CP-001, SC-001                                |
+| Epic             | Checkout & Payment                            |
+| Priority         | 2 — High                                      |
+| Points           | 5                                             |
+| Date             | 2026-04-19                                    |
+| Git Tag          | v1.0-IMP-004-stable                           |
+| Branch           | improve/IMP-004                               |
+| Based On         | improve/IMP-003                               |
 
 ### Summary
 
@@ -4632,7 +4632,7 @@ All existing authenticated checkout routes and tests are untouched.
 
 ### Changes Made
 
-#### `ecommerce/database/migrations/2026_04_19_000001_make_user_id_nullable_add_guest_email_to_orders.php` *(new)*
+#### `ecommerce/database/migrations/2026_04_19_000001_make_user_id_nullable_add_guest_email_to_orders.php` _(new)_
 
 - Makes `user_id` nullable on the `orders` table (guest orders have no account).
 - Adds `guest_email VARCHAR(255) NULL` for order confirmation and guest tracking.
@@ -4658,7 +4658,7 @@ All existing authenticated checkout routes and tests are untouched.
 - **`placeGuestOrder()`** — Creates `Order` with `user_id = null` and `guest_email`; creates `OrderItem`s; calls `PaymentService::createPaymentIntent`; stores `checkout.guest_order_id` in session for ownership verification; returns `{client_secret, order_id}`.
 - **`showGuestSuccess()`** — Verifies ownership via `session(checkout.guest_order_id)` + `whereNull('user_id')` scope; clears checkout session keys on success.
 
-#### `ecommerce/resources/views/checkout/guest.blade.php` *(new)*
+#### `ecommerce/resources/views/checkout/guest.blade.php` _(new)_
 
 - Bootstrap 5 two-column layout matching the auth checkout style.
 - Left column: Contact (email) card → Shipping Address card → Shipping Method card → "Review & Pay" CTA.
@@ -4667,7 +4667,7 @@ All existing authenticated checkout routes and tests are untouched.
 - "Sign in" link in page header for users who already have an account.
 - All server output uses `{{ }}` (XSS-safe).
 
-#### `ecommerce/tests/Feature/GuestCheckoutTest.php` *(new)*
+#### `ecommerce/tests/Feature/GuestCheckoutTest.php` _(new)_
 
 - 18 test cases covering: GET 200 for guest / auth redirect / cart items / email field / address fields / shipping options / Stripe.js CDN / JSON totals / session population / standard cost / express cost / total arithmetic / missing email → 422 / invalid email → 422 / missing address → 422 / invalid method → 422 / guest order stored with null user_id / missing session → 422.
 
