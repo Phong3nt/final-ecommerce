@@ -127,7 +127,25 @@
                         <a class="nav-link active" href="{{ route('products.index') }}">Catalog</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('cart.index') }}">Cart</a>
+                        @php $__cartCount = array_sum(array_column(session('cart', []), 'quantity')); @endphp
+                        <button class="btn btn-outline-light btn-sm position-relative" type="button"
+                            data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" aria-controls="cartDrawer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor"
+                                viewBox="0 0 16 16" aria-hidden="true">
+                                <path
+                                    d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.948L4.043 12H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.465-.686L5.28 8.643 3.055 3.75 2.61 2H.5a.5.5 0 0 1-.5-.5zM3.226 4l.893 4.462 9.144-.925.79-3.537H3.226zM5.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
+                            </svg>
+                            <span class="ms-1">Cart</span>
+                            @if($__cartCount > 0)
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    id="cart-badge-count" style="font-size:.6rem;">{{ $__cartCount }}</span>
+                            @else
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger visually-hidden"
+                                    id="cart-badge-count" style="font-size:.6rem;">0</span>
+                            @endif
+                        </button>
                     </li>
                     @auth
                         <li class="nav-item">
@@ -259,7 +277,7 @@
                                             class="card-img-top skel-img" loading="lazy" onload="this.classList.remove('skel-img')">
                                     @else
                                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center
-                                                                    {{ $loop->first ? '' : '' }}"
+                                                                                {{ $loop->first ? '' : '' }}"
                                             style="height: {{ $loop->first ? '340px' : '180px' }};">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ced4da"
                                                 viewBox="0 0 16 16">
@@ -329,6 +347,86 @@
                 @endif
             </main>
 
+        </div>
+    </div>
+
+    <!-- IMP-005: Off-canvas cart drawer ──────────────────────────────── -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerLabel"
+        style="width:min(380px,100vw);">
+        <div class="offcanvas-header border-bottom py-3">
+            <h5 class="offcanvas-title fw-bold d-flex align-items-center gap-2 mb-0" id="cartDrawerLabel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"
+                    aria-hidden="true">
+                    <path
+                        d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.948L4.043 12H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.465-.686L5.28 8.643 3.055 3.75 2.61 2H.5a.5.5 0 0 1-.5-.5zM3.226 4l.893 4.462 9.144-.925.79-3.537H3.226zM5.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
+                </svg>
+                Your Cart
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column" style="min-height:0;">
+            @php
+                $__dc = session('cart', []);
+                $__ds = array_sum(array_map(fn($i) => $i['price'] * $i['quantity'], $__dc));
+            @endphp
+            {{-- Empty state --}}
+            <div id="drawer-empty-state"
+                class="{{ empty($__dc) ? '' : 'd-none' }} flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center px-4 py-5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" fill="#ced4da" class="mb-3"
+                    viewBox="0 0 16 16" aria-hidden="true">
+                    <path
+                        d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.948L4.043 12H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.465-.686L5.28 8.643 3.055 3.75 2.61 2H.5a.5.5 0 0 1-.5-.5zM3.226 4l.893 4.462 9.144-.925.79-3.537H3.226zM5.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
+                </svg>
+                <p class="fw-semibold text-dark mb-1">Your cart is empty</p>
+                <p class="text-muted small mb-3">Add items to get started.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="offcanvas">Continue
+                    Shopping</button>
+            </div>
+            {{-- Has items --}}
+            <div id="drawer-has-items" class="{{ empty($__dc) ? 'd-none' : '' }} d-flex flex-column flex-grow-1"
+                style="min-height:0;">
+                <div class="flex-grow-1 overflow-auto px-3 pt-3" id="drawer-items-list">
+                    @foreach($__dc as $__item)
+                        <div class="d-flex align-items-start gap-3 pb-3 mb-3 border-bottom">
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-semibold lh-sm mb-1" style="font-size:.88rem;">
+                                    @if($__item['slug'])
+                                        <a href="{{ route('products.show', $__item['slug']) }}"
+                                            class="text-dark text-decoration-none">
+                                            {{ $__item['name'] }}
+                                        </a>
+                                    @else
+                                        {{ $__item['name'] }}
+                                    @endif
+                                </div>
+                                <div class="text-muted" style="font-size:.78rem;">
+                                    ${{ number_format($__item['price'], 2) }} &times; {{ $__item['quantity'] }}
+                                </div>
+                            </div>
+                            <span class="fw-semibold text-nowrap" style="font-size:.88rem;">
+                                ${{ number_format($__item['price'] * $__item['quantity'], 2) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="p-3 border-top" id="drawer-footer">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small fw-semibold text-uppercase"
+                            style="letter-spacing:.04em;">Subtotal</span>
+                        <span class="fw-bold fs-6" id="drawer-subtotal">${{ number_format($__ds, 2) }}</span>
+                    </div>
+                    <a href="{{ route('cart.index') }}" class="btn btn-outline-dark w-100 mb-2 btn-sm">View Full
+                        Cart</a>
+                    @auth
+                        <a href="{{ route('checkout.index') }}" class="btn btn-dark w-100 btn-sm">Checkout &rarr;</a>
+                    @else
+                        <a href="{{ route('checkout.guest.index') }}" class="btn btn-dark w-100 btn-sm mb-1">Checkout as
+                            Guest</a>
+                        <a href="{{ route('login') }}" class="btn btn-outline-secondary w-100 btn-sm">Sign In to
+                            Checkout</a>
+                    @endauth
+                </div>
+            </div>
         </div>
     </div>
 
