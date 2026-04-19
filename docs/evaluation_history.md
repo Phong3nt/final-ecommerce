@@ -4934,3 +4934,66 @@ No regressions. All existing auth checkout tests unaffected.
 - Micro-interactions: spinner, success/error states (SC-001), row fade-out (SC-004), saving spinner + tick (SC-003), toast notifications (SC-002)
 - Full regression pass: 877/877 tests
 <!-- EVAL-IMP-007 END -->
+
+<!-- EVAL-IMP-008 START -->
+## EVAL-IMP-008 — Switch Queue Driver: sync → database
+
+| Field              | Value                                                         |
+|--------------------|---------------------------------------------------------------|
+| Improvement ID     | IMP-008                                                       |
+| Mode               | `[INFRA_MODE]`                                                |
+| Scope              | config, migrations, `.env.example`, tests                     |
+| Target Tasks       | CP-004, NT-001, NT-002                                        |
+| Git Tag            | `v1.0-IMP-008-stable`                                         |
+| Branch             | `improve/IMP-008`                                             |
+| Date               | 2026-04-19                                                    |
+| Tests Added        | 10 (DatabaseQueueDriverTest)                                  |
+| Test Baseline      | 877 → 887                                                     |
+| Assertions         | 2044                                                          |
+
+### Changes Made
+
+| File                                                          | Change                                                   |
+|---------------------------------------------------------------|----------------------------------------------------------|
+| `ecommerce/config/queue.php`                                  | Fallback default changed `'sync'` → `'database'`         |
+| `ecommerce/.env.example`                                      | `QUEUE_CONNECTION=sync` → `QUEUE_CONNECTION=database`    |
+| `ecommerce/tests/Feature/DatabaseQueueDriverTest.php`         | New — 10 IMP-008 infrastructure tests                    |
+
+### Pre-existing Infrastructure (no changes required)
+
+| File                                                                              | Status                                      |
+|-----------------------------------------------------------------------------------|---------------------------------------------|
+| `ecommerce/database/migrations/2026_04_09_044545_create_jobs_table.php`           | Already existed — SQLite-compatible schema  |
+| `ecommerce/database/migrations/2019_08_19_000000_create_failed_jobs_table.php`    | Already existed — SQLite-compatible schema  |
+| All 5 job classes in `app/Jobs/`                                                  | Already implement `ShouldQueue`             |
+
+### Test Coverage (DatabaseQueueDriverTest — 10 tests)
+
+| TC   | Description                                               | Result |
+|------|-----------------------------------------------------------|--------|
+| TC01 | `config/queue.php` fallback default is `'database'`       | PASS   |
+| TC02 | `config/queue.php` reads `QUEUE_CONNECTION` from `env()`  | PASS   |
+| TC03 | `.env.example` specifies `QUEUE_CONNECTION=database`      | PASS   |
+| TC04 | `.env.example` does NOT retain `QUEUE_CONNECTION=sync`    | PASS   |
+| TC05 | `database` connection config specifies `jobs` table       | PASS   |
+| TC06 | `database` connection config has `retry_after` set        | PASS   |
+| TC07 | `database` connection driver value is `'database'`        | PASS   |
+| TC08 | `jobs` table migration file exists in migrations folder   | PASS   |
+| TC09 | `failed_jobs` table migration file exists                 | PASS   |
+| TC10 | `jobs` and `failed_jobs` tables exist in schema (SQLite)  | PASS   |
+
+### Regression
+
+- All 877 pre-existing tests continue to pass (driver-agnostic due to `Queue::fake()`)
+- 10 new IMP-008 tests pass
+- Total: **887 tests / 2044 assertions**
+
+### Acceptance Criteria
+
+- [x] `QUEUE_CONNECTION` defaults to `database` (config + `.env.example`)
+- [x] `jobs` table migration exists and runs (SQLite + MySQL compatible)
+- [x] `failed_jobs` table migration exists
+- [x] No changes to job classes, controllers, services, models, or Blade views
+- [x] All 887 tests pass; 0 regressions
+- [x] `[INFRA_MODE]` constraints respected throughout
+<!-- EVAL-IMP-008 END -->
