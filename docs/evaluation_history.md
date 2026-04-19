@@ -4436,17 +4436,17 @@ None at this time.
 
 ### Acceptance Criteria Check
 
-| Criterion | Status |
-|-----------|--------|
-| `id="filter-form"` preserved on filter form | ✅ |
-| Sort options `newest`, `oldest`, `price_asc`, `price_desc`, `rating` present | ✅ |
-| `selected` attribute on active sort option | ✅ |
-| `No products available` text in empty state | ✅ |
-| `In Stock` / `Out of Stock` stock status text | ✅ |
-| XSS: all output via `{{ }}` | ✅ |
-| Bootstrap 5 only — no Tailwind, no Vue/React | ✅ |
-| No new PHP libraries required | ✅ |
-| Mobile-first responsive (col-lg-3 sidebar + 3/2/1-col bento grid) | ✅ |
+| Criterion                                                                    | Status |
+| ---------------------------------------------------------------------------- | ------ |
+| `id="filter-form"` preserved on filter form                                  | ✅     |
+| Sort options `newest`, `oldest`, `price_asc`, `price_desc`, `rating` present | ✅     |
+| `selected` attribute on active sort option                                   | ✅     |
+| `No products available` text in empty state                                  | ✅     |
+| `In Stock` / `Out of Stock` stock status text                                | ✅     |
+| XSS: all output via `{{ }}`                                                  | ✅     |
+| Bootstrap 5 only — no Tailwind, no Vue/React                                 | ✅     |
+| No new PHP libraries required                                                | ✅     |
+| Mobile-first responsive (col-lg-3 sidebar + 3/2/1-col bento grid)            | ✅     |
 
 ### Risk / Regression Notes
 
