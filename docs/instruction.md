@@ -389,6 +389,41 @@ BATCHING RULE — when to commit immediately vs. batch:
    Fix caused regression                   → DO NOT commit, fix regression first
 ```
 
+### Scenario D — Improvement Request (UI/UX, Logic, Infra)
+
+> **Entry point:** User prefixes request with a scope keyword.
+> **Full workflow →** [improvement_template.md](improvement_template.md)
+
+**Valid invocation patterns:**
+
+```
+[UIUX_MODE]       <description> — IMP-<NNN>
+[LOGIC_MODE]      <description> — IMP-<NNN>
+[INFRA_MODE]      <description> — IMP-<NNN>
+[FULL_STACK_MODE] <description> — IMP-<NNN>
+```
+
+```
+1. If no scope keyword → ask user to specify before proceeding
+2. Run improvement_template.md STEP 0 (Tech Stack Compatibility Check) FIRST
+   → No Tailwind if project uses Bootstrap
+   → No Vue/React if project uses Blade + Alpine.js
+   → No new library without user approval
+3. Run STEP 1 (Backlog & Evaluation Scan)
+   → Identify affected Task IDs from backlog.md
+   → Read their EVAL blocks in evaluation_history.md
+   → Check for duplicate or STALE proposals
+4. Run STEP 2 (Impact Analysis) — fill risk table and Rule 10 check
+5. Run STEP 3–4 (Plan + Apply) — scope-keyword checklist strictly enforced
+6. Run STEP 5 (Verify) — targeted regression + full suite
+7. Run STEP 6 (Evaluate & Document)
+   → Append EVAL-IMP-<NNN> to evaluation_history.md
+   → Update IMP-<NNN> status to Done in Improvement Backlog (backlog.md)
+8. Run STEP 7 (Commit) — use improve() prefix in commit message
+```
+
+---
+
 ### Scenario C — "Thực hiện đề xuất cải tiến [TASK-ID].1"
 
 ```

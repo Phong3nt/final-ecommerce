@@ -4358,20 +4358,20 @@ None at this time.
 
 ### Test Results
 
-| Test Case ID | Scenario                                                                               | Type   | Result  | Notes |
-| ------------ | -------------------------------------------------------------------------------------- | ------ | ------- | ----- |
-| TC-01        | Auth registration test file exists with ≥10 test methods                              | Audit  | PASS ✅ |       |
-| TC-02        | Auth login test file exists with ≥8 test methods                                      | Audit  | PASS ✅ |       |
-| TC-03        | Auth logout test file exists                                                           | Audit  | PASS ✅ |       |
-| TC-04        | Auth password-reset test file exists                                                   | Audit  | PASS ✅ |       |
-| TC-05        | Auth RBAC test file exists                                                             | Audit  | PASS ✅ |       |
-| TC-06        | All four checkout stage test files exist (address, shipping, review, success)         | Audit  | PASS ✅ |       |
-| TC-07        | CheckoutReviewTest covers `place_order_creates_order_in_database` and order items      | Audit  | PASS ✅ |       |
-| TC-08        | CheckoutReviewTest covers `webhook_marks_order_paid` path                              | Audit  | PASS ✅ |       |
-| TC-09        | OrderConfirmationEmailTest covers `payment_failed_does_not_dispatch` path              | Audit  | PASS ✅ |       |
-| TC-10        | OrderConfirmationEmailTest covers `payment_succeeded_dispatches_confirmation` path     | Audit  | PASS ✅ |       |
-| TC-11        | Critical test classes extend `Tests\TestCase` (PHPUnit, not Pest)                     | Audit  | PASS ✅ |       |
-| TC-12        | Critical test classes use `RefreshDatabase` trait                                      | Audit  | PASS ✅ |       |
+| Test Case ID | Scenario                                                                           | Type  | Result  | Notes |
+| ------------ | ---------------------------------------------------------------------------------- | ----- | ------- | ----- |
+| TC-01        | Auth registration test file exists with ≥10 test methods                           | Audit | PASS ✅ |       |
+| TC-02        | Auth login test file exists with ≥8 test methods                                   | Audit | PASS ✅ |       |
+| TC-03        | Auth logout test file exists                                                       | Audit | PASS ✅ |       |
+| TC-04        | Auth password-reset test file exists                                               | Audit | PASS ✅ |       |
+| TC-05        | Auth RBAC test file exists                                                         | Audit | PASS ✅ |       |
+| TC-06        | All four checkout stage test files exist (address, shipping, review, success)      | Audit | PASS ✅ |       |
+| TC-07        | CheckoutReviewTest covers `place_order_creates_order_in_database` and order items  | Audit | PASS ✅ |       |
+| TC-08        | CheckoutReviewTest covers `webhook_marks_order_paid` path                          | Audit | PASS ✅ |       |
+| TC-09        | OrderConfirmationEmailTest covers `payment_failed_does_not_dispatch` path          | Audit | PASS ✅ |       |
+| TC-10        | OrderConfirmationEmailTest covers `payment_succeeded_dispatches_confirmation` path | Audit | PASS ✅ |       |
+| TC-11        | Critical test classes extend `Tests\TestCase` (PHPUnit, not Pest)                  | Audit | PASS ✅ |       |
+| TC-12        | Critical test classes use `RefreshDatabase` trait                                  | Audit | PASS ✅ |       |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped  
 **Regression:** All previous tests still PASS ✅ (821/821)
@@ -4382,7 +4382,7 @@ None at this time.
 | ------------- | ----- | ---------------------------------------------------------------------------------------------- |
 | Correctness   | 5     | Audit confirms all critical flows (auth, checkout, payment webhook) are covered by PHPUnit     |
 | Test Coverage | 5     | Covers 12 audit scenarios spanning registration, login, logout, password reset, RBAC, checkout |
-| Code Quality  | 5     | Audit tests use file-based assertions — no flaky runtime dependencies                         |
+| Code Quality  | 5     | Audit tests use file-based assertions — no flaky runtime dependencies                          |
 | Security      | 5     | Tests use RefreshDatabase and extend PHPUnit TestCase; no test pollution risk                  |
 | Performance   | 5     | Audit tests run in <1 second; no DB migrations required                                        |
 
