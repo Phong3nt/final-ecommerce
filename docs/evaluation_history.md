@@ -4467,20 +4467,20 @@ None at this time.
 
 ## EVAL-IMP-002 — Skeleton Screen for all async-load areas
 
-| Field             | Value                                      |
-|-------------------|--------------------------------------------|
-| Evaluation ID     | EVAL-IMP-002                               |
-| Improvement ID    | IMP-002                                    |
-| Improvement Name  | Skeleton Screen for all async-load areas   |
-| Scope             | `[UIUX_MODE]`                              |
-| Target Task IDs   | PC-001, AD-001, AD-002                     |
-| Epic              | Product Catalog · Admin                    |
-| Priority          | 3 — Medium                                 |
-| Points            | 3                                          |
-| Date              | 2026-04-19                                 |
-| Git Tag           | v1.0-IMP-002-stable                        |
-| Branch            | improve/IMP-002                            |
-| Based On          | improve/IMP-001 (Bento Grid base)          |
+| Field            | Value                                    |
+| ---------------- | ---------------------------------------- |
+| Evaluation ID    | EVAL-IMP-002                             |
+| Improvement ID   | IMP-002                                  |
+| Improvement Name | Skeleton Screen for all async-load areas |
+| Scope            | `[UIUX_MODE]`                            |
+| Target Task IDs  | PC-001, AD-001, AD-002                   |
+| Epic             | Product Catalog · Admin                  |
+| Priority         | 3 — Medium                               |
+| Points           | 3                                        |
+| Date             | 2026-04-19                               |
+| Git Tag          | v1.0-IMP-002-stable                      |
+| Branch           | improve/IMP-002                          |
+| Based On         | improve/IMP-001 (Bento Grid base)        |
 
 ### Summary
 

@@ -83,8 +83,13 @@
 
         /* ── Skeleton Shimmer ────────────────────────────────── */
         @keyframes skel-shimmer {
-            0%   { background-position: -600px 0; }
-            100% { background-position:  600px 0; }
+            0% {
+                background-position: -600px 0;
+            }
+
+            100% {
+                background-position: 600px 0;
+            }
         }
 
         /* KPI card value: shimmer shown while page paints, removed by JS on DOMContentLoaded */
