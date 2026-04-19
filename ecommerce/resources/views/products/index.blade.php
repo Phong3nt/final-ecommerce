@@ -62,6 +62,23 @@
             letter-spacing: 1px;
         }
 
+        /* ── Skeleton Shimmer ───────────────────────────────────────── */
+        @keyframes skel-shimmer {
+            0% {
+                background-position: -600px 0;
+            }
+
+            100% {
+                background-position: 600px 0;
+            }
+        }
+
+        .skel-img {
+            background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f4 50%, #e2e5e7 75%);
+            background-size: 600px 100%;
+            animation: skel-shimmer 1.4s ease infinite;
+        }
+
         /* ── Responsive breakpoints ─────────────────────────────────── */
         @media (max-width: 991.98px) {
             .bento-grid {
@@ -239,10 +256,10 @@
 
                                     @if ($product->image)
                                         <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                                            class="card-img-top">
+                                            class="card-img-top skel-img" loading="lazy" onload="this.classList.remove('skel-img')">
                                     @else
                                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center
-                                                        {{ $loop->first ? '' : '' }}"
+                                                                    {{ $loop->first ? '' : '' }}"
                                             style="height: {{ $loop->first ? '340px' : '180px' }};">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ced4da"
                                                 viewBox="0 0 16 16">

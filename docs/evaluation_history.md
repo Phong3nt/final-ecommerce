@@ -4460,3 +4460,68 @@ None at this time.
 - IMP-010: Add product image lightbox + zoom on the detail card
 
 <!-- EVAL-IMP-001 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-002 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-002 — Skeleton Screen for all async-load areas
+
+| Field             | Value                                      |
+|-------------------|--------------------------------------------|
+| Evaluation ID     | EVAL-IMP-002                               |
+| Improvement ID    | IMP-002                                    |
+| Improvement Name  | Skeleton Screen for all async-load areas   |
+| Scope             | `[UIUX_MODE]`                              |
+| Target Task IDs   | PC-001, AD-001, AD-002                     |
+| Epic              | Product Catalog · Admin                    |
+| Priority          | 3 — Medium                                 |
+| Points            | 3                                          |
+| Date              | 2026-04-19                                 |
+| Git Tag           | v1.0-IMP-002-stable                        |
+| Branch            | improve/IMP-002                            |
+| Based On          | improve/IMP-001 (Bento Grid base)          |
+
+### Summary
+
+Applied shimmer skeleton screens to all genuinely async-loading UI areas across the product catalog and admin dashboard, using pure CSS `@keyframes` + vanilla JS — no new libraries.
+
+### Changes Made
+
+#### `ecommerce/resources/views/products/index.blade.php`
+
+- Added `@keyframes skel-shimmer` + `.skel-img` CSS rule in the `<style>` block (placed before the responsive breakpoints section).
+- Changed `<img class="card-img-top">` → `<img class="card-img-top skel-img" loading="lazy" onload="this.classList.remove('skel-img')">` for all product images.
+- The shimmer gradient is visible while the browser fetches the image; `onload` fires and removes the class the moment the image has decoded, giving a clean progressive reveal.
+
+#### `ecommerce/resources/views/admin/dashboard.blade.php`
+
+- Added `@keyframes skel-shimmer`, `.kpi-card.kpi-loading .kpi-value / .kpi-label` rules, `.skel-chart-wrap`, `#chart-skeleton`, and `#chart-skeleton.hidden` CSS to the `<style>` block.
+- Added `kpi-loading` class to all 4 `.kpi-card` elements in HTML; a `DOMContentLoaded` JS listener removes it immediately once the DOM is ready — so values are always present in the HTML source (test-safe) but visually shimmer for the ~0 ms until JS runs.
+- Wrapped `<canvas id="revenue-chart">` inside `<div class="skel-chart-wrap">` and injected `<div id="chart-skeleton">` as a sibling before the canvas.
+- Updated `loadChart(range)` to call `skeleton.classList.remove('hidden')` at the top of the function (before `fetch`) and `skeleton.classList.add('hidden')` after `new Chart(...)` renders, so the shimmer covers the blank canvas on every range switch.
+
+### Test Regression Assessment
+
+- `[UIUX_MODE]` — no PHPUnit test changes required.
+- All existing test constraints preserved:
+  - `id="revenue-chart"` canvas attribute unchanged.
+  - `data-range="daily"/"weekly"/"monthly"` buttons unchanged.
+  - `cdn.jsdelivr.net/npm/chart.js` CDN script unchanged.
+  - `assertSee('Total Revenue')` etc. — KPI labels remain in source.
+  - `assertSee('250.00')` — KPI values are server-rendered into `class="kpi-value"` divs; `color: transparent` is CSS-only and invisible to PHPUnit's HTML parser.
+  - `id="filter-form"`, sort options, `No products available`, `In Stock`/`Out of Stock` — all unchanged in `products/index.blade.php`.
+- Full PHPUnit suite (821 tests) will run at commit; no regressions anticipated.
+
+### Security Notes
+
+- All Blade output uses `{{ }}` (HTML-escaped). No `{!! !!}` introduced.
+- `onload` handler on `<img>` only calls `this.classList.remove(...)` — no user data involved.
+- No new HTTP endpoints, no controller/model/route changes.
+
+### Upgrade Proposals
+
+- IMP-003: Lazy-load below-the-fold bento cards with Intersection Observer
+- IMP-010: Product image lightbox + zoom on the detail card
+
+<!-- EVAL-IMP-002 END -->
