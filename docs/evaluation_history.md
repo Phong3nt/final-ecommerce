@@ -4602,3 +4602,96 @@ No regressions. All existing CP-001/CP-002/CP-003 tests continue to pass — mul
 - IMP-005: Apply `coupon` input field on the one-page checkout to replace the separate coupon step
 
 <!-- EVAL-IMP-003 END -->
+
+<!-- ============================================================ -->
+<!-- EVAL-IMP-004 START                                           -->
+<!-- ============================================================ -->
+
+## EVAL-IMP-004 — Guest Checkout (complete order without login)
+
+| Field             | Value                                                  |
+|-------------------|--------------------------------------------------------|
+| Evaluation ID     | EVAL-IMP-004                                           |
+| Improvement ID    | IMP-004                                                |
+| Improvement Name  | Guest Checkout (complete order without login)          |
+| Scope             | `[FULL_STACK_MODE]`                                    |
+| Target Task IDs   | CP-001, SC-001                                         |
+| Epic              | Checkout & Payment                                     |
+| Priority          | 2 — High                                               |
+| Points            | 5                                                      |
+| Date              | 2026-04-19                                             |
+| Git Tag           | v1.0-IMP-004-stable                                    |
+| Branch            | improve/IMP-004                                        |
+| Based On          | improve/IMP-003                                        |
+
+### Summary
+
+Added a complete guest checkout flow accessible at `/checkout/guest` — no login required. Guests supply their email address, shipping address, and shipping method on a single page. A Stripe PaymentIntent is created server-side; card tokenisation happens entirely client-side via Stripe.js. Guest orders are stored with `user_id = NULL` and `guest_email` set for confirmation and lookup.
+
+All existing authenticated checkout routes and tests are untouched.
+
+### Changes Made
+
+#### `ecommerce/database/migrations/2026_04_19_000001_make_user_id_nullable_add_guest_email_to_orders.php` *(new)*
+
+- Makes `user_id` nullable on the `orders` table (guest orders have no account).
+- Adds `guest_email VARCHAR(255) NULL` for order confirmation and guest tracking.
+- Uses raw `DB::statement()` SQL to avoid `doctrine/dbal` dependency.
+- SQLite (test DB) uses a full table-rebuild path (`PRAGMA foreign_keys OFF` → `CREATE TABLE orders_new` → `INSERT … SELECT` → `DROP` → `RENAME`) because SQLite does not support `ALTER TABLE MODIFY COLUMN`.
+
+#### `ecommerce/app/Models/Order.php`
+
+- Added `guest_email` to `$fillable`.
+
+#### `ecommerce/routes/web.php`
+
+- Added four guest routes **outside** the `auth` middleware group:
+  - `GET /checkout/guest` → `showGuestCheckout` (name: `checkout.guest.index`)
+  - `POST /checkout/guest/session` → `storeGuestSession` (name: `checkout.guest.session.store`)
+  - `POST /checkout/guest/order` → `placeGuestOrder` (name: `checkout.guest.place-order`)
+  - `GET /checkout/guest/success` → `showGuestSuccess` (name: `checkout.guest.success`)
+
+#### `ecommerce/app/Http/Controllers/CheckoutController.php`
+
+- **`showGuestCheckout()`** — Renders `checkout.guest` with cart, shipping options, and subtotal. Redirects authenticated users to `checkout.index`.
+- **`storeGuestSession()`** — Validates `guest_email`, full address, and `method`; stores all three in session; returns JSON totals `{ok, subtotal, shipping_cost, discount, total}`.
+- **`placeGuestOrder()`** — Creates `Order` with `user_id = null` and `guest_email`; creates `OrderItem`s; calls `PaymentService::createPaymentIntent`; stores `checkout.guest_order_id` in session for ownership verification; returns `{client_secret, order_id}`.
+- **`showGuestSuccess()`** — Verifies ownership via `session(checkout.guest_order_id)` + `whereNull('user_id')` scope; clears checkout session keys on success.
+
+#### `ecommerce/resources/views/checkout/guest.blade.php` *(new)*
+
+- Bootstrap 5 two-column layout matching the auth checkout style.
+- Left column: Contact (email) card → Shipping Address card → Shipping Method card → "Review & Pay" CTA.
+- Right column: Order Summary table + live totals + Payment panel (hidden until Review & Pay completes).
+- JS flow: "Review & Pay" → POST `checkout.guest.session.store` → POST `checkout.guest.place-order` → mount `stripe.elements()` → reveal `#payment-section` → "Pay" → `stripe.confirmPayment()` → `/checkout/guest/success`.
+- "Sign in" link in page header for users who already have an account.
+- All server output uses `{{ }}` (XSS-safe).
+
+#### `ecommerce/tests/Feature/GuestCheckoutTest.php` *(new)*
+
+- 18 test cases covering: GET 200 for guest / auth redirect / cart items / email field / address fields / shipping options / Stripe.js CDN / JSON totals / session population / standard cost / express cost / total arithmetic / missing email → 422 / invalid email → 422 / missing address → 422 / invalid method → 422 / guest order stored with null user_id / missing session → 422.
+
+### Test Results
+
+```
+Tests\Feature\GuestCheckoutTest — 18 passed (34 assertions)
+Full suite baseline (pre-IMP-004): 839 passed
+Full suite post-IMP-004: 857 passed (839 + 18 new)
+```
+
+No regressions. All existing auth checkout tests unaffected.
+
+### Security Notes
+
+- Guest orders are scoped by `session('checkout.guest_order_id')` + `whereNull('user_id')` in `showGuestSuccess()` — prevents a malicious user from accessing another guest's order via intent ID enumeration.
+- `guest_email` is validated as `email|max:255` before any use.
+- Card data never touches the server — Stripe tokenisation is client-side only.
+- All `{{ }}` in Blade; no `{!! !!}`.
+- CSRF token read from `<meta name="csrf-token">` — not embedded as a JS string.
+
+### Upgrade Proposals
+
+- IMP-005: Off-canvas cart drawer (mobile-first slide-in)
+- IMP-006: Persist guest email in cart session so guest checkout is pre-filled after "add to cart"
+
+<!-- EVAL-IMP-004 END -->

@@ -143,6 +143,12 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+// IMP-004: Guest Checkout — no auth required; guests supply email for order tracking
+Route::get('/checkout/guest', [CheckoutController::class, 'showGuestCheckout'])->name('checkout.guest.index');
+Route::post('/checkout/guest/session', [CheckoutController::class, 'storeGuestSession'])->name('checkout.guest.session.store');
+Route::post('/checkout/guest/order', [CheckoutController::class, 'placeGuestOrder'])->name('checkout.guest.place-order');
+Route::get('/checkout/guest/success', [CheckoutController::class, 'showGuestSuccess'])->name('checkout.guest.success');
+
 // AU-006: Admin routes — auth + role:admin required
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

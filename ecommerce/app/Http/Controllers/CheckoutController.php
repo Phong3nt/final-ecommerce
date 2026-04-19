@@ -129,6 +129,183 @@ class CheckoutController extends Controller
         ]);
     }
 
+    // =========================================================================
+    // IMP-004: Guest Checkout — no authentication required
+    // =========================================================================
+
+    /**
+     * IMP-004: Show the guest one-page checkout.
+     * If the visitor is already authenticated, redirect to the auth checkout.
+     */
+    public function showGuestCheckout(): View|RedirectResponse
+    {
+        if (auth()->check()) {
+            return redirect()->route('checkout.index');
+        }
+
+        $cart = session('cart', []);
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        return view('checkout.guest', [
+            'cart' => $cart,
+            'shippingOptions' => self::SHIPPING_OPTIONS,
+            'subtotal' => $subtotal,
+        ]);
+    }
+
+    /**
+     * IMP-004: Save guest address, email and shipping to session.
+     * Returns JSON: { ok, subtotal, shipping_cost, discount, total }
+     */
+    public function storeGuestSession(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'guest_email' => 'required|email|max:255',
+            'name' => 'required|string|max:255',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'nullable|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'postal_code' => 'required|string|max:20',
+            'country' => 'required|string|max:100',
+            'method' => ['required', 'in:' . implode(',', array_keys(self::SHIPPING_OPTIONS))],
+        ]);
+
+        session()->put('checkout.address', [
+            'name' => $data['name'],
+            'address_line1' => $data['address_line1'],
+            'address_line2' => $data['address_line2'] ?? null,
+            'city' => $data['city'],
+            'state' => $data['state'],
+            'postal_code' => $data['postal_code'],
+            'country' => $data['country'],
+        ]);
+
+        session()->put('checkout.guest_email', $data['guest_email']);
+
+        $method = $data['method'];
+        $option = self::SHIPPING_OPTIONS[$method];
+
+        session()->put('checkout.shipping', [
+            'method' => $method,
+            'label' => $option['label'],
+            'cost' => $option['cost'],
+        ]);
+
+        $cart = session('cart', []);
+        $coupon = session('checkout.coupon');
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $discount = self::computeCouponDiscount($subtotal, $coupon);
+        $total = $subtotal + $option['cost'] - $discount;
+
+        return response()->json([
+            'ok' => true,
+            'subtotal' => $subtotal,
+            'shipping_cost' => $option['cost'],
+            'discount' => $discount,
+            'total' => $total,
+        ]);
+    }
+
+    /**
+     * IMP-004: Create a guest order and Stripe PaymentIntent.
+     * user_id is null; guest_email is taken from session.
+     * Returns JSON { client_secret, order_id }.
+     */
+    public function placeGuestOrder(Request $request): JsonResponse
+    {
+        if (!session()->has('checkout.address') || !session()->has('checkout.shipping')) {
+            return response()->json(['error' => 'Checkout session expired.'], 422);
+        }
+
+        $cart = session('cart', []);
+        $address = session('checkout.address');
+        $shipping = session('checkout.shipping');
+        $coupon = session('checkout.coupon');
+        $guestEmail = session('checkout.guest_email');
+
+        $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $discount = self::computeCouponDiscount($subtotal, $coupon);
+        $total = $subtotal + $shipping['cost'] - $discount;
+
+        $order = Order::create([
+            'user_id' => null,
+            'guest_email' => $guestEmail,
+            'status' => 'pending',
+            'subtotal' => $subtotal,
+            'shipping_cost' => $shipping['cost'],
+            'total' => $total,
+            'shipping_method' => $shipping['method'],
+            'shipping_label' => $shipping['label'],
+            'coupon_code' => $coupon ? $coupon['code'] : null,
+            'discount_amount' => $discount,
+            'address' => $address,
+        ]);
+
+        foreach ($cart as $productId => $item) {
+            $order->items()->create([
+                'product_id' => $productId,
+                'product_name' => $item['name'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['price'],
+                'subtotal' => $item['price'] * $item['quantity'],
+            ]);
+        }
+
+        $amountCents = (int) round($total * 100);
+        $intent = $this->paymentService->createPaymentIntent($amountCents, 'usd', [
+            'order_id' => (string) $order->id,
+            'guest_email' => (string) $guestEmail,
+        ]);
+
+        $order->update([
+            'stripe_payment_intent_id' => $intent['id'],
+            'stripe_client_secret' => $intent['client_secret'],
+        ]);
+
+        // Store order ID in session so showGuestSuccess can verify ownership
+        session()->put('checkout.guest_order_id', $order->id);
+
+        return response()->json([
+            'client_secret' => $intent['client_secret'],
+            'order_id' => $order->id,
+        ]);
+    }
+
+    /**
+     * IMP-004: Guest order success/failure page.
+     * Stripe redirects here after confirmPayment.
+     * Ownership is verified via session (checkout.guest_order_id).
+     */
+    public function showGuestSuccess(Request $request): View|RedirectResponse
+    {
+        $intentId = $request->query('payment_intent');
+        $redirectStatus = $request->query('redirect_status', '');
+
+        if (!$intentId) {
+            return redirect()->route('checkout.guest.index');
+        }
+
+        $guestOrderId = session('checkout.guest_order_id');
+
+        $order = Order::where('stripe_payment_intent_id', $intentId)
+            ->whereNull('user_id')
+            ->when($guestOrderId, fn($q) => $q->where('id', $guestOrderId))
+            ->with('items')
+            ->first();
+
+        if (!$order) {
+            return redirect()->route('checkout.guest.index');
+        }
+
+        if ($redirectStatus === 'succeeded') {
+            session()->forget(['checkout.address', 'checkout.shipping', 'checkout.coupon', 'cart', 'checkout.guest_email', 'checkout.guest_order_id']);
+            return view('checkout.success', compact('order'));
+        }
+
+        return view('checkout.failed', ['order' => $order, 'status' => $redirectStatus]);
+    }
+
     /**
      * CP-001: Show the checkout address step.
      * Auth users see their saved addresses + a new address form.
