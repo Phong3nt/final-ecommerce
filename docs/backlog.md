@@ -325,3 +325,4 @@
 | IMP-017 | `[FULL_STACK_MODE]` | Real-time admin notifications via Firebase             | NT-002, AD-001, AD-004                 | Notifications · Admin                        | 3        | 5      | Not Started | —                   |                   |
 
 > IMP IDs are sequential and never reused. Add new rows at the bottom as improvements are identified.
+| IMP-010 | [UIUX_MODE] | Product image lightbox + zoom on detail page | PC-005 | Product Catalog | 3 | 2 | Done | v1.0-IMP-010-stable | 2026-04-21 |
