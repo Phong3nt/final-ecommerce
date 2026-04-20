@@ -222,6 +222,110 @@
                 transform: translateX(4px);
             }
         }
+
+        /* IMP-010: Lightbox + zoom gallery */
+        .imp010-main-wrapper {
+            position: relative;
+            cursor: zoom-in;
+            overflow: hidden;
+            border-radius: .5rem;
+        }
+
+        .imp010-main-img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            transition: opacity .15s ease;
+        }
+
+        .imp010-main-img:hover {
+            opacity: .88;
+        }
+
+        .imp010-thumbs {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            margin-top: .75rem;
+        }
+
+        .imp010-thumb {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: .375rem;
+            border: 2px solid #dee2e6;
+            cursor: pointer;
+            transition: border-color .15s ease;
+        }
+
+        .imp010-thumb:hover,
+        .imp010-thumb-active {
+            border-color: #212529;
+        }
+
+        .imp010-lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .85);
+            z-index: 1055;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .imp010-lightbox-content {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .imp010-zoom-wrap {
+            overflow: hidden;
+            max-width: 90vw;
+            max-height: 85vh;
+            cursor: zoom-in;
+        }
+
+        .imp010-zoom-wrap.imp010-zoomed {
+            cursor: zoom-out;
+        }
+
+        .imp010-lightbox-img {
+            max-width: 90vw;
+            max-height: 85vh;
+            display: block;
+            transition: transform .25s ease;
+            transform: scale(1);
+            transform-origin: center center;
+        }
+
+        .imp010-lightbox-img.imp010-img-zoomed {
+            transform: scale(2);
+        }
+
+        .imp010-close-btn {
+            position: absolute;
+            top: -2.5rem;
+            right: 0;
+            background: rgba(255, 255, 255, .15);
+            border: none;
+            color: #fff;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .imp010-close-btn:hover {
+            background: rgba(255, 255, 255, .3);
+        }
     </style>
 </head>
 
@@ -258,13 +362,69 @@
     <div class="container-xl py-4">
 
         <article class="product-detail">
-            {{-- Image gallery --}}
-            <div class="product-images">
+            {{-- IMP-010: Lightbox + zoom gallery --}}
+            <div class="product-images"
+                 x-data="imp010Lightbox({
+                     mainImage: @json($product->image ? asset('storage/' . $product->image) : null),
+                     images: @json(collect($product->images ?? [])->map(fn($p) => asset('storage/' . $p))->values()->all()),
+                     alt: @json($product->name)
+                 })">
                 @if ($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                        class="product-main-image">
+                    <div class="imp010-main-wrapper">
+                        <img src="{{ asset('storage/' . $product->image) }}"
+                             :src="currentImage"
+                             alt="{{ $product->name }}"
+                             :alt="alt"
+                             class="product-main-image imp010-main-img"
+                             @click="openLightbox(currentImage)"
+                             data-imp010="main-image">
+                    </div>
+                    <template x-if="allImages.length > 1">
+                        <div class="imp010-thumbs" data-imp010="thumbs">
+                            <template x-for="(url, i) in allImages" :key="i">
+                                <img :src="url"
+                                     :alt="alt"
+                                     class="imp010-thumb"
+                                     :class="{ 'imp010-thumb-active': url === currentImage }"
+                                     @click="currentImage = url"
+                                     data-imp010="thumb">
+                            </template>
+                        </div>
+                    </template>
                 @else
                     <p class="no-image">No image available</p>
+                @endif
+
+                {{-- IMP-010: Lightbox overlay (hidden until triggered) --}}
+                @if ($product->image)
+                    <div class="imp010-lightbox-overlay"
+                         id="imp010-lightbox"
+                         x-show="lightboxOpen"
+                         @click.self="lightboxOpen = false"
+                         @keydown.escape.window="lightboxOpen = false"
+                         role="dialog"
+                         aria-modal="true"
+                         aria-label="Product image lightbox"
+                         style="display:none;">
+                        <div class="imp010-lightbox-content" @click.stop>
+                            <div x-data="{ zoomed: false }"
+                                 @click="zoomed = !zoomed"
+                                 class="imp010-zoom-wrap"
+                                 :class="{ 'imp010-zoomed': zoomed }">
+                                <img :src="lightboxImage"
+                                     :alt="alt"
+                                     class="imp010-lightbox-img"
+                                     :class="{ 'imp010-img-zoomed': zoomed }"
+                                     data-imp010="lightbox-image">
+                            </div>
+                            <button @click="lightboxOpen = false"
+                                    class="imp010-close-btn"
+                                    aria-label="Close lightbox"
+                                    data-imp010="close-btn">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
                 @endif
             </div>
 
@@ -597,6 +757,28 @@
             var d = document.createElement('div');
             d.appendChild(document.createTextNode(String(str)));
             return d.innerHTML;
+        }
+
+        /* IMP-010: Lightbox + zoom Alpine component */
+        function imp010Lightbox({ mainImage, images, alt }) {
+            var allImgs = [];
+            if (mainImage) allImgs.push(mainImage);
+            if (Array.isArray(images)) {
+                images.forEach(function (u) {
+                    if (u && allImgs.indexOf(u) === -1) allImgs.push(u);
+                });
+            }
+            return {
+                currentImage: mainImage || '',
+                allImages: allImgs,
+                lightboxOpen: false,
+                lightboxImage: '',
+                alt: alt,
+                openLightbox: function (url) {
+                    this.lightboxImage = url;
+                    this.lightboxOpen = true;
+                },
+            };
         }
     </script>
 </body>
