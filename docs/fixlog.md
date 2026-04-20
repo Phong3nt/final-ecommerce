@@ -280,29 +280,29 @@ _(Batched with FIX-003 — see FIX-003 commit message)_
 
 ## FIX-005 · IDE P1013 error — AuditLogController `withQueryString()` (IMP-016 new file)
 
-| Field          | Value                                                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Fix ID         | `FIX-005`                                                                                                                 |
-| Fix Date       | `2026-04-21`                                                                                                              |
+| Field          | Value                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fix ID         | `FIX-005`                                                                                                                                                  |
+| Fix Date       | `2026-04-21`                                                                                                                                               |
 | Error Message  | `Undefined method 'withQueryString'` (P1013) · `Call to unknown method: Illuminate\Contracts\Pagination\LengthAwarePaginator::withQueryString()` (PHP0418) |
-| Error Location | `ecommerce/app/Http/Controllers/Admin/AuditLogController.php` line 38                                                    |
-| Trigger        | IDE static analysis (Intelephense) on new file introduced by IMP-016; no runtime crash — works correctly at runtime      |
-| Fix Type       | `Code` (docblock annotation + chain split — no logic change)                                                             |
-| Batch?         | `No — commit immediately with IMP-015 + IMP-016 changes`                                                                 |
+| Error Location | `ecommerce/app/Http/Controllers/Admin/AuditLogController.php` line 38                                                                                      |
+| Trigger        | IDE static analysis (Intelephense) on new file introduced by IMP-016; no runtime crash — works correctly at runtime                                        |
+| Fix Type       | `Code` (docblock annotation + chain split — no logic change)                                                                                               |
+| Batch?         | `No — commit immediately with IMP-015 + IMP-016 changes`                                                                                                   |
 
 ### STEP 1 — Parent Tasks
 
-| Parent Task ID | Why related?                                                                                   |
-| -------------- | ---------------------------------------------------------------------------------------------- |
+| Parent Task ID | Why related?                                                                                    |
+| -------------- | ----------------------------------------------------------------------------------------------- |
 | `IMP-016`      | `AuditLogController::index()` created in IMP-016 uses `paginate(30)->withQueryString()` — P1013 |
 
 ### STEP 2 — Root Cause
 
-| Question              | Answer                                                                                                                                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Question                    | Answer                                                                                                                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | PHP0418/P1013 — exact cause | `paginate()` return type resolved by Intelephense as `Illuminate\Contracts\Pagination\LengthAwarePaginator` (interface), which does not declare `withQueryString()`. The concrete class `Illuminate\Pagination\LengthAwarePaginator` does. |
-| Runtime impact?       | None — works correctly at runtime; pure static-analysis false positive                                                                                                                                                  |
-| Is this a Code bug?   | No — IDE annotation gap only; same root cause as FIX-002 and FIX-003                                                                                                                                                  |
+| Runtime impact?             | None — works correctly at runtime; pure static-analysis false positive                                                                                                                                                                     |
+| Is this a Code bug?         | No — IDE annotation gap only; same root cause as FIX-002 and FIX-003                                                                                                                                                                       |
 
 ### STEP 3 — Test Case Gap Analysis
 
@@ -310,8 +310,8 @@ _(Batched with FIX-003 — see FIX-003 commit message)_
 
 ### STEP 4 — Fix Applied
 
-| Layer | Change Description                                                                                                               | Files Affected                                       |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Layer | Change Description                                                                                                               | Files Affected                                      |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | Code  | Added `/** @var \Illuminate\Pagination\LengthAwarePaginator $logs */` docblock and split `paginate(30)->withQueryString()` chain | `app/Http/Controllers/Admin/AuditLogController.php` |
 
 ```php
@@ -326,12 +326,12 @@ $logs->withQueryString();
 
 ### STEP 5 — Verify
 
-| Test                    | Before Fix      | After Fix       |
-| ----------------------- | --------------- | --------------- |
-| AuditLogTest (12 tests) | 12/12 PASS ✅   | 12/12 PASS ✅   |
-| Full suite              | 987 PASS ✅     | 987 PASS ✅     |
-| IDE errors (P1013)      | 1 error ❌      | 0 errors ✅     |
-| Regression detected?    | —               | No ✅           |
+| Test                    | Before Fix    | After Fix     |
+| ----------------------- | ------------- | ------------- |
+| AuditLogTest (12 tests) | 12/12 PASS ✅ | 12/12 PASS ✅ |
+| Full suite              | 987 PASS ✅   | 987 PASS ✅   |
+| IDE errors (P1013)      | 1 error ❌    | 0 errors ✅   |
+| Regression detected?    | —             | No ✅         |
 
 ### STEP 6 — Commit Message
 

@@ -133,7 +133,7 @@
     </style>
 </head>
 
-<body>
+<body data-imp017="realtime-enabled">
     <h1>Admin Dashboard</h1>
     <p class="welcome">Welcome, {{ auth()->user()->name }}</p>
 
@@ -319,6 +319,37 @@
         });
 
         loadChart(currentRange);
+    </script>
+
+    {{-- IMP-017: Firebase real-time listener — refreshes Recent Orders section on new order --}}
+    @if(config('services.firebase.api_key'))
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+    @endif
+    <script>
+        (function () {
+            var _fbApiKey = '{{ config("services.firebase.api_key", "") }}';
+            var _fbDbUrl  = '{{ config("services.firebase.db_url", "") }}';
+            if (_fbApiKey && _fbDbUrl) {
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (typeof firebase !== 'undefined') {
+                        firebase.initializeApp({ apiKey: _fbApiKey, databaseURL: _fbDbUrl });
+                        firebase.database().ref('admin/latest_notification').on('value', function (snap) {
+                            if (!snap.val()) return;
+                            // Show non-intrusive refresh hint on the Recent Orders section
+                            var section = document.getElementById('recent-orders-section');
+                            if (section && !document.getElementById('rtdb-refresh-hint')) {
+                                var hint = document.createElement('p');
+                                hint.id = 'rtdb-refresh-hint';
+                                hint.style.cssText = 'color:#2563eb;font-size:0.875rem;margin:0.5rem 0 0;';
+                                hint.textContent = 'New orders available — reload page to see latest.';
+                                section.insertBefore(hint, section.querySelector('div'));
+                            }
+                        });
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 

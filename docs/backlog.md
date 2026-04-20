@@ -322,6 +322,6 @@
 | IMP-014 | `[LOGIC_MODE]`      | Product catalog response caching (Laravel Cache)       | PC-001, PC-002, PC-003, PC-004         | Product Catalog                              | 2        | 3      | Done        | v1.0-IMP-014-stable | 2026-04-21        |
 | IMP-015 | `[LOGIC_MODE]`      | DB-backed cart persistence for authenticated users     | SC-001, SC-002, SC-003, SC-004         | Shopping Cart                                | 2        | 5      | Done        | v1.0-IMP-015-stable | 2026-04-21        |
 | IMP-016 | `[FULL_STACK_MODE]` | Consolidated audit log (auth events + admin actions)   | AU-002, AU-003, AU-004, PM-002, UM-004 | Auth · Admin                                 | 2        | 5      | Done        | v1.0-IMP-016-stable | 2026-04-21        |
-| IMP-017 | `[FULL_STACK_MODE]` | Real-time admin notifications via Firebase             | NT-002, AD-001, AD-004                 | Notifications · Admin                        | 3        | 5      | Not Started | —                   |                   |
+| IMP-017 | `[FULL_STACK_MODE]` | Real-time admin notifications via Firebase             | NT-002, AD-001, AD-004                 | Notifications · Admin                        | 3        | 5      | Done        | v1.0-IMP-017-stable | 2026-04-21        |
 
 > IMP IDs are sequential and never reused. Add new rows at the bottom as improvements are identified.

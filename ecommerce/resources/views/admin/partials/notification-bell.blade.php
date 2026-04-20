@@ -1,4 +1,4 @@
-<div id="notification-bell" style="position:relative;display:inline-block;cursor:pointer;"
+<div id="notification-bell" data-imp017="bell-firebase" style="position:relative;display:inline-block;cursor:pointer;"
     onclick="toggleNotificationPanel()">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -64,8 +64,26 @@
             }).then(() => loadNotifications());
         };
 
-        // Poll unread count every 30 s
+        // Poll unread count every 120 s (IMP-017: Firebase on('value') handles real-time; polling is fallback only)
         loadNotifications();
-        setInterval(loadNotifications, 30000);
+        setInterval(loadNotifications, 120000);
+
+        // IMP-017: Firebase Realtime Database — on('value') fires immediately on new order
+        var _fbApiKey = '{{ config("services.firebase.api_key", "") }}';
+        var _fbDbUrl  = '{{ config("services.firebase.db_url", "") }}';
+        if (_fbApiKey && _fbDbUrl) {
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof firebase !== 'undefined') {
+                    firebase.initializeApp({ apiKey: _fbApiKey, databaseURL: _fbDbUrl });
+                    firebase.database().ref('admin/latest_notification').on('value', loadNotifications);
+                }
+            });
+        }
     })();
 </script>
+
+@if(config('services.firebase.api_key'))
+{{-- IMP-017: Firebase compat SDK — loaded only when FIREBASE_API_KEY is configured --}}
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+@endif

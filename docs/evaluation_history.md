@@ -5509,3 +5509,88 @@ Extended the existing `audit_logs` table and wired audit entries for all key aut
 > Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-IMP-016 END -->
+
+---
+
+<!-- EVAL-IMP-017 START -->
+
+## EVAL-IMP-017 · Real-time Admin Notifications via Firebase
+
+| Field             | Value                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| Task ID           | `IMP-017`                                                             |
+| Mode              | `[FULL_STACK_MODE]`                                                   |
+| Date              | `2026-04-21`                                                          |
+| Parent Tasks      | `NT-002`, `AD-001`, `AD-004`                                          |
+| Status            | ✅ Done                                                               |
+| Stable Tag        | `v1.0-IMP-017-stable`                                                 |
+| Baseline (before) | 987 tests passing                                                     |
+| Final (after)     | 999 tests passing (+12 new, 0 regressions)                            |
+
+### Summary
+
+Upgraded the admin notification bell from 30-second AJAX polling to Firebase Realtime Database `on('value')` push. When a new order is placed, `NotifyAdminOfNewOrder` writes to Firebase RTDB via REST API (`FirebaseService`), and the browser-side Firebase JS SDK fires `loadNotifications()` immediately — no polling wait. Polling is kept as a 120-second fallback for environments without Firebase credentials. Server-side `FIREBASE_SECRET` is never sent to the browser.
+
+### Files Changed
+
+| File | Change |
+| ---- | ------ |
+| `config/services.php` | Added `firebase` section (db_url, secret, api_key, project_id) |
+| `app/Services/FirebaseService.php` | **New** — HTTP PUT to Firebase RTDB; no-ops when db_url empty; catches exceptions |
+| `app/Jobs/NotifyAdminOfNewOrder.php` | Calls `FirebaseService::pushAdminNotification()` after DB write |
+| `resources/views/admin/partials/notification-bell.blade.php` | Added `data-imp017="bell-firebase"`, Firebase JS init + `on('value')` listener, polling reduced 30 s → 120 s |
+| `resources/views/admin/dashboard.blade.php` | Added `data-imp017="realtime-enabled"` on `<body>`, Firebase JS listener shows "New orders available" hint |
+| `tests/Feature/FirebaseNotificationTest.php` | **New** — 12 test cases |
+
+### Test Results
+
+| TC ID      | Description                                               | Type        | Result |
+| ---------- | --------------------------------------------------------- | ----------- | ------ |
+| IMP-017-01 | FirebaseService sends PUT to RTDB when configured         | Happy path  | ✅ PASS |
+| IMP-017-02 | FirebaseService skips HTTP when db_url is empty           | Edge case   | ✅ PASS |
+| IMP-017-03 | Job still creates AdminNotification DB record             | Regression  | ✅ PASS |
+| IMP-017-04 | Firebase exception does not block DB notification write   | Edge case   | ✅ PASS |
+| IMP-017-05 | Bell partial has `data-imp017="bell-firebase"` attribute  | UI / view   | ✅ PASS |
+| IMP-017-06 | Bell partial script contains `on('value')` listener       | UI / view   | ✅ PASS |
+| IMP-017-07 | Dashboard body has `data-imp017="realtime-enabled"`       | UI / view   | ✅ PASS |
+| IMP-017-08 | FIREBASE_SECRET is never rendered in bell partial HTML    | Security    | ✅ PASS |
+| IMP-017-09 | Firebase push payload includes correct order_id           | Happy path  | ✅ PASS |
+| IMP-017-10 | `/admin/notifications` JSON endpoint unchanged (regression) | Regression | ✅ PASS |
+| IMP-017-11 | Bell uses 120 s polling interval (not old 30 s)           | Edge case   | ✅ PASS |
+| IMP-017-12 | Dashboard `data-imp017` requires admin auth (403 for user) | Security   | ✅ PASS |
+
+### Quality Scores
+
+| Dimension   | Score | Notes                                                                |
+| ----------- | ----- | -------------------------------------------------------------------- |
+| Simplicity  | 5/5   | FirebaseService is 40 LOC; no SDK dependency — pure HTTP REST        |
+| Security    | 5/5   | DB Secret server-side only; client gets api_key (Firebase public key) |
+| Performance | 5/5   | Immediate push replaces 30s polling; 120s fallback retained          |
+| Coverage    | 4/5   | All server paths covered; browser JS execution untestable in PHPUnit |
+
+### Impact Check
+
+| Affected Feature                | Regression Test Result |
+| ------------------------------- | ---------------------- |
+| NT-002 — Admin notification bell | ✅ No regression (AdminOrderNotificationTest 12/12) |
+| AD-001 — Admin dashboard KPIs   | ✅ No regression (AdminDashboardTest 12/12) |
+| AD-004 — Recent orders on dashboard | ✅ No regression (AdminDashboardTest 12/12) |
+| Full suite                      | ✅ 999/999 passed      |
+
+### Architectural Notes
+
+- `FirebaseService` gracefully no-ops when `FIREBASE_DB_URL` is empty — zero config required for dev/test.
+- `FIREBASE_SECRET` (Database Secret for server writes) is distinct from `FIREBASE_API_KEY` (Web API Key, safe for browser). Only `api_key` is passed to Blade.
+- Firebase CDN scripts are conditionally included via `@if(config('services.firebase.api_key'))` — no extra JS loaded in non-Firebase environments.
+- Polling reduced from 30 s to 120 s (4× less load); Firebase `on('value')` handles real-time delivery.
+
+### Improvement Proposals
+
+| ID        | Proposal                                           | Benefit                                   | Priority |
+| --------- | -------------------------------------------------- | ----------------------------------------- | -------- |
+| IMP-017.1 | Add Firebase auth token (custom token / ID token) instead of Database Secret for RTDB writes | Better security posture | Medium |
+| IMP-017.2 | Extend Firebase push to low-stock alerts (NT-001)  | Unified real-time channel for all admin events | Low |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-017 END -->
