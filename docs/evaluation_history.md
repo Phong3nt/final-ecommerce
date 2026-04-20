@@ -196,6 +196,7 @@
 | Bug ID       | Description                                                                                                                                                                                    | Severity | Status                       |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
 | BUG-AU002-01 | Email verification routes added in `routes/web.php` (`// AU-002: Email verification routes`) but `EmailVerificationController` never created — runtime crash if user clicks verification link. | High     | Fixed — FIX-001 (2026-04-20) |
+| BUG-AU002-02 | `LoginTest::test_AU002_csrfMiddlewareIsActive()` calls `$kernel->getMiddlewareGroups()` where `$kernel` is resolved as the `Illuminate\Contracts\Http\Kernel` contract (no `getMiddlewareGroups()`) → PHP0418. IDE annotation gap only — test passes at runtime. | Low | Fixed — FIX-003 (2026-04-20) |
 
 ---
 
@@ -673,6 +674,12 @@
 - PC-003 (filter by category/price/rating) can add `scopeFilter()` on Product; category requires its own model
 - Consider debounced JS search-as-you-type for UX improvement (post-MVP)
 - Search index (MySQL FULLTEXT) recommended before production for scale
+
+### Bugs / Side Effects Found
+
+| Bug ID      | Description                                                                                                                                                                                                                                  | Severity | Status                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| BUG-PC002-01 | `ProductController::search()` — `@var` docblock on `$results` does not suppress PHP0418 on chained `paginate(12)->withQueryString()` call. Intelephense still evaluates the chain and flags `withQueryString()` on the contract return type. | Low      | Fixed — FIX-003 (2026-04-20) |
 
 <!-- EVAL-PC-002 END -->
 
@@ -4600,6 +4607,12 @@ No regressions. All existing CP-001/CP-002/CP-003 tests continue to pass — mul
 
 - IMP-004: Guest Checkout (complete order without login)
 - IMP-005: Apply `coupon` input field on the one-page checkout to replace the separate coupon step
+
+### Bugs / Side Effects Found
+
+| Bug ID        | Description                                                                                                                                                                                                                                                              | Severity | Status                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------------------- |
+| BUG-IMP003-01 | `CheckoutController::storeSession()` and `::storeAddress()` — `auth()->user()` resolves to `Illuminate\Contracts\Auth\Authenticatable` contract in Intelephense, which does not declare `addresses()` → P1013 ×2. Runtime is correct; IDE annotation gap only. | Low      | Fixed — FIX-003 (2026-04-20) |
 
 <!-- EVAL-IMP-003 END -->
 

@@ -161,3 +161,117 @@ fix(AU-001,AU-002): add EmailVerificationController + tests — batch with FIX-0
 _(Batched with FIX-001 — see FIX-001 commit message)_
 
 <!-- FIX-002 END -->
+
+---
+
+## FIX-003 · IDE annotation gaps — CheckoutController `addresses()`, ProductController `withQueryString()`, LoginTest `getMiddlewareGroups()`
+
+| Field          | Value                                                                                                                                                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fix ID         | `FIX-003`                                                                                                                                                                                                                                             |
+| Fix Date       | `2026-04-20`                                                                                                                                                                                                                                          |
+| Error Message  | `Undefined method 'addresses'` (P1013 ×2) · `Call to unknown method: Illuminate\Contracts\Pagination\LengthAwarePaginator::withQueryString()` (PHP0418) · `Call to unknown method: Illuminate\Contracts\Http\Kernel::getMiddlewareGroups()` (PHP0418) |
+| Error Location | `CheckoutController.php` lines 89, 347 · `ProductController.php` line 61 · `tests/Feature/Auth/LoginTest.php` line 190                                                                                                                                |
+| Trigger        | IDE static analysis (Intelephense/Psalm); no runtime crash — all three work correctly at runtime                                                                                                                                                      |
+| Fix Type       | `Code` (docblock annotations + chain split — no logic change)                                                                                                                                                                                         |
+| Batch?         | `Yes — batch with FIX-004 in same commit`                                                                                                                                                                                                             |
+
+### STEP 1 — Parent Tasks
+
+| Parent Task ID | Why related?                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `IMP-003`      | `CheckoutController::storeSession()` and `::storeAddress()` call `$user->addresses()` — P1013            |
+| `CP-001`       | `CheckoutController::storeAddress()` is the CP-001 address-store endpoint — P1013                        |
+| `PC-001`       | `ProductController::search()` calls `paginate()->withQueryString()` — PHP0418 (line 61, chain not split) |
+| `PC-002`       | `ProductController::search()` is the PC-002 search endpoint — PHP0418                                    |
+| `AU-002`       | `LoginTest::test_AU002_csrfMiddlewareIsActive()` calls `$kernel->getMiddlewareGroups()` — PHP0418        |
+
+### STEP 2 — Root Cause
+
+| Question            | Answer                                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1013 — exact cause | `auth()->user()` resolves to `Illuminate\Contracts\Auth\Authenticatable` (contract) in Intelephense. The contract does not declare `addresses()`. Fix: `/** @var \App\Models\User $user */` annotation. |
+| PHP0418 (PC-001)    | `@var` docblock on `$results` does not suppress PHP0418 on the chain call `paginate(12)->withQueryString()`. Fix: split into two lines so `$results` is typed before `withQueryString()` is called.     |
+| PHP0418 (AU-002)    | `app(\Illuminate\Contracts\Http\Kernel::class)` resolves to the contract which lacks `getMiddlewareGroups()`. Fix: `/** @var \Illuminate\Foundation\Http\Kernel $kernel */` annotation.                 |
+| Runtime impact?     | None — all three work correctly at runtime; pure static-analysis false positives                                                                                                                        |
+| Is this a Code bug? | No — IDE annotation gap only                                                                                                                                                                            |
+
+### STEP 3 — Test Case Gap Analysis
+
+**Gap conclusion:** `Environment-only` — tests already cover the runtime behaviour of all three locations. The IDE warnings do not indicate testable defects.
+
+### STEP 4 — Fix Applied
+
+| Layer | Change Description                                                                                                                      | Files Affected                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Code  | Added `/** @var \App\Models\User $user */` before `$user = auth()->user()` in `storeSession()` and `storeAddress()`                     | `app/Http/Controllers/CheckoutController.php` |
+| Code  | Split `$results = ...->paginate(12)->withQueryString()` into assignment + `$results->withQueryString()` so `@var` docblock takes effect | `app/Http/Controllers/ProductController.php`  |
+| Code  | Added `/** @var \Illuminate\Foundation\Http\Kernel $kernel */` before `$kernel = app(...)` in `test_AU002_csrfMiddlewareIsActive()`     | `tests/Feature/Auth/LoginTest.php`            |
+
+### STEP 5 — Verify
+
+| Test                     | Before Fix  | After Fix   |
+| ------------------------ | ----------- | ----------- |
+| IMP-003 / CP-001 suite   | PASS ✅     | PASS ✅     |
+| PC-001 / PC-002 suite    | PASS ✅     | PASS ✅     |
+| AU-002 suite (LoginTest) | PASS ✅     | PASS ✅     |
+| Full suite               | 903 PASS ✅ | 903 PASS ✅ |
+| Regression detected?     | —           | No ✅       |
+
+### STEP 6 — Commit Message
+
+```
+fix(IMP-003,CP-001,PC-001,PC-002,AU-002): IDE annotation gaps — addresses, withQueryString, getMiddlewareGroups
+```
+
+<!-- FIX-003 END -->
+
+---
+
+## FIX-004 · VS Code language-server false positives in Blade templates
+
+| Field          | Value                                                                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Fix ID         | `FIX-004`                                                                                                                                                                                                    |
+| Fix Date       | `2026-04-20`                                                                                                                                                                                                 |
+| Error Message  | `','expected` / `':'expected` / `Decorators are not valid here` / `Expression expected` / `at-rule or selector expected` / `property value expected`                                                         |
+| Error Location | `resources/views/admin/users/show.blade.php:287` · `resources/views/checkout/shipping.blade.php:52-75` · `resources/views/partials/toast.blade.php:124-136` · `resources/views/products/index.blade.php:281` |
+| Trigger        | VS Code embedded JS/CSS language services parse raw `.blade.php` source instead of compiled output: `{{ }}` and `@json()` directives are misread as JS expressions / CSS rules                               |
+| Fix Type       | `Environment` (VS Code IDE limitation — no code change possible or appropriate)                                                                                                                              |
+| Batch?         | `Yes — batch with FIX-003 in same commit`                                                                                                                                                                    |
+
+### STEP 1 — Parent Tasks
+
+| Parent Task ID | Why related?                                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `UM-003`       | `admin/users/show.blade.php` — Blade `{{ $user->is_active ? '...' : '...' }}` in `onsubmit` attribute misread as JS     |
+| `IMP-003`      | `checkout/shipping.blade.php` — `@json($shippingOptions)` inside `<script>` block misread as TS decorator by VS Code    |
+| `IMP-009`      | `partials/toast.blade.php` — `@json(session('...'))` inside `<script>` block misread as TS decorator                    |
+| `PC-001`       | `products/index.blade.php` — `{{ $loop->first ? '340px' : '180px' }}` inside inline `style=""` attribute misread as CSS |
+
+### STEP 2 — Root Cause
+
+| Question                | Answer                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Why do errors appear?   | VS Code's HTML/JS/CSS language services see the raw Blade source. `{{ expr }}` with single-quoted PHP strings looks like broken JS. `@json()` matches TS decorator syntax.     |
+| Are they real errors?   | No — the compiled server-side output is valid HTML/JS/CSS. All pages render and work correctly at runtime.                                                                     |
+| Is a code fix possible? | No — replacing `@json()` with `{!! json_encode() !!}` would trade one false positive for another. Inline `style="{{ expr }}"` and `onsubmit="{{ expr }}"` are idiomatic Blade. |
+| Runtime impact?         | None                                                                                                                                                                           |
+
+### STEP 3 — Test Case Gap Analysis
+
+**Gap conclusion:** `Environment-only` — no test can catch IDE parser limitations. All affected templates are already covered by feature tests that assert correct rendered HTML.
+
+### STEP 4 — Fix Applied
+
+No code changes. This entry documents the classification so future developers do not investigate these as real bugs.
+
+### STEP 5 — Verify
+
+All affected pages render correctly at runtime. Existing feature tests (UM-003, checkout, IMP-009 toast, PC-001) continue to pass.
+
+### STEP 6 — Commit Message
+
+_(Batched with FIX-003 — see FIX-003 commit message)_
+
+<!-- FIX-004 END -->

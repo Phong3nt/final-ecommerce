@@ -58,7 +58,8 @@ class ProductController extends Controller
         }
 
         /** @var \Illuminate\Pagination\LengthAwarePaginator $results */
-        $results = Product::published()->search($q)->latest()->paginate(12)->withQueryString();
+        $results = Product::published()->search($q)->latest()->paginate(12);
+        $results->withQueryString();
 
         return view('products.search', compact('results', 'q'));
     }

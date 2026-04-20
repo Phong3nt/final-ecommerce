@@ -67,6 +67,7 @@ class CheckoutController extends Controller
      */
     public function storeSession(Request $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         if ($request->filled('address_id')) {
@@ -325,6 +326,7 @@ class CheckoutController extends Controller
      */
     public function storeAddress(Request $request): RedirectResponse
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         if ($request->filled('address_id')) {
