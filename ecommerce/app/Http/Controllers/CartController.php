@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -10,6 +11,77 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    // ---------------------------------------------------------------
+    // IMP-015: DB cart persistence helpers for authenticated users
+    // ---------------------------------------------------------------
+
+    /**
+     * IMP-015: Build a session-cart array from the user's DB cart rows.
+     * Products that have been deleted are silently skipped.
+     */
+    private function loadDbCart(int $userId): array
+    {
+        return CartItem::where('user_id', $userId)
+            ->with('product')
+            ->get()
+            ->filter(fn($item) => $item->product !== null)
+            ->mapWithKeys(fn($item) => [
+                $item->product_id => [
+                    'product_id' => $item->product_id,
+                    'name'       => $item->product->name,
+                    'price'      => (float) $item->product->price,
+                    'quantity'   => $item->quantity,
+                    'slug'       => $item->product->slug,
+                ],
+            ])
+            ->all();
+    }
+
+    /**
+     * IMP-015: Merge the current session cart with the authenticated user's DB
+     * cart, then persist the result to both the session and the DB.
+     *
+     * Merge rules:
+     *  - Items in session but not DB  → inserted into DB.
+     *  - Items in DB but not session  → added to session.
+     *  - Items in both               → higher quantity wins; DB is updated if needed.
+     *
+     * This handles the "just-logged-in" case (session cart = guest items) as well
+     * as the "other device" case (DB has items the current session doesn't).
+     */
+    private function mergeCartWithDb(): void
+    {
+        if (!auth()->check()) {
+            return;
+        }
+
+        $userId      = auth()->id();
+        $sessionCart = session()->get('cart', []);
+
+        foreach ($sessionCart as $productId => $item) {
+            $existing = CartItem::where('user_id', $userId)
+                ->where('product_id', $productId)
+                ->first();
+
+            if ($existing) {
+                // Keep the higher quantity across devices
+                if ($item['quantity'] > $existing->quantity) {
+                    $existing->update(['quantity' => $item['quantity']]);
+                }
+            } else {
+                CartItem::create([
+                    'user_id'    => $userId,
+                    'product_id' => $productId,
+                    'quantity'   => $item['quantity'],
+                ]);
+            }
+        }
+
+        // Reload full merged DB cart back into the session
+        $merged = $this->loadDbCart($userId);
+        session()->put('cart', $merged);
+    }
+
     /**
      * SC-005: Compute the coupon discount for the given cart subtotal.
      * Returns 0.0 when no coupon is in session.
@@ -32,6 +104,9 @@ class CartController extends Controller
      */
     public function index(): View
     {
+        // IMP-015: merge session cart ↔ DB cart for authenticated users
+        $this->mergeCartWithDb();
+
         $cart = session()->get('cart', []);
         $subtotal = array_sum(array_map(
             fn($item) => $item['price'] * $item['quantity'],
@@ -70,6 +145,13 @@ class CartController extends Controller
 
         $cart[$productId]['quantity'] = $qty;
         session()->put('cart', $cart);
+
+        // IMP-015: sync updated quantity to DB for authenticated users
+        if (auth()->check()) {
+            CartItem::where('user_id', auth()->id())
+                ->where('product_id', $productId)
+                ->update(['quantity' => $qty]);
+        }
 
         $newSubtotal = $cart[$productId]['price'] * $qty;
         $newTotal = array_sum(array_map(
@@ -111,6 +193,13 @@ class CartController extends Controller
 
         unset($cart[$productId]);
         session()->put('cart', $cart);
+
+        // IMP-015: remove from DB for authenticated users
+        if (auth()->check()) {
+            CartItem::where('user_id', auth()->id())
+                ->where('product_id', $productId)
+                ->delete();
+        }
 
         $cartCount = array_sum(array_column($cart, 'quantity'));
         $newTotal = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
@@ -171,6 +260,14 @@ class CartController extends Controller
         }
 
         session()->put('cart', $cart);
+
+        // IMP-015: persist to DB for authenticated users
+        if (auth()->check()) {
+            CartItem::updateOrCreate(
+                ['user_id' => auth()->id(), 'product_id' => $id],
+                ['quantity' => $cart[$id]['quantity']]
+            );
+        }
 
         $cartCount = array_sum(array_column($cart, 'quantity'));
 

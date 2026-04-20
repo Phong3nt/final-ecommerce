@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\RefundController;
@@ -230,6 +231,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/read-all', [AdminNotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::patch('/notifications/{notification}/read', [AdminNotificationController::class, 'markRead'])->name('notifications.read');
+
+    // IMP-016: Consolidated audit log
+    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)

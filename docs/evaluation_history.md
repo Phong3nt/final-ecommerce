@@ -5093,5 +5093,419 @@ No regressions. All existing auth checkout tests unaffected.
 - [x] 10 new IMP-009 tests added and passing
 - [x] Full regression suite passes with zero failures
 - [x] `[UIUX_MODE]` constraints respected
-<!-- EVAL-IMP-009 END -->
-IMP-010 completed: Product image lightbox + zoom on detail page (PC-005) - 2026-04-21
+  <!-- EVAL-IMP-009 END -->
+  <!-- EVAL-IMP-010 END -->
+
+<!-- EVAL-IMP-011 START -->
+
+## EVAL-IMP-011 · Order Status Visual Progress Stepper
+
+**Date:** 2026-04-21
+**Scope:** `[UIUX_MODE]`
+**Target Task:** OH-003
+**Git Tag:** `v1.0-IMP-011-stable`
+**Baseline:** IMP-010 12/12 PASS · OrderDetail/History/Status/Cancellation 36/36 PASS
+
+### Architecture Review
+
+| File                                    | Change                                                                                                                                                                                                                          |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resources/views/orders/show.blade.php` | Replaced `<ol class="timeline">` vertical text list with `<div class="imp011-stepper">` horizontal visual stepper; added CSS block for stepper, steps, connectors, circle icons, labels, timestamps, cancelled/refunded banners |
+
+**[UIUX_MODE] Constraints Respected:**
+
+- No controller, service, model, migration, or route changes
+- Pure Blade + CSS enhancement
+- No new JS dependencies
+
+### Stepper Design
+
+- **4 fixed steps:** Placed → Processing → Shipped → Delivered
+- **State classes:** `imp011-done` (past steps), `imp011-active` (current), none (future), `imp011-cancelled` (cancelled/refunded)
+- **Connector lines** between steps turn green when both ends are done/active
+- **Timestamps** shown below each completed step label
+- **Cancelled/Refunded banners** replace the active progress indicator with coloured alert blocks
+- **Accessibility:** `role="list"`, `role="listitem"`, `aria-label` on stepper and steps
+
+### Test Results (OrderStatusStepperTest.php — 12/12 PASS)
+
+| TC    | Description                                              | Type          | Result |
+| ----- | -------------------------------------------------------- | ------------- | ------ |
+| TC-01 | Stepper container present                                | Happy         | PASS   |
+| TC-02 | All four step elements rendered                          | Happy         | PASS   |
+| TC-03 | Active step class present for paid order                 | Happy         | PASS   |
+| TC-04 | Placed step shows order creation timestamp               | Happy         | PASS   |
+| TC-05 | Delivered order shows 3+ done steps + 1 active           | Happy         | PASS   |
+| TC-06 | Cancelled order shows cancelled banner + cancelled class | Edge          | PASS   |
+| TC-07 | Refunded order shows refunded banner                     | Edge          | PASS   |
+| TC-08 | Stepper has role=list, role=listitem, aria-label         | Accessibility | PASS   |
+| TC-09 | All four label texts visible                             | Happy         | PASS   |
+| TC-10 | Shipped timestamp shown when shipped_at is set           | Happy         | PASS   |
+| TC-11 | Guest redirected to login (auth boundary unchanged)      | Security      | PASS   |
+| TC-12 | Order detail with stepper responds within 2 seconds      | Performance   | PASS   |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped
+**Regression:** OrderDetailTest 12/12 · OrderHistoryTest 12/12 · OrderStatusTest 12/12 · OrderCancellationTest 12/12 · ProductLightboxTest 12/12 · No regression detected.
+
+### Quality Scores (1–5)
+
+| Dimension     | Score | Comment                                                                                    |
+| ------------- | ----- | ------------------------------------------------------------------------------------------ |
+| Simplicity    | 5/5   | Pure CSS + Blade @php logic; no new JS, no controller changes                              |
+| Security      | 5/5   | View-only; all values server-rendered via Blade escaping                                   |
+| Performance   | 5/5   | 0 extra DB queries; timestamps from already-loaded Order model                             |
+| Test Coverage | 5/5   | 12 tests cover all states: happy, edge (cancelled/refunded), accessibility, security, perf |
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description                                | Severity | Status |
+| ------ | ------------------------------------------ | -------- | ------ |
+| —      | No bugs — all 12 tests passed on first run | —        | —      |
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                             | Benefit                                           | Complexity |
+| ----------- | ----------------------------------------------------------------------- | ------------------------------------------------- | ---------- |
+| IMP-011.1   | Alpine.js animated fade-in on stepper load (steps appear left to right) | Polished UX                                       | Low        |
+| IMP-011.2   | Compact mini stepper on orders/index.blade.php list                     | At-a-glance progress without clicking into detail | Medium     |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-011 END -->
+
+<!-- EVAL-IMP-012 START -->
+
+## EVAL-IMP-012 — Interactive Star Rating Input
+
+**Date:** 2026-04-21  
+**Tag:** v1.0-IMP-012-stable  
+**Mode:** `[UIUX_MODE]`  
+**Scope:** `resources/views/products/show.blade.php` (CSS + Alpine.js only)
+
+### Summary
+
+Replaced the plain `<select id="rating">` dropdown and plain `Rating: X / 5` text with an interactive Alpine.js star rating widget and server-side visual star displays. No controller, route, or model changes.
+
+### Changes Made
+
+| File                                      | Change                                                                                                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resources/views/products/show.blade.php` | CSS block added for `.imp012-star`, `.imp012-star--filled`, `.imp012-star-input`, `.imp012-avg`, `.imp012-review-stars`, `.imp012-star-hint`              |
+| `resources/views/products/show.blade.php` | Average rating `<p>` replaced with `<div class="imp012-avg">` showing visual stars + `Average Rating: X.X / 5 (N reviews)`                                |
+| `resources/views/products/show.blade.php` | Per-review `<p class="review-rating">` replaced with `<div class="imp012-review-stars">` showing visual stars + visually-hidden `Rating: X / 5`           |
+| `resources/views/products/show.blade.php` | `<select id="rating">` replaced with Alpine.js `imp012-star-input` component (hidden `<input type="hidden">`, `<template x-for>` star buttons, hint span) |
+| `resources/views/products/show.blade.php` | `imp012StarRating()` plain-function Alpine component registered in bottom `<script>` block                                                                |
+
+### Test Results
+
+| Suite                                       | Tests  | Pass   | Fail  |
+| ------------------------------------------- | ------ | ------ | ----- |
+| InteractiveStarRatingTest (IMP-012)         | 12     | 12     | 0     |
+| ProductReviewTest (RV-001 regression)       | 12     | 12     | 0     |
+| ProductReviewListTest (RV-002 regression)   | 12     | 12     | 0     |
+| ProductLightboxTest (IMP-010 regression)    | 12     | 12     | 0     |
+| OrderStatusStepperTest (IMP-011 regression) | 12     | 12     | 0     |
+| **Total**                                   | **60** | **60** | **0** |
+
+### Test Coverage (IMP-012)
+
+| TC    | Type          | Description                                                                      | Result |
+| ----- | ------------- | -------------------------------------------------------------------------------- | ------ |
+| TC-01 | Happy         | `data-imp012="star-input"` present for eligible reviewer                         | PASS   |
+| TC-02 | Happy         | Hidden `data-imp012="rating-input"` input present                                | PASS   |
+| TC-03 | Happy         | Star button `data-imp012="star-btn"` present                                     | PASS   |
+| TC-04 | Accessibility | Star buttons have `aria-label` expressions                                       | PASS   |
+| TC-05 | Happy         | `data-imp012="star-hint"` hint element present                                   | PASS   |
+| TC-06 | Negative      | Old `<select id="rating">` no longer present                                     | PASS   |
+| TC-07 | Happy         | Per-review `data-imp012="review-stars"` present                                  | PASS   |
+| TC-08 | Happy         | Average rating `data-imp012="average-rating"` + `data-imp012="avg-text"` present | PASS   |
+| TC-09 | Happy         | `imp012StarRating` Alpine component function defined in page                     | PASS   |
+| TC-10 | Edge          | Star input absent for non-purchaser (`$canReview` false)                         | PASS   |
+| TC-11 | Edge          | Star input absent after user already reviewed                                    | PASS   |
+| TC-12 | Performance   | Page responds within 2 seconds                                                   | PASS   |
+
+### Improvement Proposals
+
+| ID        | Description                                                         | Benefit                    | Priority |
+| --------- | ------------------------------------------------------------------- | -------------------------- | -------- |
+| IMP-012.1 | Persist hover-preview rating in `sessionStorage` on navigation away | Better UX on slow networks | Low      |
+| IMP-012.2 | Animate star fill transition with CSS `transition: color 0.15s`     | Polished feel              | Low      |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-012 END -->
+
+<!-- EVAL-IMP-013 START -->
+
+## EVAL-IMP-013 — Admin Tables: Sortable Columns + Responsive Layout
+
+**Date:** 2026-04-21  
+**Tag:** v1.0-IMP-013-stable  
+**Mode:** `[UIUX_MODE]`  
+**Scope:** `resources/views/admin/orders/index.blade.php`, `resources/views/admin/products/index.blade.php`, `resources/views/admin/users/index.blade.php`
+
+### Summary
+
+Upgraded all three admin index tables with IMP-013 responsive horizontal-scroll wrapper (`imp013-table-wrap`) and sortable column headers (`data-imp013="sortable-th"`, `aria-sort`). Orders uses server-side sort links with CSS arrow indicators. Products and Users use Alpine.js client-side `imp013TableSort()` component. No controller/model/route changes.
+
+### Changes Made
+
+| File                             | Change                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `admin/orders/index.blade.php`   | IMP-013 CSS block added; `$thClass`, `$ariaSortVal`, `$sortIconHtml` helpers added to sort `@php`; `<table>` wrapped in `<div class="imp013-table-wrap" data-imp013="table-wrap">`; sortable `<th>` elements upgraded with `data-imp013="sortable-th"`, `aria-sort`, CSS sort classes, and `↕/▲/▼` icons                       |
+| `admin/products/index.blade.php` | Alpine.js CDN added to `<head>`; IMP-013 CSS added; main products table wrapped in Alpine `x-data="imp013TableSort()"` + `data-imp013="table-wrap"` div; static `<th>` headers replaced with sortable versions using `x-on:click` and `data-imp013="sortable-th"`; `imp013TableSort()` function registered in `<script>` block |
+| `admin/users/index.blade.php`    | Same pattern as products — Alpine CDN, IMP-013 CSS, responsive sort wrapper, sortable `<th>` headers, `imp013TableSort()` function                                                                                                                                                                                             |
+
+### Test Results
+
+| Suite                                      | Tests  | Pass   | Fail  |
+| ------------------------------------------ | ------ | ------ | ----- |
+| AdminTableSortResponsiveTest (IMP-013)     | 12     | 12     | 0     |
+| AdminOrderListTest (OM-001 regression)     | 12     | 12     | 0     |
+| AdminUserListTest (UM-001 regression)      | 12     | 12     | 0     |
+| AdminProductCreateTest (PM-001 regression) | 12     | 12     | 0     |
+| AdminProductDeleteTest (PM regression)     | 12     | 12     | 0     |
+| AdminProductEditTest (PM regression)       | 18     | 18     | 0     |
+| **Total**                                  | **78** | **78** | **0** |
+
+### Test Coverage (IMP-013)
+
+| TC    | Type          | Description                                            | Result |
+| ----- | ------------- | ------------------------------------------------------ | ------ |
+| TC-01 | Happy         | Orders index has `data-imp013="table-wrap"`            | PASS   |
+| TC-02 | Happy         | Products index has `data-imp013="table-wrap"`          | PASS   |
+| TC-03 | Happy         | Users index has `data-imp013="table-wrap"`             | PASS   |
+| TC-04 | Happy         | Orders index has `data-imp013="sortable-th"`           | PASS   |
+| TC-05 | Happy         | Products index has `data-imp013="sortable-th"`         | PASS   |
+| TC-06 | Happy         | Users index has `data-imp013="sortable-th"`            | PASS   |
+| TC-07 | Accessibility | Orders sortable headers have `aria-sort` attribute     | PASS   |
+| TC-08 | Accessibility | Products sortable headers have `aria-sort="none"`      | PASS   |
+| TC-09 | Accessibility | Users sortable headers have `aria-sort="none"`         | PASS   |
+| TC-10 | Happy         | Orders index has server-side `total_asc` sort link     | PASS   |
+| TC-11 | Happy         | `sort=oldest` yields `aria-sort="ascending"` on header | PASS   |
+| TC-12 | Performance   | Admin orders page responds within 2 seconds            | PASS   |
+
+### Improvement Proposals
+
+| ID        | Description                                                                          | Benefit   | Priority |
+| --------- | ------------------------------------------------------------------------------------ | --------- | -------- |
+| IMP-013.1 | Persist client-side sort column in `sessionStorage` so sort survives page refresh    | Better UX | Low      |
+| IMP-013.2 | Add sticky first column (`position: sticky; left: 0`) for very wide tables on mobile | Usability | Medium   |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-013 END -->
+
+<!-- EVAL-IMP-014 START -->
+
+## EVAL-IMP-014 — Product Catalog Response Caching (Laravel Cache)
+
+**Date:** 2026-04-21  
+**Tag:** v1.0-IMP-014-stable  
+**Mode:** `[LOGIC_MODE]`  
+**Scope:** `app/Http/Controllers/ProductController.php`, `app/Models/Product.php`
+
+### Summary
+
+Added Laravel `Cache::remember()` caching to all three product catalog endpoints (`index`, `show`, `search`) using a **version-key invalidation** strategy. A `catalog_version` integer is stored in cache; all cache keys include this version. When any Product is saved, deleted, or restored, a model `booted()` hook calls `Cache::increment('catalog_version', 1)`, making all previously cached catalog entries stale. No DB schema changes, no config changes, no view changes.
+
+### Changes Made
+
+| File                                         | Change                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/Http/Controllers/ProductController.php` | Added `use Illuminate\Support\Facades\Cache`; added `private static catalogVersion(): int` helper; wrapped `index()` paginated query + category list in `Cache::remember()` (5 min TTL); wrapped `show()` reviews + averageRating in `Cache::remember()` (10 min TTL, user-specific `$canReview`/`$userReview` kept uncached); wrapped `search()` paginator in `Cache::remember()` (5 min TTL) |
+| `app/Models/Product.php`                     | Added `use Illuminate\Support\Facades\Cache`; added `booted()` hook that calls `Cache::increment('catalog_version', 1)` on `saved`, `deleted`, and `restored` events                                                                                                                                                                                                                           |
+
+### Cache Key Schema
+
+| Endpoint                    | Cache Key Pattern                                               | TTL    |
+| --------------------------- | --------------------------------------------------------------- | ------ |
+| Category list               | `catalog.cats.{version}`                                        | 30 min |
+| Product index page N        | `catalog.idx.{version}.{page}.{md5(filters)}`                   | 5 min  |
+| Product show reviews page N | `catalog.show.{version}.{id}.r{page}`                           | 10 min |
+| Search results page N       | `catalog.srch.{version}.{page}.{md5(q)}`                        | 5 min  |
+| Invalidation trigger        | `catalog_version` incremented on Product saved/deleted/restored | —      |
+
+### Test Results
+
+| Suite                                 | Tests   | Pass    | Fail  |
+| ------------------------------------- | ------- | ------- | ----- |
+| ProductCatalogCacheTest (IMP-014)     | 12      | 12      | 0     |
+| ProductBrowseTest (PC-001 regression) | 12      | 12      | 0     |
+| ProductDetailTest (PC-002 regression) | 12      | 12      | 0     |
+| ProductFilterTest (PC-003 regression) | 12      | 12      | 0     |
+| ProductSearchTest (PC-004 regression) | 12      | 12      | 0     |
+| ProductSortTest regression            | 12      | 12      | 0     |
+| ProductReviewTest regression          | 12      | 12      | 0     |
+| ProductReviewListTest regression      | 12      | 12      | 0     |
+| InteractiveStarRatingTest regression  | 12      | 12      | 0     |
+| ProductLightboxTest regression        | 12      | 12      | 0     |
+| **Total**                             | **120** | **120** | **0** |
+
+### Test Coverage (IMP-014)
+
+| TC    | Type        | Description                                                          | Result |
+| ----- | ----------- | -------------------------------------------------------------------- | ------ |
+| TC-01 | Happy       | Products index returns 200 with caching layer                        | PASS   |
+| TC-02 | Happy       | Second identical request hits cache (version unchanged)              | PASS   |
+| TC-03 | Happy       | Version increments on product create                                 | PASS   |
+| TC-04 | Happy       | Version increments on product update                                 | PASS   |
+| TC-05 | Happy       | Version increments on product delete                                 | PASS   |
+| TC-06 | Happy       | New product appears after creation (cache invalidated)               | PASS   |
+| TC-07 | Happy       | Deleted product absent after deletion (cache invalidated)            | PASS   |
+| TC-08 | Happy       | Search returns 200 with caching                                      | PASS   |
+| TC-09 | Happy       | Product show returns 200 with caching                                | PASS   |
+| TC-10 | Security    | User-specific `canReview` not cached — eligible user still sees form | PASS   |
+| TC-11 | Edge        | Empty search query redirects (no cache involvement)                  | PASS   |
+| TC-12 | Performance | Cached index request responds within 2 seconds                       | PASS   |
+
+### Improvement Proposals
+
+| ID        | Description                                                                                                         | Benefit                               | Priority |
+| --------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------- |
+| IMP-014.1 | Switch to Redis + cache tags to allow surgical per-product cache invalidation instead of whole-catalog version bump | Finer-grained invalidation            | Medium   |
+| IMP-014.2 | Cache admin product/order list pages with admin-specific version key                                                | Reduce DB load for high-traffic admin | Low      |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-014 END -->
+
+<!-- EVAL-IMP-015 START -->
+
+## EVAL-IMP-015 — DB-backed cart persistence for authenticated users
+
+**Date:** 2026-04-21  
+**Mode:** `[LOGIC_MODE]`  
+**Tag:** `v1.0-IMP-015-stable`  
+**Related tasks:** SC-001, SC-002, SC-003, SC-004
+
+### Summary
+
+Persisted the shopping cart to a `cart_items` database table for authenticated users so that cart contents survive session expiry and are shared across devices. Guest carts continue to use the session only.
+
+### Changes Made
+
+| File                                                                | Change                                                                                                                                     |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `database/migrations/2026_04_21_000001_create_cart_items_table.php` | New migration: `cart_items` table with `user_id`, `product_id`, `quantity`, unique(user_id, product_id), cascadeOnDelete FK                |
+| `app/Models/CartItem.php`                                           | New Eloquent model with `belongsTo(User)` and `belongsTo(Product)`                                                                         |
+| `app/Http/Controllers/CartController.php`                           | Added `loadDbCart()` + `mergeCartWithDb()` helpers; wired DB writes into `store()`, `update()`, `destroy()`; added merge call to `index()` |
+
+### Merge Strategy
+
+- **`index()`** calls `mergeCartWithDb()` which: (1) upserts session items into DB (handles just-logged-in guest cart), (2) takes the higher quantity when both session and DB have the same product, (3) reloads the full DB cart back into the session (handles cross-device restore).
+- **`store()`** upserts the accumulated session quantity into `cart_items`.
+- **`update()`** updates the row in `cart_items` to the new quantity.
+- **`destroy()`** deletes the row from `cart_items`.
+- **Guests** are unaffected — all helpers short-circuit when `auth()->check()` is false.
+
+### Test Results
+
+| Suite                   | Tests | Passed | Failed |
+| ----------------------- | ----- | ------ | ------ |
+| `CartDbPersistenceTest` | 12    | 12     | 0      |
+| Full regression         | 975   | 975    | 0      |
+
+### Test Coverage
+
+| ID         | Description                                          | Type                 |
+| ---------- | ---------------------------------------------------- | -------------------- |
+| IMP-015-01 | Auth add → DB record created                         | Happy path           |
+| IMP-015-02 | Auth add same product twice → qty merged in DB       | Happy path           |
+| IMP-015-03 | Auth PATCH qty → DB record updated                   | Happy path           |
+| IMP-015-04 | Auth DELETE → DB record removed                      | Happy path           |
+| IMP-015-05 | Guest add → no DB record created                     | Edge case            |
+| IMP-015-06 | Auth cart index with empty session hydrates from DB  | Edge case            |
+| IMP-015-07 | Auth cart index with session items pushes to DB      | Edge case            |
+| IMP-015-08 | Merge takes max qty when session > DB                | Edge case            |
+| IMP-015-09 | User A's cart not visible to user B                  | Security / isolation |
+| IMP-015-10 | Deleting user cascades to cart_items                 | Security / integrity |
+| IMP-015-11 | JSON add returns correct cart_count after DB persist | API / negative       |
+| IMP-015-12 | Cart index < 2 s with 20 DB items                    | Performance          |
+
+### Improvement Proposals
+
+| ID        | Proposal                                                                           | Benefit                     | Priority |
+| --------- | ---------------------------------------------------------------------------------- | --------------------------- | -------- |
+| IMP-015.1 | Add a `cleared_at` timestamp to support "clear cart" without cascade-deleting rows | Enables cart history / undo | Low      |
+| IMP-015.2 | Expire stale cart_items (e.g. older than 30 days) via a scheduled command          | Keeps table lean            | Low      |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-015 END -->
+
+<!-- EVAL-IMP-016 START -->
+
+## EVAL-IMP-016 — Consolidated audit log (auth events + admin actions)
+
+**Date:** 2026-04-21  
+**Mode:** `[FULL_STACK_MODE]`  
+**Tag:** `v1.0-IMP-016-stable`  
+**Related tasks:** AU-002, AU-003, AU-004, PM-002, UM-004
+
+### Summary
+
+Extended the existing `audit_logs` table and wired audit entries for all key auth events (login, failed login, logout, registration, Google OAuth) and the missing admin action (`user.status_changed`). Added a filterable admin audit log viewer at `/admin/audit-log`.
+
+### Changes Made
+
+| File                                                                           | Change                                                                                  |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `database/migrations/2026_04_21_000002_add_ip_address_to_audit_logs_table.php` | Added `ip_address` (varchar 45, nullable) column to `audit_logs`                        |
+| `app/Models/AuditLog.php`                                                      | Added `ip_address` to `$fillable`                                                       |
+| `app/Http/Controllers/Auth/LoginController.php`                                | Added `auth.login` on success, `auth.login_failed` on failure, `auth.logout` on destroy |
+| `app/Http/Controllers/Auth/RegisterController.php`                             | Added `auth.register` after successful registration                                     |
+| `app/Http/Controllers/Auth/GoogleController.php`                               | Added `auth.google_login` after OAuth callback                                          |
+| `app/Http/Controllers/Admin/UserController.php`                                | Added `user.status_changed` in `toggleStatus()`                                         |
+| `app/Http/Controllers/Admin/AuditLogController.php`                            | New controller: paginated list with action + date-range filters                         |
+| `routes/web.php`                                                               | Added `GET /admin/audit-log` → `admin.audit-log.index`                                  |
+| `resources/views/admin/audit-log/index.blade.php`                              | New Blade view: filter form, sortable table, collapsible change diffs, pagination       |
+
+### Audit Actions Tracked
+
+| Action                | Trigger                                     |
+| --------------------- | ------------------------------------------- |
+| `auth.login`          | Successful email/password login             |
+| `auth.login_failed`   | Failed email/password login attempt         |
+| `auth.logout`         | User logs out                               |
+| `auth.register`       | New user registers                          |
+| `auth.google_login`   | Google OAuth login/register                 |
+| `user.status_changed` | Admin toggles user active/suspended status  |
+| `user.role_changed`   | Admin changes user role (pre-existing)      |
+| `product.updated`     | Admin edits a product (pre-existing)        |
+| `product.deleted`     | Admin soft-deletes a product (pre-existing) |
+
+### Test Results
+
+| Suite           | Tests | Passed | Failed |
+| --------------- | ----- | ------ | ------ |
+| `AuditLogTest`  | 12    | 12     | 0      |
+| Full regression | 987   | 987    | 0      |
+
+### Test Coverage
+
+| ID         | Description                                             | Type        |
+| ---------- | ------------------------------------------------------- | ----------- |
+| IMP-016-01 | Successful login creates `auth.login` entry             | Happy path  |
+| IMP-016-02 | Failed login creates `auth.login_failed` entry          | Happy path  |
+| IMP-016-03 | Logout creates `auth.logout` entry                      | Happy path  |
+| IMP-016-04 | Registration creates `auth.register` entry              | Happy path  |
+| IMP-016-05 | Admin toggle status creates `user.status_changed` entry | Happy path  |
+| IMP-016-06 | Admin assign role creates `user.role_changed` entry     | Happy path  |
+| IMP-016-07 | Admin product update creates `product.updated` entry    | Happy path  |
+| IMP-016-08 | Admin can view the audit log page                       | UI / view   |
+| IMP-016-09 | Audit log page shows existing entries                   | UI / view   |
+| IMP-016-10 | Filter by action returns only matching rows             | Edge case   |
+| IMP-016-11 | Non-admin cannot access audit log (403)                 | Security    |
+| IMP-016-12 | Audit log page < 2 s with 50 entries                    | Performance |
+
+### Improvement Proposals
+
+| ID        | Proposal                                         | Benefit                                        | Priority |
+| --------- | ------------------------------------------------ | ---------------------------------------------- | -------- |
+| IMP-016.1 | Add date-range filter to the audit log view      | Easier investigation of time-bounded incidents | Low      |
+| IMP-016.2 | Export audit log to CSV for compliance reporting | Supports GDPR / audit requirements             | Medium   |
+
+> Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-016 END -->

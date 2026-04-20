@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,16 @@ class RegisterController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        // IMP-016: log registration
+        AuditLog::create([
+            'user_id'      => $user->id,
+            'action'       => 'auth.register',
+            'subject_type' => 'User',
+            'subject_id'   => $user->id,
+            'new_values'   => ['email' => $user->email],
+            'ip_address'   => $request->ip(),
+        ]);
 
         return redirect()->route('dashboard')
             ->with('success', 'Registration successful! Please check your email to verify your account.');

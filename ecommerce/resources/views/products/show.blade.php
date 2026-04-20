@@ -178,6 +178,64 @@
             margin-top: 1rem;
         }
 
+        /* IMP-012: Interactive star rating */
+        .imp012-star {
+            font-size: 1.5rem;
+            color: #d1d5db;
+            line-height: 1;
+            cursor: default;
+            display: inline-block;
+            transition: color .1s, transform .1s;
+        }
+
+        .imp012-star--filled {
+            color: #f59e0b;
+        }
+
+        .imp012-star-input .imp012-star {
+            background: none;
+            border: none;
+            padding: 0 .1rem;
+            cursor: pointer;
+            font-size: 1.8rem;
+        }
+
+        .imp012-star-input .imp012-star:hover,
+        .imp012-star-input .imp012-star:focus {
+            transform: scale(1.15);
+            outline: none;
+        }
+
+        .imp012-star-hint {
+            display: inline-block;
+            margin-left: .5rem;
+            font-size: .85rem;
+            color: #6b7280;
+            vertical-align: middle;
+        }
+
+        .imp012-avg {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .imp012-avg .imp012-star {
+            font-size: 1.3rem;
+        }
+
+        .imp012-avg-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .imp012-review-stars .imp012-star {
+            font-size: 1rem;
+        }
+
         /* IMP-007: Add-to-cart button micro-interactions */
         .atc-spinner {
             display: inline-block;
@@ -363,31 +421,23 @@
 
         <article class="product-detail">
             {{-- IMP-010: Lightbox + zoom gallery --}}
-            <div class="product-images"
-                 x-data="imp010Lightbox({
+            <div class="product-images" x-data="imp010Lightbox({
                      mainImage: @json($product->image ? asset('storage/' . $product->image) : null),
                      images: @json(collect($product->images ?? [])->map(fn($p) => asset('storage/' . $p))->values()->all()),
                      alt: @json($product->name)
                  })">
                 @if ($product->image)
                     <div class="imp010-main-wrapper">
-                        <img src="{{ asset('storage/' . $product->image) }}"
-                             :src="currentImage"
-                             alt="{{ $product->name }}"
-                             :alt="alt"
-                             class="product-main-image imp010-main-img"
-                             @click="openLightbox(currentImage)"
-                             data-imp010="main-image">
+                        <img src="{{ asset('storage/' . $product->image) }}" :src="currentImage" alt="{{ $product->name }}"
+                            :alt="alt" class="product-main-image imp010-main-img" @click="openLightbox(currentImage)"
+                            data-imp010="main-image">
                     </div>
                     <template x-if="allImages.length > 1">
                         <div class="imp010-thumbs" data-imp010="thumbs">
                             <template x-for="(url, i) in allImages" :key="i">
-                                <img :src="url"
-                                     :alt="alt"
-                                     class="imp010-thumb"
-                                     :class="{ 'imp010-thumb-active': url === currentImage }"
-                                     @click="currentImage = url"
-                                     data-imp010="thumb">
+                                <img :src="url" :alt="alt" class="imp010-thumb"
+                                    :class="{ 'imp010-thumb-active': url === currentImage }" @click="currentImage = url"
+                                    data-imp010="thumb">
                             </template>
                         </div>
                     </template>
@@ -397,30 +447,17 @@
 
                 {{-- IMP-010: Lightbox overlay (hidden until triggered) --}}
                 @if ($product->image)
-                    <div class="imp010-lightbox-overlay"
-                         id="imp010-lightbox"
-                         x-show="lightboxOpen"
-                         @click.self="lightboxOpen = false"
-                         @keydown.escape.window="lightboxOpen = false"
-                         role="dialog"
-                         aria-modal="true"
-                         aria-label="Product image lightbox"
-                         style="display:none;">
+                    <div class="imp010-lightbox-overlay" id="imp010-lightbox" x-show="lightboxOpen"
+                        @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false" role="dialog"
+                        aria-modal="true" aria-label="Product image lightbox" style="display:none;">
                         <div class="imp010-lightbox-content" @click.stop>
-                            <div x-data="{ zoomed: false }"
-                                 @click="zoomed = !zoomed"
-                                 class="imp010-zoom-wrap"
-                                 :class="{ 'imp010-zoomed': zoomed }">
-                                <img :src="lightboxImage"
-                                     :alt="alt"
-                                     class="imp010-lightbox-img"
-                                     :class="{ 'imp010-img-zoomed': zoomed }"
-                                     data-imp010="lightbox-image">
+                            <div x-data="{ zoomed: false }" @click="zoomed = !zoomed" class="imp010-zoom-wrap"
+                                :class="{ 'imp010-zoomed': zoomed }">
+                                <img :src="lightboxImage" :alt="alt" class="imp010-lightbox-img"
+                                    :class="{ 'imp010-img-zoomed': zoomed }" data-imp010="lightbox-image">
                             </div>
-                            <button @click="lightboxOpen = false"
-                                    class="imp010-close-btn"
-                                    aria-label="Close lightbox"
-                                    data-imp010="close-btn">
+                            <button @click="lightboxOpen = false" class="imp010-close-btn" aria-label="Close lightbox"
+                                data-imp010="close-btn">
                                 &times;
                             </button>
                         </div>
@@ -466,12 +503,12 @@
 
                 @if ($product->stock > 0)
                     <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
-                                         productId: {{ $product->id }},
-                                         productName: @json($product->name),
-                                         productPrice: {{ (float) $product->price }},
-                                         productSlug: @json($product->slug),
-                                         cartStoreUrl: '{{ route('cart.store') }}'
-                                     })">
+                                                 productId: {{ $product->id }},
+                                                 productName: @json($product->name),
+                                                 productPrice: {{ (float) $product->price }},
+                                                 productSlug: @json($product->slug),
+                                                 cartStoreUrl: '{{ route('cart.store') }}'
+                                             })">
                         <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
                             x-on:submit.prevent="submit">
                             @csrf
@@ -523,12 +560,19 @@
         <section class="product-reviews">
             <h2>Customer Reviews</h2>
 
-            {{-- RV-002: Average rating shown prominently --}}
+            {{-- RV-002: Average rating shown prominently — IMP-012: visual stars --}}
             @if ($averageRating !== null)
-                <p class="average-rating">
-                    <strong>Average Rating: {{ number_format($averageRating, 1) }} / 5</strong>
-                    ({{ $reviews->total() }} review{{ $reviews->total() === 1 ? '' : 's' }})
-                </p>
+                <div class="imp012-avg" data-imp012="average-rating"
+                    aria-label="Average rating: {{ number_format($averageRating, 1) }} out of 5">
+                    @for ($__s = 1; $__s <= 5; $__s++)
+                        <span class="imp012-star {{ $__s <= round($averageRating) ? 'imp012-star--filled' : '' }}"
+                            aria-hidden="true">&#9733;</span>
+                    @endfor
+                    <span class="imp012-avg-text" data-imp012="avg-text">
+                        Average Rating: {{ number_format($averageRating, 1) }} / 5
+                        ({{ $reviews->total() }} review{{ $reviews->total() === 1 ? '' : 's' }})
+                    </span>
+                </div>
             @endif
 
             {{-- RV-002: Paginated reviews list --}}
@@ -538,7 +582,15 @@
                 <div class="reviews-list">
                     @foreach ($reviews as $review)
                         <div class="review-item">
-                            <p class="review-rating">Rating: {{ $review->rating }} / 5</p>
+                            {{-- IMP-012: visual star display for each review --}}
+                            <div class="imp012-review-stars" data-imp012="review-stars"
+                                aria-label="{{ $review->rating }} out of 5 stars">
+                                @for ($__s = 1; $__s <= 5; $__s++)
+                                    <span class="imp012-star {{ $__s <= $review->rating ? 'imp012-star--filled' : '' }}"
+                                        aria-hidden="true">&#9733;</span>
+                                @endfor
+                                <span class="visually-hidden">Rating: {{ $review->rating }} / 5</span>
+                            </div>
                             <p class="review-comment">{{ $review->comment }}</p>
                             <p class="review-author">— {{ $review->user->name }}</p>
                         </div>
@@ -565,20 +617,31 @@
 
                     <form action="{{ route('reviews.store', $product->slug) }}" method="POST">
                         @csrf
-                        <div>
-                            <label for="rating">Rating (1–5):</label>
-                            <select id="rating" name="rating" required>
-                                <option value="">Select…</option>
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <option value="{{ $i }}" {{ old('rating') == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div>
-                            <label for="comment">Comment:</label>
-                            <textarea id="comment" name="comment" rows="4" required>{{ old('comment') }}</textarea>
-                        </div>
-                        <button type="submit">Submit Review</button>
+                        {{-- IMP-012: Alpine.js interactive star input replaces <select> --}}
+                            <div>
+                                <label>Rating:</label>
+                                <div class="imp012-star-input"
+                                    x-data="imp012StarRating({ value: {{ (int) old('rating', 0) }} })"
+                                    data-imp012="star-input">
+                                    <input type="hidden" name="rating" :value="rating" data-imp012="rating-input">
+                                    <template x-for="i in [1,2,3,4,5]" :key="i">
+                                        <button type="button" class="imp012-star"
+                                            :class="{ 'imp012-star--filled': i <= effective() }" @click="set(i)"
+                                            @mouseenter="hover(i)" @mouseleave="leave()"
+                                            :aria-label="'Rate ' + i + ' out of 5'"
+                                            :aria-pressed="rating === i ? 'true' : 'false'" data-imp012="star-btn">
+                                            &#9733;
+                                        </button>
+                                    </template>
+                                    <span class="imp012-star-hint" x-text="rating ? rating + ' / 5' : 'Select a rating'"
+                                        data-imp012="star-hint"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="comment">Comment:</label>
+                                <textarea id="comment" name="comment" rows="4" required>{{ old('comment') }}</textarea>
+                            </div>
+                            <button type="submit">Submit Review</button>
                     </form>
                 </div>
             @endif
@@ -780,7 +843,15 @@
                 },
             };
         }
+        /* IMP-012: Interactive star rating Alpine component */
+        function imp012StarRating({ value }) {
+            return {
+                rating: value || 0,
+                hovered: 0,
+                set(val) { this.rating = val; },
+                hover(val) { this.hovered = val; },
+                leave() { this.hovered = 0; },
+                effective() { return this.hovered || this.rating; },
+            };
+        }
     </script>
-</body>
-
-</html>

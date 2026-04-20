@@ -182,6 +182,38 @@
             padding: 2rem;
             color: #6c757d;
         }
+
+        /* IMP-013: sortable columns + responsive layout */
+        .imp013-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .imp013-th--sort {
+            white-space: nowrap;
+        }
+
+        .imp013-th--sort a {
+            color: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .imp013-th--sort a:hover {
+            text-decoration: underline;
+        }
+
+        .imp013-sort-icon {
+            font-size: .7rem;
+            color: #adb5bd;
+        }
+
+        .imp013-th--asc .imp013-sort-icon,
+        .imp013-th--desc .imp013-sort-icon {
+            color: #0d6efd;
+        }
     </style>
 </head>
 
@@ -241,52 +273,85 @@
     @php
         $sortUrl = fn(string $col) => route('admin.orders.index', array_merge(request()->except('sort', 'page'), ['sort' => $col]));
         $currentSort = request('sort', 'newest');
-        $sortIcon = fn(string $col) => $currentSort === $col ? ' ▲' : ($currentSort === $col . '_desc' ? ' ▼' : '');
+        // IMP-013: sort class + aria helpers
+        $thClass = function (array $ascKeys, array $descKeys) use ($currentSort): string {
+            if (in_array($currentSort, $ascKeys))
+                return 'imp013-th--sort imp013-th--asc';
+            if (in_array($currentSort, $descKeys))
+                return 'imp013-th--sort imp013-th--desc';
+            return 'imp013-th--sort';
+        };
+        $ariaSortVal = function (array $ascKeys, array $descKeys) use ($currentSort): string {
+            if (in_array($currentSort, $ascKeys))
+                return 'ascending';
+            if (in_array($currentSort, $descKeys))
+                return 'descending';
+            return 'none';
+        };
+        $sortIconHtml = function (array $asc, array $desc) use ($currentSort): string {
+            if (in_array($currentSort, $asc))
+                return '<span class="imp013-sort-icon" aria-hidden="true">▲</span>';
+            if (in_array($currentSort, $desc))
+                return '<span class="imp013-sort-icon" aria-hidden="true">▼</span>';
+            return '<span class="imp013-sort-icon" aria-hidden="true">↕</span>';
+        };
     @endphp
 
-    {{-- Table --}}
-    <table>
-        <thead>
-            <tr>
-                <th><a
-                        href="{{ $sortUrl('newest') }}">ID{{ $currentSort === 'newest' ? ' ▼' : ($currentSort === 'oldest' ? ' ▲' : '') }}</a>
-                </th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th><a
-                        href="{{ $sortUrl($currentSort === 'total_asc' ? 'total_desc' : 'total_asc') }}">Total{{ $currentSort === 'total_asc' ? ' ▲' : ($currentSort === 'total_desc' ? ' ▼' : '') }}</a>
-                </th>
-                <th><a
-                        href="{{ $sortUrl($currentSort === 'newest' ? 'oldest' : 'newest') }}">Date{{ $currentSort === 'newest' ? ' ▼' : ($currentSort === 'oldest' ? ' ▲' : '') }}</a>
-                </th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($orders as $order)
+    {{-- IMP-013: responsive wrapper --}}
+    <div class="imp013-table-wrap" data-imp013="table-wrap">
+        <table>
+            <thead>
                 <tr>
-                    <td>#{{ $order->id }}</td>
-                    <td>
-                        {{ $order->user?->name ?? '—' }}<br>
-                        <small style="color:#6c757d;">{{ $order->user?->email ?? '' }}</small>
-                    </td>
-                    <td>
-                        <span class="badge badge-{{ $order->status }}">{{ $order->status }}</span>
-                    </td>
-                    <td>${{ number_format($order->total, 2) }}</td>
-                    <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                    <td>
-                        <a href="{{ route('orders.show', $order) }}" class="btn btn-secondary"
-                            style="font-size:.8rem;padding:.25rem .65rem;">View</a>
-                    </td>
+                    <th class="{{ $thClass(['oldest'], ['newest']) }}" data-imp013="sortable-th"
+                        aria-sort="{{ $ariaSortVal(['oldest'], ['newest']) }}">
+                        <a href="{{ $sortUrl($currentSort === 'oldest' ? 'newest' : 'oldest') }}">
+                            ID {!! $sortIconHtml(['oldest'], ['newest']) !!}
+                        </a>
+                    </th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th class="{{ $thClass(['total_asc'], ['total_desc']) }}" data-imp013="sortable-th"
+                        aria-sort="{{ $ariaSortVal(['total_asc'], ['total_desc']) }}">
+                        <a href="{{ $sortUrl($currentSort === 'total_asc' ? 'total_desc' : 'total_asc') }}">
+                            Total {!! $sortIconHtml(['total_asc'], ['total_desc']) !!}
+                        </a>
+                    </th>
+                    <th class="{{ $thClass(['oldest'], ['newest']) }}" data-imp013="sortable-th"
+                        aria-sort="{{ $ariaSortVal(['oldest'], ['newest']) }}">
+                        <a href="{{ $sortUrl($currentSort === 'newest' ? 'oldest' : 'newest') }}">
+                            Date {!! $sortIconHtml(['oldest'], ['newest']) !!}
+                        </a>
+                    </th>
+                    <th>Actions</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="empty">No orders found.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse($orders as $order)
+                    <tr>
+                        <td>#{{ $order->id }}</td>
+                        <td>
+                            {{ $order->user?->name ?? '—' }}<br>
+                            <small style="color:#6c757d;">{{ $order->user?->email ?? '' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ $order->status }}">{{ $order->status }}</span>
+                        </td>
+                        <td>${{ number_format($order->total, 2) }}</td>
+                        <td>{{ $order->created_at->format('Y-m-d') }}</td>
+                        <td>
+                            <a href="{{ route('orders.show', $order) }}" class="btn btn-secondary"
+                                style="font-size:.8rem;padding:.25rem .65rem;">View</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="empty">No orders found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+    </div>{{-- /imp013-table-wrap --}}
 
     {{-- Pagination --}}
     @if($orders->hasPages())

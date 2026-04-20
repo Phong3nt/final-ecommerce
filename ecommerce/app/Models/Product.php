@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -23,6 +24,16 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'low_stock_threshold', 'low_stock_notified', 'image', 'images', 'category_id', 'rating', 'status'];
+
+    // IMP-014: bump catalog_version in cache whenever a product changes, so all
+    // version-keyed cache entries are automatically considered stale.
+    protected static function booted(): void
+    {
+        $bump = fn () => Cache::increment('catalog_version', 1);
+        static::saved($bump);
+        static::deleted($bump);
+        static::restored($bump);
+    }
 
     protected $casts = [
         'price' => 'decimal:2',

@@ -81,6 +81,17 @@ class UserController extends Controller
 
         $action = $user->is_active ? 'activated' : 'suspended';
 
+        // IMP-016: log user status change
+        AuditLog::create([
+            'user_id'      => Auth::id(),
+            'action'       => 'user.status_changed',
+            'subject_type' => 'User',
+            'subject_id'   => $user->id,
+            'old_values'   => ['is_active' => !$user->is_active],
+            'new_values'   => ['is_active' => $user->is_active],
+            'ip_address'   => request()->ip(),
+        ]);
+
         return redirect()->route('admin.users.show', $user)
             ->with('success', "Account {$action} successfully.");
     }

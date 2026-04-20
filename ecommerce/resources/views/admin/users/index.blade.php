@@ -3,6 +3,8 @@
 
 <head>
     <title>Admin — Users</title>
+    <!-- IMP-013: Alpine.js for client-side table sort -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -138,6 +140,33 @@
             padding: 2rem;
             color: #6c757d;
         }
+
+        /* IMP-013: sortable columns + responsive layout */
+        .imp013-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .imp013-th--sort {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .imp013-th--sort:hover {
+            background: #edf0f3;
+        }
+
+        .imp013-sort-icon {
+            font-size: .7rem;
+            color: #adb5bd;
+            margin-left: .25rem;
+        }
+
+        .imp013-th--asc .imp013-sort-icon,
+        .imp013-th--desc .imp013-sort-icon {
+            color: #0d6efd;
+        }
     </style>
 </head>
 
@@ -166,35 +195,47 @@
     @if($users->isEmpty())
         <div class="empty">No users found.</div>
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Registered</th>
-                    <th>Orders</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($users as $user)
+        <div class="imp013-table-wrap" data-imp013="table-wrap" x-data="imp013TableSort()">
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $user->id }}</td>
-                        <td><a href="{{ route('admin.users.show', $user) }}"
-                                style="color:#0d6efd;text-decoration:none;">{{ $user->name }}</a></td>
-                        <td>{{ $user->email }}</td>
-                        <td>
-                            @foreach($user->roles as $role)
-                                <span class="badge badge-{{ $role->name }}">{{ $role->name }}</span>
-                            @endforeach
-                        </td>
-                        <td>{{ $user->created_at->format('d M Y') }}</td>
-                        <td>{{ $user->orders_count }}</td>
+                        <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(0, 'num')">
+                            # <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                        </th>
+                        <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(1, 'str')">
+                            Name <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                        </th>
+                        <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(2, 'str')">
+                            Email <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                        </th>
+                        <th>Role</th>
+                        <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(4, 'date')">
+                            Registered <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                        </th>
+                        <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(5, 'num')">
+                            Orders <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                        </th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach($users as $user)
+                        <tr>
+                            <td>{{ $user->id }}</td>
+                            <td><a href="{{ route('admin.users.show', $user) }}"
+                                    style="color:#0d6efd;text-decoration:none;">{{ $user->name }}</a></td>
+                            <td>{{ $user->email }}</td>
+                            <td>
+                                @foreach($user->roles as $role)
+                                    <span class="badge badge-{{ $role->name }}">{{ $role->name }}</span>
+                                @endforeach
+                            </td>
+                            <td>{{ $user->created_at->format('d M Y') }}</td>
+                            <td>{{ $user->orders_count }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>{{-- /imp013-table-wrap --}}
 
         {{-- Pagination --}}
         @if($users->hasPages())
@@ -221,6 +262,60 @@
             </div>
         @endif
     @endif
+
+    <script>
+        /* IMP-013: client-side table sort */
+        function imp013TableSort() {
+            return {
+                col: null,
+                dir: 'asc',
+                sort(colIndex, type) {
+                    if (this.col === colIndex) {
+                        this.dir = this.dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.col = colIndex;
+                        this.dir = 'asc';
+                    }
+                    const dir = this.dir;
+                    const tbody = this.$el.querySelector('tbody');
+                    if (!tbody) return;
+                    const rows = [...tbody.querySelectorAll('tr')];
+                    rows.sort((a, b) => {
+                        const aText = a.cells[colIndex] ? a.cells[colIndex].innerText.trim() : '';
+                        const bText = b.cells[colIndex] ? b.cells[colIndex].innerText.trim() : '';
+                        let cmp;
+                        if (type === 'num') {
+                            cmp = (parseFloat(aText.replace(/[^0-9.-]/g, '')) || 0) -
+                                (parseFloat(bText.replace(/[^0-9.-]/g, '')) || 0);
+                        } else if (type === 'date') {
+                            cmp = new Date(aText) - new Date(bText);
+                        } else {
+                            cmp = aText.localeCompare(bText);
+                        }
+                        return dir === 'asc' ? cmp : -cmp;
+                    });
+                    rows.forEach(r => tbody.appendChild(r));
+                    const ths = this.$el.querySelectorAll('[data-imp013="sortable-th"]');
+                    ths.forEach(th => {
+                        const idx = parseInt(th.getAttribute('data-col-index') || '-1');
+                        th.setAttribute('aria-sort',
+                            idx === colIndex ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
+                        const icon = th.querySelector('.imp013-sort-icon');
+                        if (icon) {
+                            if (idx === colIndex) {
+                                th.classList.add(dir === 'asc' ? 'imp013-th--asc' : 'imp013-th--desc');
+                                th.classList.remove(dir === 'asc' ? 'imp013-th--desc' : 'imp013-th--asc');
+                                icon.textContent = dir === 'asc' ? '▲' : '▼';
+                            } else {
+                                th.classList.remove('imp013-th--asc', 'imp013-th--desc');
+                                icon.textContent = '↕';
+                            }
+                        }
+                    });
+                }
+            };
+        }
+    </script>
 
 </body>
 
