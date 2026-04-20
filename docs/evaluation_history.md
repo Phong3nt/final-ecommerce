@@ -119,9 +119,9 @@
 
 ### Bugs / Side Effects Found
 
-| Bug ID | Description   | Severity | Status |
-| ------ | ------------- | -------- | ------ |
-| —      | No bugs found | —        | —      |
+| Bug ID       | Description                                                                                                                                                                     | Severity | Status                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| BUG-AU001-01 | `EmailVerificationController` was never created despite being imported in `routes/web.php`. Would cause `ClassNotFoundException` at runtime when any verification route is hit. | High     | Fixed — FIX-001 (2026-04-20) |
 
 ---
 
@@ -193,9 +193,9 @@
 
 ### Bugs / Side Effects Found
 
-| Bug ID | Description   | Severity | Status |
-| ------ | ------------- | -------- | ------ |
-| —      | No bugs found | —        | —      |
+| Bug ID       | Description                                                                                                                                                                                    | Severity | Status                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| BUG-AU002-01 | Email verification routes added in `routes/web.php` (`// AU-002: Email verification routes`) but `EmailVerificationController` never created — runtime crash if user clicks verification link. | High     | Fixed — FIX-001 (2026-04-20) |
 
 ---
 
@@ -4936,51 +4936,52 @@ No regressions. All existing auth checkout tests unaffected.
 <!-- EVAL-IMP-007 END -->
 
 <!-- EVAL-IMP-008 START -->
+
 ## EVAL-IMP-008 — Switch Queue Driver: sync → database
 
-| Field              | Value                                                         |
-|--------------------|---------------------------------------------------------------|
-| Improvement ID     | IMP-008                                                       |
-| Mode               | `[INFRA_MODE]`                                                |
-| Scope              | config, migrations, `.env.example`, tests                     |
-| Target Tasks       | CP-004, NT-001, NT-002                                        |
-| Git Tag            | `v1.0-IMP-008-stable`                                         |
-| Branch             | `improve/IMP-008`                                             |
-| Date               | 2026-04-19                                                    |
-| Tests Added        | 10 (DatabaseQueueDriverTest)                                  |
-| Test Baseline      | 877 → 887                                                     |
-| Assertions         | 2044                                                          |
+| Field          | Value                                     |
+| -------------- | ----------------------------------------- |
+| Improvement ID | IMP-008                                   |
+| Mode           | `[INFRA_MODE]`                            |
+| Scope          | config, migrations, `.env.example`, tests |
+| Target Tasks   | CP-004, NT-001, NT-002                    |
+| Git Tag        | `v1.0-IMP-008-stable`                     |
+| Branch         | `improve/IMP-008`                         |
+| Date           | 2026-04-19                                |
+| Tests Added    | 10 (DatabaseQueueDriverTest)              |
+| Test Baseline  | 877 → 887                                 |
+| Assertions     | 2044                                      |
 
 ### Changes Made
 
-| File                                                          | Change                                                   |
-|---------------------------------------------------------------|----------------------------------------------------------|
-| `ecommerce/config/queue.php`                                  | Fallback default changed `'sync'` → `'database'`         |
-| `ecommerce/.env.example`                                      | `QUEUE_CONNECTION=sync` → `QUEUE_CONNECTION=database`    |
-| `ecommerce/tests/Feature/DatabaseQueueDriverTest.php`         | New — 10 IMP-008 infrastructure tests                    |
+| File                                                  | Change                                                |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `ecommerce/config/queue.php`                          | Fallback default changed `'sync'` → `'database'`      |
+| `ecommerce/.env.example`                              | `QUEUE_CONNECTION=sync` → `QUEUE_CONNECTION=database` |
+| `ecommerce/tests/Feature/DatabaseQueueDriverTest.php` | New — 10 IMP-008 infrastructure tests                 |
 
 ### Pre-existing Infrastructure (no changes required)
 
-| File                                                                              | Status                                      |
-|-----------------------------------------------------------------------------------|---------------------------------------------|
-| `ecommerce/database/migrations/2026_04_09_044545_create_jobs_table.php`           | Already existed — SQLite-compatible schema  |
-| `ecommerce/database/migrations/2019_08_19_000000_create_failed_jobs_table.php`    | Already existed — SQLite-compatible schema  |
-| All 5 job classes in `app/Jobs/`                                                  | Already implement `ShouldQueue`             |
+| File                                                                           | Status                                     |
+| ------------------------------------------------------------------------------ | ------------------------------------------ |
+| `ecommerce/database/migrations/2026_04_09_044545_create_jobs_table.php`        | Already existed — SQLite-compatible schema |
+| `ecommerce/database/migrations/2019_08_19_000000_create_failed_jobs_table.php` | Already existed — SQLite-compatible schema |
+| All 5 job classes in `app/Jobs/`                                               | Already implement `ShouldQueue`            |
 
 ### Test Coverage (DatabaseQueueDriverTest — 10 tests)
 
-| TC   | Description                                               | Result |
-|------|-----------------------------------------------------------|--------|
-| TC01 | `config/queue.php` fallback default is `'database'`       | PASS   |
-| TC02 | `config/queue.php` reads `QUEUE_CONNECTION` from `env()`  | PASS   |
-| TC03 | `.env.example` specifies `QUEUE_CONNECTION=database`      | PASS   |
-| TC04 | `.env.example` does NOT retain `QUEUE_CONNECTION=sync`    | PASS   |
-| TC05 | `database` connection config specifies `jobs` table       | PASS   |
-| TC06 | `database` connection config has `retry_after` set        | PASS   |
-| TC07 | `database` connection driver value is `'database'`        | PASS   |
-| TC08 | `jobs` table migration file exists in migrations folder   | PASS   |
-| TC09 | `failed_jobs` table migration file exists                 | PASS   |
-| TC10 | `jobs` and `failed_jobs` tables exist in schema (SQLite)  | PASS   |
+| TC   | Description                                              | Result |
+| ---- | -------------------------------------------------------- | ------ |
+| TC01 | `config/queue.php` fallback default is `'database'`      | PASS   |
+| TC02 | `config/queue.php` reads `QUEUE_CONNECTION` from `env()` | PASS   |
+| TC03 | `.env.example` specifies `QUEUE_CONNECTION=database`     | PASS   |
+| TC04 | `.env.example` does NOT retain `QUEUE_CONNECTION=sync`   | PASS   |
+| TC05 | `database` connection config specifies `jobs` table      | PASS   |
+| TC06 | `database` connection config has `retry_after` set       | PASS   |
+| TC07 | `database` connection driver value is `'database'`       | PASS   |
+| TC08 | `jobs` table migration file exists in migrations folder  | PASS   |
+| TC09 | `failed_jobs` table migration file exists                | PASS   |
+| TC10 | `jobs` and `failed_jobs` tables exist in schema (SQLite) | PASS   |
 
 ### Regression
 
@@ -4999,46 +5000,47 @@ No regressions. All existing auth checkout tests unaffected.
 <!-- EVAL-IMP-008 END -->
 
 <!-- EVAL-IMP-009 START -->
+
 ## EVAL-IMP-009 — Global Toast Notification System (Replace Bare Flash)
 
-| Field              | Value                                                         |
-|--------------------|---------------------------------------------------------------|
-| Improvement ID     | IMP-009                                                       |
-| Mode               | `[UIUX_MODE]`                                                 |
-| Scope              | Blade view UX messaging only                                  |
-| Target Tasks       | AU-001–004, SC-001–004, CP-005                                |
-| Git Tag            | `v1.0-IMP-009-stable`                                         |
-| Branch             | `improve/IMP-009`                                             |
-| Date               | 2026-04-19                                                    |
-| Tests Added        | 10 (GlobalToastNotificationTest)                              |
-| Test Baseline      | 887 → 897                                                     |
-| Assertions         | 2114                                                          |
+| Field          | Value                            |
+| -------------- | -------------------------------- |
+| Improvement ID | IMP-009                          |
+| Mode           | `[UIUX_MODE]`                    |
+| Scope          | Blade view UX messaging only     |
+| Target Tasks   | AU-001–004, SC-001–004, CP-005   |
+| Git Tag        | `v1.0-IMP-009-stable`            |
+| Branch         | `improve/IMP-009`                |
+| Date           | 2026-04-19                       |
+| Tests Added    | 10 (GlobalToastNotificationTest) |
+| Test Baseline  | 887 → 897                        |
+| Assertions     | 2114                             |
 
 ### Changes Made
 
-| File                                                            | Change                                                                 |
-|-----------------------------------------------------------------|------------------------------------------------------------------------|
-| `ecommerce/resources/views/partials/toast.blade.php`            | New global toast partial (shared styles + event-driven renderer)       |
-| `ecommerce/resources/views/auth/login.blade.php`                | Added shared toast include                                              |
-| `ecommerce/resources/views/auth/forgot-password.blade.php`      | Replaced inline status flash with shared toast include                  |
-| `ecommerce/resources/views/dashboard.blade.php`                 | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/profile/show.blade.php`              | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/cart/index.blade.php`                | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/products/show.blade.php`             | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/checkout/address.blade.php`          | Added shared toast include for prerequisite flash errors                |
-| `ecommerce/resources/views/checkout/shipping.blade.php`         | Replaced inline error flash with shared toast include                   |
-| `ecommerce/resources/views/checkout/review.blade.php`           | Replaced inline error flash with shared toast include                   |
-| `ecommerce/resources/views/orders/index.blade.php`              | Added shared toast include for cancellation success flash               |
-| `ecommerce/resources/views/orders/show.blade.php`               | Replaced inline error flash with shared toast include                   |
-| `ecommerce/resources/views/user/addresses/index.blade.php`      | Replaced inline success/error flash with shared toast include           |
-| `ecommerce/resources/views/admin/categories/index.blade.php`    | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/admin/coupons/index.blade.php`       | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/admin/orders/index.blade.php`        | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/admin/orders/show.blade.php`         | Replaced inline success/error flash with shared toast include           |
-| `ecommerce/resources/views/admin/products/index.blade.php`      | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/admin/products/images.blade.php`     | Replaced inline success flash with shared toast include                 |
-| `ecommerce/resources/views/admin/users/show.blade.php`          | Replaced inline success/error flash with shared toast include           |
-| `ecommerce/tests/Feature/GlobalToastNotificationTest.php`       | New feature test suite (10 test cases)                                 |
+| File                                                         | Change                                                           |
+| ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `ecommerce/resources/views/partials/toast.blade.php`         | New global toast partial (shared styles + event-driven renderer) |
+| `ecommerce/resources/views/auth/login.blade.php`             | Added shared toast include                                       |
+| `ecommerce/resources/views/auth/forgot-password.blade.php`   | Replaced inline status flash with shared toast include           |
+| `ecommerce/resources/views/dashboard.blade.php`              | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/profile/show.blade.php`           | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/cart/index.blade.php`             | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/products/show.blade.php`          | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/checkout/address.blade.php`       | Added shared toast include for prerequisite flash errors         |
+| `ecommerce/resources/views/checkout/shipping.blade.php`      | Replaced inline error flash with shared toast include            |
+| `ecommerce/resources/views/checkout/review.blade.php`        | Replaced inline error flash with shared toast include            |
+| `ecommerce/resources/views/orders/index.blade.php`           | Added shared toast include for cancellation success flash        |
+| `ecommerce/resources/views/orders/show.blade.php`            | Replaced inline error flash with shared toast include            |
+| `ecommerce/resources/views/user/addresses/index.blade.php`   | Replaced inline success/error flash with shared toast include    |
+| `ecommerce/resources/views/admin/categories/index.blade.php` | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/admin/coupons/index.blade.php`    | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/admin/orders/index.blade.php`     | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/admin/orders/show.blade.php`      | Replaced inline success/error flash with shared toast include    |
+| `ecommerce/resources/views/admin/products/index.blade.php`   | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/admin/products/images.blade.php`  | Replaced inline success flash with shared toast include          |
+| `ecommerce/resources/views/admin/users/show.blade.php`       | Replaced inline success/error flash with shared toast include    |
+| `ecommerce/tests/Feature/GlobalToastNotificationTest.php`    | New feature test suite (10 test cases)                           |
 
 ### IMP-007 Safety Fix Included
 
@@ -5047,18 +5049,18 @@ No regressions. All existing auth checkout tests unaffected.
 
 ### Test Coverage (GlobalToastNotificationTest — 10 tests)
 
-| TC   | Description                                                                  | Result |
-|------|------------------------------------------------------------------------------|--------|
-| TC01 | Shared toast partial exists and supports success/error/status                | PASS   |
-| TC02 | Forgot password view uses shared toast include                              | PASS   |
-| TC03 | Login view uses shared toast include                                         | PASS   |
-| TC04 | Checkout shipping removed inline flash and uses shared toast                 | PASS   |
-| TC05 | Checkout review removed inline flash and uses shared toast                   | PASS   |
-| TC06 | Checkout address includes shared toast for redirected flash errors           | PASS   |
-| TC07 | Cart view removed inline success flash and uses shared toast                 | PASS   |
-| TC08 | Product detail removed inline success flash and uses shared toast            | PASS   |
-| TC09 | Orders index includes shared toast for cancellation success                  | PASS   |
-| TC10 | Admin flash pages all use shared toast and no inline session flash remains   | PASS   |
+| TC   | Description                                                                | Result |
+| ---- | -------------------------------------------------------------------------- | ------ |
+| TC01 | Shared toast partial exists and supports success/error/status              | PASS   |
+| TC02 | Forgot password view uses shared toast include                             | PASS   |
+| TC03 | Login view uses shared toast include                                       | PASS   |
+| TC04 | Checkout shipping removed inline flash and uses shared toast               | PASS   |
+| TC05 | Checkout review removed inline flash and uses shared toast                 | PASS   |
+| TC06 | Checkout address includes shared toast for redirected flash errors         | PASS   |
+| TC07 | Cart view removed inline success flash and uses shared toast               | PASS   |
+| TC08 | Product detail removed inline success flash and uses shared toast          | PASS   |
+| TC09 | Orders index includes shared toast for cancellation success                | PASS   |
+| TC10 | Admin flash pages all use shared toast and no inline session flash remains | PASS   |
 
 ### Regression
 

@@ -17,6 +17,7 @@ class ProductController extends Controller
         $categories = Category::orderBy('name')->get();
         $sort = $filters['sort'] ?? 'newest';
 
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
         $products = Product::published()->with('category')->filter($filters)->sort($sort)->paginate(12)->withQueryString();
 
         return view('products.index', compact('products', 'filters', 'categories'));
@@ -56,6 +57,7 @@ class ProductController extends Controller
             return redirect()->route('products.index');
         }
 
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $results */
         $results = Product::published()->search($q)->latest()->paginate(12)->withQueryString();
 
         return view('products.search', compact('results', 'q'));

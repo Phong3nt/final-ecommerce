@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $sku
+ * @property string|null $description
+ * @property float $price
+ * @property int $stock
+ * @property int $category_id
+ * @property string $status
+ */
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
