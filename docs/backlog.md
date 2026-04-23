@@ -295,7 +295,7 @@
 | IMP-022 | Profile page — Full Redesign                         | Done   | 3     | Full Redesign | `v1.0-IMP-022-stable`                                                                       | 2026-04-23           |
 | IMP-023 | Order History + Order Detail — Full Redesign         | Done   | 3     | Full Redesign | `v1.0-IMP-023-stable`                                                                       | 2026-04-23           |
 | IMP-025 | Addresses page — Full Redesign                       | Done   | 3     | Full Redesign | `v1.0-IMP-025-stable`                                                                       | 2026-04-23           |
-| IMP-026 | Create `layouts/admin.blade.php` + migrate admin BS5 | To Do  | 1     | Migration     | —                                                                                           | —                    |
+| IMP-026 | Create `layouts/admin.blade.php` + migrate admin BS5 | Done   | 1     | Migration     | `v1.0-IMP-026-stable`                                                                       | 2026-04-23           |
 | IMP-027 | Admin Dashboard — Full Redesign                      | To Do  | 4     | Full Redesign | —                                                                                           | —                    |
 | IMP-028 | Welcome / Homepage — Full Redesign                   | To Do  | 5     | Full Redesign | —                                                                                           | —                    |
 | IMP-029 | Cart page — Full Redesign                            | To Do  | 5     | Full Redesign | —                                                                                           | —                    |
