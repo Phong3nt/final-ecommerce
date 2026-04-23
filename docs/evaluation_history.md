@@ -4222,32 +4222,117 @@ None at this time.
 
 ### Files Changed
 
-| File | Change |
-|------|--------|
-| `ecommerce/resources/views/orders/index.blade.php` | Full Redesign — extends `layouts.app`, Bootstrap table-hover, status-* badges, empty state card, pagination |
-| `ecommerce/resources/views/orders/show.blade.php` | Full Redesign — extends `layouts.app`, IMP-011 stepper CSS in `@push('styles')`, Bootstrap cards, Alpine cancel dialog |
+| File                                               | Change                                                                                                                 |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ecommerce/resources/views/orders/index.blade.php` | Full Redesign — extends `layouts.app`, Bootstrap table-hover, status-\* badges, empty state card, pagination           |
+| `ecommerce/resources/views/orders/show.blade.php`  | Full Redesign — extends `layouts.app`, IMP-011 stepper CSS in `@push('styles')`, Bootstrap cards, Alpine cancel dialog |
 
 ### UIUX Spec Compliance
 
-| # | Criterion | Status |
-|---|-----------|--------|
-| 1 | `@extends('layouts.app')` — no standalone `<!DOCTYPE html>` (Rule 1) | ✅ |
-| 2 | No inline `<style>` block — CSS in `@push('styles')` (Rule 15) | ✅ |
-| 3 | No `@include('partials.toast')` duplication — layout handles globally | ✅ |
-| 4 | Bootstrap 5.3 utility classes (table-hover, card, badge pattern) | ✅ |
-| 5 | Alpine.js fade-in via `x-init` (Rule 10) | ✅ |
-| 6 | Cancel button uses `btn btn-danger` + Alpine confirm (Rule 10) | ✅ |
-| 7 | IMP-011 stepper: all `data-imp011="..."` attributes preserved | ✅ |
-| 8 | `class="status-{{ $order->status }}"` pattern: TC-09 counts exactly 10 | ✅ |
-| 9 | Empty state text: "haven't placed any orders yet." (TC-03) | ✅ |
-| 10 | OrderHistoryTest: 12 / 12 passed | ✅ |
-| 11 | OrderDetailTest: 12 / 12 passed | ✅ |
-| 12 | OrderStatusStepperTest: 12 / 12 passed | ✅ |
-| 13 | OrderCancellationTest: 12 / 12 passed | ✅ |
-| 14 | OrderStatusTest: 12 / 12 passed | ✅ |
-| 15 | GlobalToastNotificationTest: 10 / 10 passed | ✅ |
+| #   | Criterion                                                              | Status |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 1   | `@extends('layouts.app')` — no standalone `<!DOCTYPE html>` (Rule 1)   | ✅     |
+| 2   | No inline `<style>` block — CSS in `@push('styles')` (Rule 15)         | ✅     |
+| 3   | No `@include('partials.toast')` duplication — layout handles globally  | ✅     |
+| 4   | Bootstrap 5.3 utility classes (table-hover, card, badge pattern)       | ✅     |
+| 5   | Alpine.js fade-in via `x-init` (Rule 10)                               | ✅     |
+| 6   | Cancel button uses `btn btn-danger` + Alpine confirm (Rule 10)         | ✅     |
+| 7   | IMP-011 stepper: all `data-imp011="..."` attributes preserved          | ✅     |
+| 8   | `class="status-{{ $order->status }}"` pattern: TC-09 counts exactly 10 | ✅     |
+| 9   | Empty state text: "haven't placed any orders yet." (TC-03)             | ✅     |
+| 10  | OrderHistoryTest: 12 / 12 passed                                       | ✅     |
+| 11  | OrderDetailTest: 12 / 12 passed                                        | ✅     |
+| 12  | OrderStatusStepperTest: 12 / 12 passed                                 | ✅     |
+| 13  | OrderCancellationTest: 12 / 12 passed                                  | ✅     |
+| 14  | OrderStatusTest: 12 / 12 passed                                        | ✅     |
+| 15  | GlobalToastNotificationTest: 10 / 10 passed                            | ✅     |
 
 <!-- EVAL-IMP-023 END -->
+
+---
+
+<!-- EVAL-IMP-024 START -->
+## EVAL-IMP-024 — Forgot Password + Reset Password: Full Redesign [UIUX_MODE]
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-024-stable`
+**Commit:** `e0e975d`
+**Tests:** 999 / 999 passed (2290 assertions)
+**Duration:** ~85s
+
+### Scope
+
+Redesigned `auth/forgot-password.blade.php` and `auth/reset-password.blade.php` to use Bootstrap 5.3 card layout consistent with IMP-019/020 auth pages.
+
+### Design Decisions
+
+- Both pages extend `layouts/app.blade.php` (no standalone DOCTYPE)
+- Centered card at `max-width: 440px` with `rounded-4 shadow-sm border-0`
+- `bi-key` icon (warning tint) for forgot-password; `bi-shield-lock` icon (success tint) for reset-password
+- Alpine.js loading state on submit buttons (`:disabled="loading"`)
+- `@include('partials.toast')` in forgot-password raw source (required by GlobalToastNotificationTest TC-02)
+- `$token` hidden field + `$email ?? old('email')` pre-fill on reset form
+- `@error is-invalid` validation feedback on all fields
+
+### Test Compliance
+
+| #   | Test Suite                        | Result |
+| --- | --------------------------------- | ------ |
+| 1   | PasswordResetTest: 12 / 12 passed | ✅     |
+| 2   | CsrfProtectionTest: 12 / 12 passed | ✅    |
+| 3   | GlobalToastNotificationTest: 10 / 10 passed | ✅ |
+
+### Files Changed
+
+| File | Change |
+| ---- | ------ |
+| `ecommerce/resources/views/auth/forgot-password.blade.php` | Full redesign — Bootstrap 5.3 card, Alpine loading, toast partial |
+| `ecommerce/resources/views/auth/reset-password.blade.php` | Full redesign — Bootstrap 5.3 card, token hidden field, Alpine loading |
+
+<!-- EVAL-IMP-024 END -->
+
+---
+
+<!-- EVAL-IMP-025 START -->
+## EVAL-IMP-025 — Addresses Page: Full Redesign [UIUX_MODE]
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-025-stable`
+**Commit:** `18b1b42`
+**Tests:** 999 / 999 passed (2290 assertions)
+**Duration:** ~77s
+
+### Scope
+
+Redesigned `user/addresses/index.blade.php` replacing standalone HTML with Bootstrap 5.3 + Alpine.js layout.
+
+### Design Decisions
+
+- Extends `layouts/app.blade.php` (removed standalone DOCTYPE + inline `<style>` block)
+- Card-per-address layout with `rounded-4 shadow-sm border-0`
+- Default badge (`bg-success`, `bi-geo-alt-fill`) on default address
+- Alpine.js `x-data="{ editing: false }"` inline edit toggle per card
+- Set Default / Edit / Delete action buttons per card with Bootstrap outline variants
+- Empty state card with `bi-geo-alt` icon and CTA button
+- Add New Address collapsible card (auto-opens when `$errors->any()` is true)
+- Alpine loading spinner on store form submit
+- `@include('partials.toast')` for flash message support
+- `@error is-invalid` validation feedback on all store form fields
+
+### Test Compliance
+
+| #   | Test Suite                                    | Result |
+| --- | --------------------------------------------- | ------ |
+| 1   | UserAddressTest: 12 / 12 passed               | ✅     |
+| 2   | GlobalToastNotificationTest: 10 / 10 passed   | ✅     |
+
+### Files Changed
+
+| File | Change |
+| ---- | ------ |
+| `ecommerce/resources/views/user/addresses/index.blade.php` | Full redesign — Bootstrap 5.3 cards, Alpine.js edit toggles, empty state |
+
+<!-- EVAL-IMP-025 END -->
 
 ### Files Changed
 
