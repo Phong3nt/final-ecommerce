@@ -293,7 +293,7 @@
 | IMP-024 | Forgot Password + Reset Password — Full Redesign     | To Do  | 2     | Full Redesign | —                                                                                           | —                    |
 | IMP-030 | Email Verify + Google OAuth callback — Full Redesign | To Do  | 2     | Full Redesign | —                                                                                           | —                    |
 | IMP-022 | Profile page — Full Redesign                         | Done   | 3     | Full Redesign | `v1.0-IMP-022-stable`                                                                       | 2026-04-23           |
-| IMP-023 | Order History + Order Detail — Full Redesign         | To Do  | 3     | Full Redesign | —                                                                                           | —                    |
+| IMP-023 | Order History + Order Detail — Full Redesign         | Done   | 3     | Full Redesign | `v1.0-IMP-023-stable`                                                                       | 2026-04-23           |
 | IMP-025 | Addresses page — Full Redesign                       | To Do  | 3     | Full Redesign | —                                                                                           | —                    |
 | IMP-026 | Create `layouts/admin.blade.php` + migrate admin BS5 | To Do  | 1     | Migration     | —                                                                                           | —                    |
 | IMP-027 | Admin Dashboard — Full Redesign                      | To Do  | 4     | Full Redesign | —                                                                                           | —                    |

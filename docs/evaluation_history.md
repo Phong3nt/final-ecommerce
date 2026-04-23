@@ -4195,19 +4195,59 @@ None at this time.
 
 ### Acceptance Criteria
 
-| #   | Criterion                                                        | Status |
-| --- | ---------------------------------------------------------------- | ------ |
-| 1   | Extends `layouts.app`                                            | ✅     |
-| 2   | Page header: "My Profile" heading + subtitle                     | ✅     |
-| 3   | Avatar preview: rounded circle, fallback `bi-person` icon        | ✅     |
-| 4   | All inputs use `form-control` with `@error` → `is-invalid`       | ✅     |
-| 5   | Submit button uses Alpine loading state (Rule 4)                 | ✅     |
-| 6   | Fade-in animation via Alpine `x-init` (Rule 10)                  | ✅     |
-| 7   | No inline `<style>` block                                        | ✅     |
-| 8   | Card layout (`shadow-sm border-0 rounded-3`) (Rule 5)            | ✅     |
-| 9   | ProfileTest: 12 / 12 passed                                      | ✅     |
+| #   | Criterion                                                  | Status |
+| --- | ---------------------------------------------------------- | ------ |
+| 1   | Extends `layouts.app`                                      | ✅     |
+| 2   | Page header: "My Profile" heading + subtitle               | ✅     |
+| 3   | Avatar preview: rounded circle, fallback `bi-person` icon  | ✅     |
+| 4   | All inputs use `form-control` with `@error` → `is-invalid` | ✅     |
+| 5   | Submit button uses Alpine loading state (Rule 4)           | ✅     |
+| 6   | Fade-in animation via Alpine `x-init` (Rule 10)            | ✅     |
+| 7   | No inline `<style>` block                                  | ✅     |
+| 8   | Card layout (`shadow-sm border-0 rounded-3`) (Rule 5)      | ✅     |
+| 9   | ProfileTest: 12 / 12 passed                                | ✅     |
 
 <!-- EVAL-IMP-022 END -->
+
+---
+
+<!-- EVAL-IMP-023 START -->
+
+## IMP-023 — Order History + Order Detail: Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-023-stable`
+**Commit:** `24d511d`
+**Tests:** 999 / 999 passed (2290 assertions, 79.92s)
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `ecommerce/resources/views/orders/index.blade.php` | Full Redesign — extends `layouts.app`, Bootstrap table-hover, status-* badges, empty state card, pagination |
+| `ecommerce/resources/views/orders/show.blade.php` | Full Redesign — extends `layouts.app`, IMP-011 stepper CSS in `@push('styles')`, Bootstrap cards, Alpine cancel dialog |
+
+### UIUX Spec Compliance
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | `@extends('layouts.app')` — no standalone `<!DOCTYPE html>` (Rule 1) | ✅ |
+| 2 | No inline `<style>` block — CSS in `@push('styles')` (Rule 15) | ✅ |
+| 3 | No `@include('partials.toast')` duplication — layout handles globally | ✅ |
+| 4 | Bootstrap 5.3 utility classes (table-hover, card, badge pattern) | ✅ |
+| 5 | Alpine.js fade-in via `x-init` (Rule 10) | ✅ |
+| 6 | Cancel button uses `btn btn-danger` + Alpine confirm (Rule 10) | ✅ |
+| 7 | IMP-011 stepper: all `data-imp011="..."` attributes preserved | ✅ |
+| 8 | `class="status-{{ $order->status }}"` pattern: TC-09 counts exactly 10 | ✅ |
+| 9 | Empty state text: "haven't placed any orders yet." (TC-03) | ✅ |
+| 10 | OrderHistoryTest: 12 / 12 passed | ✅ |
+| 11 | OrderDetailTest: 12 / 12 passed | ✅ |
+| 12 | OrderStatusStepperTest: 12 / 12 passed | ✅ |
+| 13 | OrderCancellationTest: 12 / 12 passed | ✅ |
+| 14 | OrderStatusTest: 12 / 12 passed | ✅ |
+| 15 | GlobalToastNotificationTest: 10 / 10 passed | ✅ |
+
+<!-- EVAL-IMP-023 END -->
 
 ### Files Changed
 
