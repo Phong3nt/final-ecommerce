@@ -4174,6 +4174,41 @@ None at this time.
 
 <!-- EVAL-IMP-021 END -->
 
+<!-- EVAL-IMP-022 START -->
+
+## EVAL-IMP-022 · Profile Page — Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-022-stable`
+**Branch:** `improve/IMP-010`
+**Tests:** 999 / 999 passed (2290 assertions)
+
+### Cleanup Log
+
+- Removed standalone `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>` wrapper
+- Removed bare `<title>My Profile</title>` (now handled by `@section('title')`)
+- Removed `@include('partials.toast')` (handled globally by `layouts.app`)
+- Replaced bare `<input>` elements with `form-control` inputs + `@error` validation
+- Replaced bare `<button>` with Bootstrap `btn btn-primary` + Alpine loading state
+- Replaced plain `<img>` with responsive `rounded-circle` avatar + fallback icon
+- Replaced with `@extends('layouts.app')` — Bootstrap 5.3 loaded from layout
+
+### Acceptance Criteria
+
+| #   | Criterion                                                        | Status |
+| --- | ---------------------------------------------------------------- | ------ |
+| 1   | Extends `layouts.app`                                            | ✅     |
+| 2   | Page header: "My Profile" heading + subtitle                     | ✅     |
+| 3   | Avatar preview: rounded circle, fallback `bi-person` icon        | ✅     |
+| 4   | All inputs use `form-control` with `@error` → `is-invalid`       | ✅     |
+| 5   | Submit button uses Alpine loading state (Rule 4)                 | ✅     |
+| 6   | Fade-in animation via Alpine `x-init` (Rule 10)                  | ✅     |
+| 7   | No inline `<style>` block                                        | ✅     |
+| 8   | Card layout (`shadow-sm border-0 rounded-3`) (Rule 5)            | ✅     |
+| 9   | ProfileTest: 12 / 12 passed                                      | ✅     |
+
+<!-- EVAL-IMP-022 END -->
+
 ### Files Changed
 
 | File                                                                                   | Change                                                             |
