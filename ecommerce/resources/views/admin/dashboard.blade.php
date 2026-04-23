@@ -323,13 +323,13 @@
 
     {{-- IMP-017: Firebase real-time listener — refreshes Recent Orders section on new order --}}
     @if(config('services.firebase.api_key'))
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
     @endif
     <script>
         (function () {
             var _fbApiKey = '{{ config("services.firebase.api_key", "") }}';
-            var _fbDbUrl  = '{{ config("services.firebase.db_url", "") }}';
+            var _fbDbUrl = '{{ config("services.firebase.db_url", "") }}';
             if (_fbApiKey && _fbDbUrl) {
                 document.addEventListener('DOMContentLoaded', function () {
                     if (typeof firebase !== 'undefined') {

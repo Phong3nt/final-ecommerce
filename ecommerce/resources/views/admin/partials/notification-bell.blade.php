@@ -70,7 +70,7 @@
 
         // IMP-017: Firebase Realtime Database — on('value') fires immediately on new order
         var _fbApiKey = '{{ config("services.firebase.api_key", "") }}';
-        var _fbDbUrl  = '{{ config("services.firebase.db_url", "") }}';
+        var _fbDbUrl = '{{ config("services.firebase.db_url", "") }}';
         if (_fbApiKey && _fbDbUrl) {
             document.addEventListener('DOMContentLoaded', function () {
                 if (typeof firebase !== 'undefined') {
@@ -83,7 +83,7 @@
 </script>
 
 @if(config('services.firebase.api_key'))
-{{-- IMP-017: Firebase compat SDK — loaded only when FIREBASE_API_KEY is configured --}}
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+    {{-- IMP-017: Firebase compat SDK — loaded only when FIREBASE_API_KEY is configured --}}
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
 @endif

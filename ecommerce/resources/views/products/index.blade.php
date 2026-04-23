@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop — Products</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+@section('title', 'Shop — Products')
+
+@push('styles')
     <style>
         body {
             background-color: #f8f9fa;
@@ -105,71 +102,9 @@
             }
         }
     </style>
-</head>
+@endpush
 
-<body>
-    <!-- ── Navbar ──────────────────────────────────────────────────── -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container-xl">
-            <a class="navbar-brand fw-bold" href="{{ route('products.index') }}">ShopApp</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNav">
-                <form class="d-flex ms-auto me-3" action="{{ route('products.search') }}" method="GET" role="search">
-                    <input class="form-control form-control-sm me-2" type="search" name="q"
-                        placeholder="Search products…" aria-label="Search">
-                    <button class="btn btn-outline-light btn-sm" type="submit">Search</button>
-                </form>
-                <ul class="navbar-nav gap-1">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('products.index') }}">Catalog</a>
-                    </li>
-                    <li class="nav-item">
-                        @php $__cartCount = array_sum(array_column(session('cart', []), 'quantity')); @endphp
-                        <button class="btn btn-outline-light btn-sm position-relative" type="button"
-                            data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" aria-controls="cartDrawer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor"
-                                viewBox="0 0 16 16" aria-hidden="true">
-                                <path
-                                    d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.948L4.043 12H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.465-.686L5.28 8.643 3.055 3.75 2.61 2H.5a.5.5 0 0 1-.5-.5zM3.226 4l.893 4.462 9.144-.925.79-3.537H3.226zM5.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
-                            </svg>
-                            <span class="ms-1">Cart</span>
-                            @if($__cartCount > 0)
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                    id="cart-badge-count" style="font-size:.6rem;">{{ $__cartCount }}</span>
-                            @else
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger visually-hidden"
-                                    id="cart-badge-count" style="font-size:.6rem;">0</span>
-                            @endif
-                        </button>
-                    </li>
-                    @auth
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('orders.index') }}">Orders</a>
-                        </li>
-                        <li class="nav-item">
-                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-link nav-link p-0">Logout</button>
-                            </form>
-                        </li>
-                    @else
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-primary btn-sm ms-1" href="{{ route('register') }}">Register</a>
-                        </li>
-                    @endauth
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+@section('content')
     <!-- ── Main layout ─────────────────────────────────────────────── -->
     <div class="container-xl py-4">
 
@@ -220,8 +155,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="min_rating"
-                                    class="form-label small fw-semibold text-uppercase text-muted">Min Rating</label>
+                                <label for="min_rating" class="form-label small fw-semibold text-uppercase text-muted">Min
+                                    Rating</label>
                                 <div class="input-group input-group-sm">
                                     <input type="number" name="min_rating" id="min_rating" class="form-control"
                                         placeholder="0 – 5" step="0.1" min="0" max="5"
@@ -277,7 +212,7 @@
                                             class="card-img-top skel-img" loading="lazy" onload="this.classList.remove('skel-img')">
                                     @else
                                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center
-                                                                                {{ $loop->first ? '' : '' }}"
+                                                                                                {{ $loop->first ? '' : '' }}"
                                             style="height: {{ $loop->first ? '340px' : '180px' }};">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ced4da"
                                                 viewBox="0 0 16 16">
@@ -430,7 +365,4 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>
+@endsection

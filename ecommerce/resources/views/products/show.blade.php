@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $product->name }}</title>
-    <meta name="description" content="{{ Str::limit($product->description, 160) }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <!-- IMP-007: Alpine.js micro-interactions -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+@section('title', $product->name)
+
+@push('styles')
     <style>
         .product-main-image {
             max-width: 100%;
@@ -385,9 +378,9 @@
             background: rgba(255, 255, 255, .3);
         }
     </style>
-</head>
+@endpush
 
-<body class="bg-light">
+@section('content')
     @include('partials.toast')
     <!-- IMP-005: Bootstrap navbar with cart drawer trigger -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
@@ -399,8 +392,8 @@
                 @php $__cartCountShow = array_sum(array_column(session('cart', []), 'quantity')); @endphp
                 <button class="btn btn-outline-light btn-sm position-relative" type="button" data-bs-toggle="offcanvas"
                     data-bs-target="#cartDrawer" aria-controls="cartDrawer" id="cart-drawer-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor"
-                        viewBox="0 0 16 16" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"
+                        aria-hidden="true">
                         <path
                             d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.948L4.043 12H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.465-.686L5.28 8.643 3.055 3.75 2.61 2H.5a.5.5 0 0 1-.5-.5zM3.226 4l.893 4.462 9.144-.925.79-3.537H3.226zM5.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2 1.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
                     </svg>
@@ -422,10 +415,10 @@
         <article class="product-detail">
             {{-- IMP-010: Lightbox + zoom gallery --}}
             <div class="product-images" x-data="imp010Lightbox({
-                     mainImage: @json($product->image ? asset('storage/' . $product->image) : null),
-                     images: @json(collect($product->images ?? [])->map(fn($p) => asset('storage/' . $p))->values()->all()),
-                     alt: @json($product->name)
-                 })">
+                         mainImage: @json($product->image ? asset('storage/' . $product->image) : null),
+                         images: @json(collect($product->images ?? [])->map(fn($p) => asset('storage/' . $p))->values()->all()),
+                         alt: @json($product->name)
+                     })">
                 @if ($product->image)
                     <div class="imp010-main-wrapper">
                         <img src="{{ asset('storage/' . $product->image) }}" :src="currentImage" alt="{{ $product->name }}"
@@ -503,12 +496,12 @@
 
                 @if ($product->stock > 0)
                     <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
-                                                 productId: {{ $product->id }},
-                                                 productName: @json($product->name),
-                                                 productPrice: {{ (float) $product->price }},
-                                                 productSlug: @json($product->slug),
-                                                 cartStoreUrl: '{{ route('cart.store') }}'
-                                             })">
+                                                         productId: {{ $product->id }},
+                                                         productName: @json($product->name),
+                                                         productPrice: {{ (float) $product->price }},
+                                                         productSlug: @json($product->slug),
+                                                         cartStoreUrl: '{{ route('cart.store') }}'
+                                                     })">
                         <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
                             x-on:submit.prevent="submit">
                             @csrf
@@ -621,14 +614,12 @@
                             <div>
                                 <label>Rating:</label>
                                 <div class="imp012-star-input"
-                                    x-data="imp012StarRating({ value: {{ (int) old('rating', 0) }} })"
-                                    data-imp012="star-input">
+                                    x-data="imp012StarRating({ value: {{ (int) old('rating', 0) }} })" data-imp012="star-input">
                                     <input type="hidden" name="rating" :value="rating" data-imp012="rating-input">
                                     <template x-for="i in [1,2,3,4,5]" :key="i">
                                         <button type="button" class="imp012-star"
                                             :class="{ 'imp012-star--filled': i <= effective() }" @click="set(i)"
-                                            @mouseenter="hover(i)" @mouseleave="leave()"
-                                            :aria-label="'Rate ' + i + ' out of 5'"
+                                            @mouseenter="hover(i)" @mouseleave="leave()" :aria-label="'Rate ' + i + ' out of 5'"
                                             :aria-pressed="rating === i ? 'true' : 'false'" data-imp012="star-btn">
                                             &#9733;
                                         </button>
@@ -726,7 +717,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@endsection
+
+@push('scripts')
     <script>
         /* IMP-007: Alpine.js component for add-to-cart micro-interactions */
         document.addEventListener('alpine:init', () => {
@@ -855,3 +848,4 @@
             };
         }
     </script>
+@endpush

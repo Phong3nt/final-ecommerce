@@ -1,14 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Checkout</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <script src="https://js.stripe.com/v3/"></script>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
+@section('title', 'Guest Checkout')
+
+@push('head')
+<script src="https://js.stripe.com/v3/"></script>
+@endpush
+
+@push('styles')
+<style>
         .checkout-step-heading {
             font-size: 1rem;
             font-weight: 600;
@@ -19,9 +18,9 @@
             display: none;
         }
     </style>
-</head>
+@endpush
 
-<body class="bg-light">
+@section('content')
     <div class="container py-4">
 
         <nav aria-label="breadcrumb" class="mb-3">
@@ -355,6 +354,4 @@
             }
         })();
     </script>
-</body>
-
-</html>
+@endsection
