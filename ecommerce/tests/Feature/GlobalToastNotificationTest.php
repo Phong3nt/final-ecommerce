@@ -47,7 +47,13 @@ class GlobalToastNotificationTest extends TestCase
     {
         $view = $this->viewSource('auth/login.blade.php');
 
-        $this->assertStringContainsString("@include('partials.toast')", $view);
+        // login.blade.php now extends layouts.app which includes partials.toast globally (IMP-018).
+        // Accept either direct include (standalone) or layout inheritance (IMP-018+).
+        $this->assertTrue(
+            str_contains($view, "@include('partials.toast')") ||
+            str_contains($view, "@extends('layouts.app')"),
+            "Login page must use the shared toast partial (directly or via layouts.app which includes it globally)"
+        );
     }
 
     public function test_imp009_tc04_checkout_shipping_uses_toast_partial_instead_of_inline_error_flash(): void
