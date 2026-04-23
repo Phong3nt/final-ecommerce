@@ -275,25 +275,49 @@
 | OM-004  | Order Management               | Done   | 7      | Agent       | [EVAL-OM-004](evaluation_history.md#eval-om-004--export-orders-to-csv)                                      | `v1.0-OM-004-stable` |       |
 | OM-005  | Order Management               | Done   | 7      | Agent       | [EVAL-OM-005](evaluation_history.md#eval-om-005--process-refund-on-cancelled-order)                         | `v1.0-OM-005-stable` |       |
 | UM-001  | User Management                | Done   | 6      | Agent       | [EVAL-UM-001](evaluation_history.md#eval-um-001--admin-user-list)                                           | `v1.0-UM-001-stable` |       |
-| UM-002  | User Management                | Done   | 6      | Agent       | [EVAL-UM-002](evaluation_history.md#eval-um-002--admin-view-user-profile-and-order-history)                 | `v1.0-UM-002-stable` |       |
-| UM-003  | User Management                | Done   | 6      | Agent       | [EVAL-UM-003](evaluation_history.md#eval-um-003--admin-activatesuspend-user-account)                        | `v1.0-UM-003-stable` |       |
-| UM-004  | User Management                | Done   | 6      | Agent       | [EVAL-UM-004](evaluation_history.md#eval-um-004--admin-assignchange-user-roles)                             | `v1.0-UM-004-stable` |       |
-| RM-001  | Revenue Management             | Done   | 6      | Agent       | [EVAL-RM-001](evaluation_history.md#eval-rm-001--admin-revenue-report-by-period)                            | `v1.0-RM-001-stable` |       |
-| RM-002  | Revenue Management             | Done   | 6      | Agent       | [EVAL-RM-002](evaluation_history.md#eval-rm-002--admin-revenue-by-productcategory)                          | `v1.0-RM-002-stable` |       |
-| RM-003  | Revenue Management             | Done   | 7      | Agent       | [EVAL-RM-003](evaluation_history.md#eval-rm-003--admin-coupon-management)                                   | `v1.0-RM-003-stable` |       |
-| NT-001  | Notifications                  | Done   | 6      | Agent       | [EVAL-NT-001](evaluation_history.md#eval-nt-001--queued-order-email-notifications)                          | `v1.0-NT-001-stable` |       |
-| NT-002  | Notifications                  | Done   | 6      | Agent       | [EVAL-NT-002](evaluation_history.md#eval-nt-002--admin-new-order-notification-bell)                         | `v1.0-NT-002-stable` |       |
-| NT-003  | Notifications                  | Done   | 7      | Agent       | [EVAL-NT-003](evaluation_history.md#eval-nt-003--admin-low-stock-threshold-notification)                    | `v1.0-NT-003-stable` |       |
-| NF-001  | Non-Functional                 | Done   | 1      | Agent       | [EVAL-NF-001](evaluation_history.md#eval-nf-001--csrf-protection-audit)                                     | `v1.0-NF-001-stable` |       |
-| NF-002  | Non-Functional                 | Done   | 3      | Agent       | [EVAL-NF-002](evaluation_history.md#eval-nf-002--input-sanitization-audit)                                  | `v1.0-NF-002-stable` |       |
-| NF-003  | Non-Functional                 | Done   | 3      | Agent       | [EVAL-NF-003](evaluation_history.md#eval-nf-003--payment-tokenization-audit)                                | `v1.0-NF-003-stable` |       |
-| NF-004  | Non-Functional                 | Done   | 1      | Agent       | [EVAL-NF-004](evaluation_history.md#eval-nf-004--https-enforcement)                                         | `v1.0-NF-004-stable` |       |
-| NF-005  | Non-Functional                 | Done   | 1      | Agent       | [EVAL-NF-005](evaluation_history.md#eval-nf-005--admin-route-middleware-audit)                              | `v1.0-NF-005-stable` |       |
-| NF-006  | Non-Functional                 | Done   | 1      | Agent       | [EVAL-NF-006](evaluation_history.md#eval-nf-006--rate-limiting)                                             | `v1.0-NF-006-stable` |       |
-| NF-007  | Non-Functional                 | Done   | 7      | Agent       | [EVAL-NF-007](evaluation_history.md#eval-nf-007--cloud-image-storage)                                       | `v1.0-NF-007-stable` |       |
-| NF-008  | Non-Functional                 | Done   | 7      | Agent       | [EVAL-NF-008](evaluation_history.md#eval-nf-008--queued-heavy-operations)                                   | `v1.0-NF-008-stable` |       |
-| NF-009  | Non-Functional                 | Done   | 7      | Agent       | [EVAL-NF-009](evaluation_history.md#eval-nf-009--application-logging--monitoring)                           | `v1.0-NF-009-stable` |       |
-| NF-010  | Non-Functional                 | Done   | 7      | Agent       | [EVAL-NF-010](evaluation_history.md#eval-nf-010--critical-flow-test-coverage-audit)                         | `v1.0-NF-010-stable` |       |
+
+---
+
+## IMP — UI/UX Improvement Tasks [UIUX_MODE]
+
+> Bootstrap 5.3 CDN + Alpine.js 3 redesign. Tracked separately from main backlog.
+
+| ID      | Description                                          | Status | Phase | Type          | Tag                                                                                         | Date                 |
+| ------- | ---------------------------------------------------- | ------ | ----- | ------------- | ------------------------------------------------------------------------------------------- | -------------------- | --- |
+| IMP-017 | (Foundation setup)                                   | Done   | 1     | —             | `v1.0-IMP-017-stable`                                                                       | 2026-04-23           |
+| IMP-018 | Create `layouts/app.blade.php` + migrate BS5 pages   | Done   | 1     | Migration     | `v1.0-IMP-018-stable`                                                                       | 2026-04-23           |
+| IMP-031 | Create `partials/navbar.blade.php`                   | Done   | 1     | New component | `v1.0-IMP-031-stable`                                                                       | 2026-04-23           |
+| IMP-019 | Login page — Full Redesign                           | Done   | 2     | Full Redesign | `v1.0-IMP-019-stable`                                                                       | 2026-04-23           |
+| IMP-020 | Register page — Full Redesign                        | Done   | 2     | Full Redesign | `v1.0-IMP-020-stable`                                                                       | 2026-04-23           |
+| IMP-021 | User Dashboard — Full Redesign                       | Done   | 3     | Full Redesign | `v1.0-IMP-021-stable`                                                                       | 2026-04-23           |
+| IMP-024 | Forgot Password + Reset Password — Full Redesign     | To Do  | 2     | Full Redesign | —                                                                                           | —                    |
+| IMP-030 | Email Verify + Google OAuth callback — Full Redesign | To Do  | 2     | Full Redesign | —                                                                                           | —                    |
+| IMP-022 | Profile page — Full Redesign                         | To Do  | 3     | Full Redesign | —                                                                                           | —                    |
+| IMP-023 | Order History + Order Detail — Full Redesign         | To Do  | 3     | Full Redesign | —                                                                                           | —                    |
+| IMP-025 | Addresses page — Full Redesign                       | To Do  | 3     | Full Redesign | —                                                                                           | —                    |
+| IMP-026 | Create `layouts/admin.blade.php` + migrate admin BS5 | To Do  | 1     | Migration     | —                                                                                           | —                    |
+| IMP-027 | Admin Dashboard — Full Redesign                      | To Do  | 4     | Full Redesign | —                                                                                           | —                    |
+| IMP-028 | Welcome / Homepage — Full Redesign                   | To Do  | 5     | Full Redesign | —                                                                                           | —                    |
+| IMP-029 | Cart page — Full Redesign                            | To Do  | 5     | Full Redesign | —                                                                                           | —                    |
+| UM-002  | User Management                                      | Done   | 6     | Agent         | [EVAL-UM-002](evaluation_history.md#eval-um-002--admin-view-user-profile-and-order-history) | `v1.0-UM-002-stable` |     |
+| UM-003  | User Management                                      | Done   | 6     | Agent         | [EVAL-UM-003](evaluation_history.md#eval-um-003--admin-activatesuspend-user-account)        | `v1.0-UM-003-stable` |     |
+| UM-004  | User Management                                      | Done   | 6     | Agent         | [EVAL-UM-004](evaluation_history.md#eval-um-004--admin-assignchange-user-roles)             | `v1.0-UM-004-stable` |     |
+| RM-001  | Revenue Management                                   | Done   | 6     | Agent         | [EVAL-RM-001](evaluation_history.md#eval-rm-001--admin-revenue-report-by-period)            | `v1.0-RM-001-stable` |     |
+| RM-002  | Revenue Management                                   | Done   | 6     | Agent         | [EVAL-RM-002](evaluation_history.md#eval-rm-002--admin-revenue-by-productcategory)          | `v1.0-RM-002-stable` |     |
+| RM-003  | Revenue Management                                   | Done   | 7     | Agent         | [EVAL-RM-003](evaluation_history.md#eval-rm-003--admin-coupon-management)                   | `v1.0-RM-003-stable` |     |
+| NT-001  | Notifications                                        | Done   | 6     | Agent         | [EVAL-NT-001](evaluation_history.md#eval-nt-001--queued-order-email-notifications)          | `v1.0-NT-001-stable` |     |
+| NT-002  | Notifications                                        | Done   | 6     | Agent         | [EVAL-NT-002](evaluation_history.md#eval-nt-002--admin-new-order-notification-bell)         | `v1.0-NT-002-stable` |     |
+| NT-003  | Notifications                                        | Done   | 7     | Agent         | [EVAL-NT-003](evaluation_history.md#eval-nt-003--admin-low-stock-threshold-notification)    | `v1.0-NT-003-stable` |     |
+| NF-001  | Non-Functional                                       | Done   | 1     | Agent         | [EVAL-NF-001](evaluation_history.md#eval-nf-001--csrf-protection-audit)                     | `v1.0-NF-001-stable` |     |
+| NF-002  | Non-Functional                                       | Done   | 3     | Agent         | [EVAL-NF-002](evaluation_history.md#eval-nf-002--input-sanitization-audit)                  | `v1.0-NF-002-stable` |     |
+| NF-003  | Non-Functional                                       | Done   | 3     | Agent         | [EVAL-NF-003](evaluation_history.md#eval-nf-003--payment-tokenization-audit)                | `v1.0-NF-003-stable` |     |
+| NF-004  | Non-Functional                                       | Done   | 1     | Agent         | [EVAL-NF-004](evaluation_history.md#eval-nf-004--https-enforcement)                         | `v1.0-NF-004-stable` |     |
+| NF-005  | Non-Functional                                       | Done   | 1     | Agent         | [EVAL-NF-005](evaluation_history.md#eval-nf-005--admin-route-middleware-audit)              | `v1.0-NF-005-stable` |     |
+| NF-006  | Non-Functional                                       | Done   | 1     | Agent         | [EVAL-NF-006](evaluation_history.md#eval-nf-006--rate-limiting)                             | `v1.0-NF-006-stable` |     |
+| NF-007  | Non-Functional                                       | Done   | 7     | Agent         | [EVAL-NF-007](evaluation_history.md#eval-nf-007--cloud-image-storage)                       | `v1.0-NF-007-stable` |     |
+| NF-008  | Non-Functional                                       | Done   | 7     | Agent         | [EVAL-NF-008](evaluation_history.md#eval-nf-008--queued-heavy-operations)                   | `v1.0-NF-008-stable` |     |
+| NF-009  | Non-Functional                                       | Done   | 7     | Agent         | [EVAL-NF-009](evaluation_history.md#eval-nf-009--application-logging--monitoring)           | `v1.0-NF-009-stable` |     |
+| NF-010  | Non-Functional                                       | Done   | 7     | Agent         | [EVAL-NF-010](evaluation_history.md#eval-nf-010--critical-flow-test-coverage-audit)         | `v1.0-NF-010-stable` |     |
 
 ---
 

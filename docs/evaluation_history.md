@@ -4108,6 +4108,71 @@ None at this time.
 
 ---
 
+<!-- EVAL-IMP-020 START -->
+
+## EVAL-IMP-020 · Register Page — Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-020-stable`
+**Branch:** `improve/IMP-010`
+**Tests:** 999 / 999 passed (2290 assertions)
+
+### Cleanup Log
+
+- Removed standalone `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>` wrapper
+- Removed `<style>` block (custom input/button CSS)
+- Removed all `style="..."` attributes on buttons and inputs
+- Replaced with `@extends('layouts.app')` — Bootstrap 5.3 CDN loaded from layout
+
+### Acceptance Criteria
+
+| #   | Criterion                                                  | Status |
+| --- | ---------------------------------------------------------- | ------ |
+| 1   | Extends `layouts.app`                                      | ✅     |
+| 2   | Card max-width 420px, centered vertically and horizontally | ✅     |
+| 3   | Brand icon (`bi-shop`) and "E-Commerce" heading            | ✅     |
+| 4   | All inputs use `form-control` with `@error` → `is-invalid` | ✅     |
+| 5   | Alpine.js loading spinner on submit                        | ✅     |
+| 6   | Login link below form                                      | ✅     |
+| 7   | No inline `<style>` block                                  | ✅     |
+| 8   | 999/999 tests pass (no regression)                         | ✅     |
+
+<!-- EVAL-IMP-020 END -->
+
+<!-- EVAL-IMP-021 START -->
+
+## EVAL-IMP-021 · User Dashboard — Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-021-stable`
+**Branch:** `improve/IMP-010`
+
+### Cleanup Log
+
+- Removed standalone `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>` wrapper
+- Removed `<style>` block (body, .alert-success, .alert-warning rules)
+- Removed `@include('partials.toast')` (handled globally by `layouts.app`)
+- Removed `style="display:inline;"` on verification resend form
+- Removed `style="background:none;border:none;..."` on resend button
+- Removed logout form (logout now accessible from navbar in `layouts.app`)
+- Replaced with `@extends('layouts.app')` — Bootstrap 5.3 loaded from layout
+
+### Acceptance Criteria
+
+| #   | Criterion                                                  | Status |
+| --- | ---------------------------------------------------------- | ------ |
+| 1   | Extends `layouts.app`                                      | ✅     |
+| 2   | Welcome heading with `auth()->user()->name`                | ✅     |
+| 3   | Email verification alert using Bootstrap `alert-warning`   | ✅     |
+| 4   | Alpine.js loading spinner on resend verification button    | ✅     |
+| 5   | 4 quick-action cards (Shop, My Orders, Profile, Addresses) | ✅     |
+| 6   | `card-hover` effect on all quick-action cards              | ✅     |
+| 7   | Fade-in animation via Alpine `x-init` (RULE 10)            | ✅     |
+| 8   | No inline `<style>` block                                  | ✅     |
+| 9   | Bootstrap Icons for each card                              | ✅     |
+
+<!-- EVAL-IMP-021 END -->
+
 ### Files Changed
 
 | File                                                                                   | Change                                                             |
