@@ -4466,8 +4466,8 @@ None at this time.
 
 <!-- EVAL-IMP-028 END -->
 
-<!-- EVAL-IMP-029 START -->
----
+## <!-- EVAL-IMP-029 START -->
+
 ## EVAL-IMP-029 — Cart Page Full Redesign
 
 **Date:** 2026-04-24
@@ -4513,6 +4513,58 @@ Migrated `cart/index.blade.php` from a standalone HTML page with no Bootstrap (o
 None at this time.
 
 <!-- EVAL-IMP-029 END -->
+
+<!-- EVAL-IMP-031 START -->
+---
+## EVAL-IMP-031 — Global Navbar (Persistent Top Navbar + Mobile Hamburger)
+
+**Date:** 2026-04-24
+**Tag:** `v1.0-IMP-031-stable` (tag pushed in prior session; test suite added this session)
+**Mode:** `[FULL_STACK_MODE]`
+**Tests:** 1011 passed / 0 failed (2324 assertions)
+
+### Summary
+
+`partials/navbar.blade.php` was implemented in a prior session and tagged `v1.0-IMP-031-stable`. This session completed the FULL_STACK_MODE cycle by creating `GlobalNavTest.php` (12 test cases) to formally verify the navbar implementation. The partial is included globally by `layouts/app.blade.php` and rendered on all user-facing pages. It satisfies RULE 8 fully: sticky-top positioning, mobile hamburger collapse, cart badge with session count, conditional `@auth` / `@else` blocks for guest vs. authenticated UI, and an authenticated dropdown with all five required nav links.
+
+### Changes Made
+
+| File | Change |
+|------|--------|
+| `ecommerce/tests/Feature/GlobalNavTest.php` | **New** — 12 test cases verifying navbar partial structure, layout inclusion, guest/auth rendering, cart badge, mobile toggle, sticky class, dropdown links |
+
+### Test Cases (GlobalNavTest — 12/12 passed)
+
+| TC | Description | Type |
+|----|-------------|------|
+| TC01 | Navbar partial file exists with required markup (`navbar-expand-lg`, `sticky-top`, `navbar-toggler`, `bi-cart3`, `bi-shop`) | View source |
+| TC02 | `layouts/app.blade.php` includes `@include('partials.navbar')` | View source |
+| TC03 | Guest user sees Login link on products page | HTTP GET |
+| TC04 | Guest user sees Register link on products page | HTTP GET |
+| TC05 | Authenticated user's name appears in navbar | HTTP GET + actingAs |
+| TC06 | Authenticated user does NOT see Login href | HTTP GET + actingAs |
+| TC07 | Navbar renders cart icon link to `route('cart.index')` | HTTP GET |
+| TC08 | Cart badge shows count when `cart_count` in session | HTTP GET + session |
+| TC09 | Mobile hamburger toggle button present (`navbar-toggler`, `data-bs-toggle="collapse"`) | HTTP GET |
+| TC10 | Navbar has `sticky-top` class (rendered output) | HTTP GET |
+| TC11 | Auth user dropdown renders Dashboard, Profile, Orders, Addresses, Logout routes | HTTP GET + actingAs |
+| TC12 | Navbar renders within 1 second | HTTP GET + timing |
+
+### Navbar Spec Compliance (RULE 8)
+
+- `navbar-expand-lg` + `sticky-top` — persistent on scroll
+- Mobile hamburger: `navbar-toggler` + `data-bs-toggle="collapse"` + `data-bs-target="#mainNav"`
+- Brand: `bi-shop` icon + "ShopName" text in `text-primary`
+- Shop link with `request()->is('products*')` active detection
+- Cart icon `bi-cart3` + `badge rounded-pill bg-danger` showing `session('cart_count')`
+- `@auth` dropdown: avatar or initial div, name, links to Dashboard / Profile / My Orders / Addresses, logout POST form
+- `@else`: Login nav-link + Register `btn-primary btn-sm`
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-IMP-031 END -->
 
 ### Files Changed
 
