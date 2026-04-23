@@ -4392,8 +4392,8 @@ Fully redesigned `resources/views/admin/dashboard.blade.php` to use `@extends('l
 
 ### Changes Made
 
-| File | Change |
-|------|--------|
+| File                                        | Change                                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `resources/views/admin/dashboard.blade.php` | Full rewrite — Bootstrap 5.3 card KPIs, Chart.js chart, top-selling table, recent orders with Action column |
 
 ### Acceptance Criteria Met
@@ -4411,6 +4411,7 @@ Fully redesigned `resources/views/admin/dashboard.blade.php` to use `@extends('l
 ### Test Results
 
 All 999 tests passed including:
+
 - `AdminDashboardTest` (12 tests) ✅
 - `AdminTopSellingProductsTest` (9 tests) ✅
 - `AdminRecentOrdersDashboardTest` (8 tests) ✅
@@ -4421,6 +4422,49 @@ All 999 tests passed including:
 None at this time.
 
 <!-- EVAL-IMP-027 END -->
+
+<!-- EVAL-IMP-028 START -->
+
+---
+
+## EVAL-IMP-028 — Welcome/Homepage Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-028-stable`
+**Commit:** `5073eef`
+**Mode:** `[UIUX_MODE]`
+**Tests:** 999 passed / 0 failed (2290 assertions)
+
+### Summary
+
+Replaced the default Laravel welcome page with a real e-commerce homepage under `@extends('layouts.app')`. The new layout includes a hero banner, trust/features strip, category browse cards, featured products section, and promotional CTA blocks while keeping Bootstrap 5.3 + Alpine.js conventions used across user-facing pages.
+
+### Changes Made
+
+| File | Change |
+| ---- | ------ |
+| `ecommerce/resources/views/welcome.blade.php` | Full rewrite from default Tailwind template to Bootstrap-based homepage with hero, category grid, featured products, and CTA |
+
+### Acceptance Criteria Met
+
+- Uses `layouts.app` shared layout (IMP-018/IMP-031)
+- Bootstrap 5.3 UI only, no Tailwind dependencies
+- Homepage includes hero banner and call-to-action buttons
+- Added featured products section
+- Added browse categories section
+- Added trust/features and promotional CTA sections
+- Alpine.js fade-in (`x-data` + `x-init`) applied on page container
+
+### Test Results
+
+- Targeted regression: `ExampleTest|ProductBrowseTest|ProductSearchTest` → 26 passed (45 assertions)
+- Pre-commit full suite: 999 passed (2290 assertions)
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-IMP-028 END -->
 
 ### Files Changed
 
