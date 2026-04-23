@@ -4441,8 +4441,8 @@ Replaced the default Laravel welcome page with a real e-commerce homepage under 
 
 ### Changes Made
 
-| File | Change |
-| ---- | ------ |
+| File                                          | Change                                                                                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `ecommerce/resources/views/welcome.blade.php` | Full rewrite from default Tailwind template to Bootstrap-based homepage with hero, category grid, featured products, and CTA |
 
 ### Acceptance Criteria Met
@@ -4465,6 +4465,54 @@ Replaced the default Laravel welcome page with a real e-commerce homepage under 
 None at this time.
 
 <!-- EVAL-IMP-028 END -->
+
+<!-- EVAL-IMP-029 START -->
+---
+## EVAL-IMP-029 — Cart Page Full Redesign
+
+**Date:** 2026-04-24
+**Tag:** `v1.0-IMP-029-stable`
+**Commit:** `8bcde42`
+**Mode:** `[UIUX_MODE]`
+**Tests:** 999 passed / 0 failed (2290 assertions)
+
+### Summary
+
+Migrated `cart/index.blade.php` from a standalone HTML page with no Bootstrap (only IMP-007 Alpine.js micro-interactions) to `@extends('layouts.app')` Bootstrap 5 layout. All IMP-007 Alpine.js logic was preserved unchanged. A two-column responsive layout was added: left `col-lg-8` for cart items (thumbnail placeholder, qty stepper input-group, trash remove button), right `col-lg-4` for a sticky order summary panel (totals, discount row, coupon apply/remove form, Proceed to Checkout CTA). Fixed the JS row selector from `form.closest('tr')` to `form.closest('[data-product-id]')` to match the new `<div>` row structure.
+
+### Changes Made
+
+| File | Change |
+| `ecommerce/resources/views/cart/index.blade.php` | Full Redesign: removed standalone HTML wrapper, added Bootstrap 5 two-column layout; preserved IMP-007 Alpine.js logic; added sticky summary panel, thumbnail placeholder, styled qty stepper; added `@include('partials.toast')` for IMP-009 compliance |
+
+### Acceptance Criteria Met
+
+- Uses `layouts.app` shared layout
+- Bootstrap 5 markup, no Tailwind
+- Preserved all IMP-007 Alpine.js logic (`imp007CartRow`, `imp007ToastManager`)
+- `@include('partials.toast')` present (IMP-009 tc07 compliance)
+- Sticky order summary panel (`imp029-summary-panel`, `top:80px`)
+- Product thumbnail placeholder (`imp029-thumb-placeholder`)
+- Styled Bootstrap `input-group` qty stepper
+- Alpine.js fade-in on page wrapper (RULE 10)
+- IMP-007 CSS preserved in `@push('styles')` block labeled `/* IMP-007: keep */`
+
+### Cleanup Log
+
+- Removed standalone `<!DOCTYPE html>` + duplicate Alpine.js CDN script from old cart view
+- Removed old table-based layout (`<table>`, `<tr>`, `<td>` rows)
+- Replaced `form.closest('tr')` with `form.closest('[data-product-id]')` in removeItem()
+
+### Test Results
+
+- Targeted: `CartViewTest` 12/12 + `AlpineCartMicroInteractionsTest` 10/10 + `GlobalToastNotificationTest` 10/10 = 32 passed
+- Pre-commit full suite: 999 passed (2290 assertions)
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-IMP-029 END -->
 
 ### Files Changed
 
