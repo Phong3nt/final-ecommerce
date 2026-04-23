@@ -4339,6 +4339,7 @@ Redesigned `user/addresses/index.blade.php` replacing standalone HTML with Boots
 ---
 
 <!-- EVAL-IMP-026 START -->
+
 ## EVAL-IMP-026 · Admin Layout + Audit-Log View Migration
 
 **Version:** A  
@@ -4350,11 +4351,11 @@ Redesigned `user/addresses/index.blade.php` replacing standalone HTML with Boots
 
 ### Test Results
 
-| Test Class | Tests | Result |
-| ---------- | ----- | ------ |
-| `AuditLogTest` | 12/12 | PASS ✅ |
-| `AdminMiddlewareAuditTest` | 12/12 | PASS ✅ |
-| `AdminDashboardTest` | 12/12 | PASS ✅ |
+| Test Class                    | Tests | Result  |
+| ----------------------------- | ----- | ------- |
+| `AuditLogTest`                | 12/12 | PASS ✅ |
+| `AdminMiddlewareAuditTest`    | 12/12 | PASS ✅ |
+| `AdminDashboardTest`          | 12/12 | PASS ✅ |
 | `GlobalToastNotificationTest` | 10/10 | PASS ✅ |
 
 **Summary:** 999 Passed · 0 Failed · 0 Skipped  
@@ -4362,9 +4363,9 @@ Redesigned `user/addresses/index.blade.php` replacing standalone HTML with Boots
 
 ### Files Changed
 
-| File | Change |
-| ---- | ------ |
-| `ecommerce/resources/views/layouts/admin.blade.php` | **New file** — Bootstrap 5.3 CDN admin layout with 240px fixed sidebar, sticky topbar, Alpine.js, notification bell, toast include |
+| File                                                        | Change                                                                                                                                                               |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ecommerce/resources/views/layouts/admin.blade.php`         | **New file** — Bootstrap 5.3 CDN admin layout with 240px fixed sidebar, sticky topbar, Alpine.js, notification bell, toast include                                   |
 | `ecommerce/resources/views/admin/audit-log/index.blade.php` | Migrated from standalone HTML → `@extends('layouts.admin')` with Bootstrap 5.3 markup, all `data-imp016` attributes preserved, Alpine.js `x-show` for changes toggle |
 
 ### Upgrade Proposals
@@ -4372,6 +4373,54 @@ Redesigned `user/addresses/index.blade.php` replacing standalone HTML with Boots
 None at this time.
 
 <!-- EVAL-IMP-026 END -->
+
+<!-- EVAL-IMP-027 START -->
+
+---
+
+## EVAL-IMP-027 — Admin Dashboard Full Redesign
+
+**Date:** 2026-04-23
+**Tag:** `v1.0-IMP-027-stable`
+**Commit:** `29a2d6f`
+**Mode:** `[UIUX_MODE]`
+**Tests:** 999 passed / 0 failed (2290 assertions)
+
+### Summary
+
+Fully redesigned `resources/views/admin/dashboard.blade.php` to use `@extends('layouts.admin')` (created in IMP-026). Replaced standalone HTML with Bootstrap 5.3 card layout featuring 4 KPI metric cards, a Chart.js revenue & orders chart with daily/weekly/monthly range toggle, a top-selling products table with date filter, and a recent orders table with quick-action "View" links.
+
+### Changes Made
+
+| File | Change |
+|------|--------|
+| `resources/views/admin/dashboard.blade.php` | Full rewrite — Bootstrap 5.3 card KPIs, Chart.js chart, top-selling table, recent orders with Action column |
+
+### Acceptance Criteria Met
+
+- `@extends('layouts.admin')` — no standalone HTML, no duplicate CDN
+- Bootstrap 5.3 only (no Tailwind, no jQuery)
+- Alpine.js `x-data x-init="$el.classList.add('fade-in')"` fade-in
+- 4 KPI cards: Total Revenue (success), Orders Today (primary), New Users Today (info), Low-Stock Products (warning)
+- Chart.js bar+line chart with daily/weekly/monthly toggle and skeleton loader
+- Top-selling products table with `Units Sold` and `Revenue ($)` columns + date range filter + empty state
+- Recent orders table with `Order #`, `Customer`, `Status`, `Action` (View link) columns + empty state
+- `data-imp017="realtime-enabled"` preserved for FirebaseNotificationTest
+- Meta refresh `content="300"` in `@push('styles')`
+
+### Test Results
+
+All 999 tests passed including:
+- `AdminDashboardTest` (12 tests) ✅
+- `AdminTopSellingProductsTest` (9 tests) ✅
+- `AdminRecentOrdersDashboardTest` (8 tests) ✅
+- `FirebaseNotificationTest` ✅
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-IMP-027 END -->
 
 ### Files Changed
 
