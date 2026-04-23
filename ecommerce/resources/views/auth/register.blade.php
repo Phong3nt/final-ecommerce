@@ -1,64 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — E-Commerce</title>
-    <style>
-        body { font-family: sans-serif; max-width: 420px; margin: 80px auto; padding: 0 1rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: .25rem; font-weight: 600; }
-        input { width: 100%; padding: .5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: .65rem; background: #4f46e5; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        .error { color: #dc2626; font-size: .85rem; margin-top: .25rem; }
-        .alert { background: #fef2f2; border: 1px solid #fca5a5; padding: .75rem; border-radius: 4px; margin-bottom: 1rem; }
-    </style>
-</head>
-<body>
-    <h2>Create an account</h2>
+@extends('layouts.app')
 
-    @if ($errors->any())
-        <div class="alert">
-            <ul style="margin:0;padding-left:1.2rem;">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+@section('title', 'Register — E-Commerce')
+
+@section('content')
+    <div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
+        <div class="card shadow-sm border-0 rounded-4" style="width:100%;max-width:420px;">
+            <div class="card-body p-4 p-md-5">
+
+                {{-- Brand header --}}
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center
+                                    bg-primary bg-opacity-10 rounded-circle mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-shop fs-4 text-primary"></i>
+                    </div>
+                    <h1 class="h4 fw-bold mb-0">E-Commerce</h1>
+                    <p class="text-muted small">Create your account</p>
+                </div>
+
+                {{-- Register form --}}
+                <form method="POST" action="{{ route('register.store') }}">
+                    @csrf
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">Full name</label>
+                        <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
+                            value="{{ old('name') }}" required autofocus autocomplete="name">
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email address</label>
+                        <input type="email" id="email" name="email"
+                            class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required
+                            autocomplete="email">
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <input type="password" id="password" name="password"
+                            class="form-control @error('password') is-invalid @enderror" required
+                            autocomplete="new-password">
+                        <div class="form-text text-muted">
+                            <i class="bi bi-info-circle me-1"></i>Min 8 chars, upper &amp; lower case, number.
+                        </div>
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password_confirmation" class="form-label fw-semibold">Confirm password</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control"
+                            required autocomplete="new-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" x-data="{ loading: false }" @click="loading = true"
+                        :disabled="loading">
+                        <span x-show="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span x-text="loading ? 'Creating account…' : 'Create account'">Create account</span>
+                    </button>
+                </form>
+
+                <p class="text-center mt-3 small mb-0">
+                    Already have an account?
+                    <a href="{{ route('login') }}" class="fw-semibold">Sign in</a>
+                </p>
+
+            </div>
         </div>
-    @endif
-
-    <form method="POST" action="{{ route('register.store') }}">
-        @csrf
-
-        <div class="form-group">
-            <label for="name">Name</label>
-            <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
-            @error('name') <p class="error">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
-            @error('email') <p class="error">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" required autocomplete="new-password">
-            <small style="color:#6b7280;">Min 8 chars, upper+lower case, number.</small>
-            @error('password') <p class="error">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="form-group">
-            <label for="password_confirmation">Confirm Password</label>
-            <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
-        </div>
-
-        <button type="submit">Register</button>
-    </form>
-
-    <p style="text-align:center;margin-top:1rem;">
-        Already have an account? <a href="{{ route('login') }}">Log in</a>
-    </p>
-</body>
-</html>
+    </div>
+@endsection
