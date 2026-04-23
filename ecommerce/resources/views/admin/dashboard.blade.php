@@ -1,87 +1,11 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.admin')
+@section('title', 'Admin Dashboard — E-Commerce')
+@section('page-title', 'Dashboard')
 
-<head>
-    <title>Admin Dashboard</title>
+@push('styles')
     <meta http-equiv="refresh" content="300">
     <style>
-        body {
-            font-family: sans-serif;
-            margin: 2rem;
-            background: #f5f5f5;
-        }
-
-        h1 {
-            margin-bottom: 0.25rem;
-        }
-
-        p.welcome {
-            color: #555;
-            margin-top: 0;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            max-width: 640px;
-            margin-top: 1.5rem;
-        }
-
-        .kpi-card {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .kpi-label {
-            font-size: 0.875rem;
-            color: #666;
-            margin-top: 0.25rem;
-        }
-
-        .chart-section {
-            margin-top: 2rem;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 1.5rem;
-            max-width: 800px;
-        }
-
-        .chart-section h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-        }
-
-        .range-toggles {
-            margin-bottom: 1rem;
-        }
-
-        .range-btn {
-            padding: 0.35rem 0.85rem;
-            margin-right: 0.5rem;
-            border: 1px solid #999;
-            border-radius: 4px;
-            background: #fff;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .range-btn.active {
-            background: #333;
-            color: #fff;
-            border-color: #333;
-        }
-
-        /* ── Skeleton Shimmer ────────────────────────────────── */
+        /* IMP-027: skeleton shimmer — chart loading indicator */
         @keyframes skel-shimmer {
             0% {
                 background-position: -600px 0;
@@ -92,21 +16,8 @@
             }
         }
 
-        /* KPI card value: shimmer shown while page paints, removed by JS on DOMContentLoaded */
-        .kpi-card.kpi-loading .kpi-value,
-        .kpi-card.kpi-loading .kpi-label {
-            background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f4 50%, #e2e5e7 75%);
-            background-size: 600px 100%;
-            animation: skel-shimmer 1.4s ease infinite;
-            color: transparent;
-            border-radius: 4px;
-            user-select: none;
-        }
-
-        /* Chart skeleton overlay */
         .skel-chart-wrap {
             position: relative;
-            line-height: 0;
         }
 
         #chart-skeleton {
@@ -115,7 +26,7 @@
             background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f4 50%, #e2e5e7 75%);
             background-size: 600px 100%;
             animation: skel-shimmer 1.4s ease infinite;
-            border-radius: 4px;
+            border-radius: 6px;
             z-index: 2;
             transition: opacity 0.3s ease;
         }
@@ -125,149 +36,237 @@
             pointer-events: none;
         }
 
-        .tbl-empty {
-            padding: 0.5rem 1rem;
-            text-align: center;
-            color: #888;
+        .range-btn.active {
+            background: #0d6efd !important;
+            color: #fff !important;
+            border-color: #0d6efd !important;
         }
     </style>
-</head>
+@endpush
 
-<body data-imp017="realtime-enabled">
-    <h1>Admin Dashboard</h1>
-    <p class="welcome">Welcome, {{ auth()->user()->name }}</p>
+@section('content')
+    <div data-imp017="realtime-enabled" x-data x-init="$el.classList.add('fade-in')">
 
-    <div class="kpi-grid">
-        <div class="kpi-card kpi-loading">
-            <div class="kpi-value" id="kpi-total-revenue">${{ number_format($totalRevenue, 2) }}</div>
-            <div class="kpi-label">Total Revenue</div>
-        </div>
-        <div class="kpi-card kpi-loading">
-            <div class="kpi-value" id="kpi-orders-today">{{ $ordersToday }}</div>
-            <div class="kpi-label">Orders Today</div>
-        </div>
-        <div class="kpi-card kpi-loading">
-            <div class="kpi-value" id="kpi-new-users-today">{{ $newUsersToday }}</div>
-            <div class="kpi-label">New Users Today</div>
-        </div>
-        <div class="kpi-card kpi-loading">
-            <div class="kpi-value" id="kpi-low-stock">{{ $lowStockProducts }}</div>
-            <div class="kpi-label">Low-Stock Products</div>
-        </div>
-    </div>
+        {{-- ── KPI Cards ─────────────────────────────────────────────── --}}
+        <div class="row g-3 mb-4">
 
-    <div class="chart-section">
-        <h2>Revenue &amp; Orders</h2>
-        <div class="range-toggles">
-            <button class="range-btn active" data-range="daily">Daily</button>
-            <button class="range-btn" data-range="weekly">Weekly</button>
-            <button class="range-btn" data-range="monthly">Monthly</button>
-        </div>
-        <div class="skel-chart-wrap">
-            <div id="chart-skeleton"></div>
-            <canvas id="revenue-chart" width="760" height="300"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-section" id="top-selling-section" style="margin-top:2.5rem;">
-        <h2>Top-Selling Products</h2>
-        <form method="GET" style="margin-bottom:1rem;display:flex;gap:1rem;align-items:end;">
-            <div>
-                <label for="top_selling_start">From:</label>
-                <input type="date" id="top_selling_start" name="top_selling_start" value="{{ $dateStart }}">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3 p-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center
+                                    justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                            <i class="bi bi-graph-up text-success fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold lh-1 mb-1" id="kpi-total-revenue">
+                                ${{ number_format($totalRevenue, 2) }}
+                            </div>
+                            <div class="text-label">Total Revenue</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="top_selling_end">To:</label>
-                <input type="date" id="top_selling_end" name="top_selling_end" value="{{ $dateEnd }}">
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3 p-4">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center
+                                    justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                            <i class="bi bi-bag-check text-primary fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold lh-1 mb-1" id="kpi-orders-today">
+                                {{ $ordersToday }}
+                            </div>
+                            <div class="text-label">Orders Today</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" style="padding:0.5rem 1.2rem;">Filter</button>
-        </form>
-        <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="background:#f3f4f6;">
-                        <th style="padding:0.5rem 1rem;text-align:left;">#</th>
-                        <th style="padding:0.5rem 1rem;text-align:left;">Product</th>
-                        <th style="padding:0.5rem 1rem;text-align:right;">Units Sold</th>
-                        <th style="padding:0.5rem 1rem;text-align:right;">Revenue ($)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($topSelling as $i => $row)
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:0.5rem 1rem;">{{ $i + 1 }}</td>
-                            <td style="padding:0.5rem 1rem;">{{ $row->product_name }}</td>
-                            <td style="padding:0.5rem 1rem;text-align:right;">{{ $row->units_sold }}</td>
-                            <td style="padding:0.5rem 1rem;text-align:right;">${{ number_format($row->total_revenue, 2) }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="tbl-empty">No sales in this period.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3 p-4">
+                        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center
+                                    justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                            <i class="bi bi-people text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold lh-1 mb-1" id="kpi-new-users-today">
+                                {{ $newUsersToday }}
+                            </div>
+                            <div class="text-label">New Users Today</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3 p-4">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center
+                                    justify-content-center flex-shrink-0" style="width:48px;height:48px;">
+                            <i class="bi bi-exclamation-triangle text-warning fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold lh-1 mb-1" id="kpi-low-stock">
+                                {{ $lowStockProducts }}
+                            </div>
+                            <div class="text-label">Low-Stock Products</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- ── Revenue & Orders Chart ──────────────────────────────────── --}}
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <h6 class="fw-semibold mb-0">Revenue &amp; Orders</h6>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Chart range">
+                        <button class="btn btn-outline-secondary range-btn active" data-range="daily">Daily</button>
+                        <button class="btn btn-outline-secondary range-btn" data-range="weekly">Weekly</button>
+                        <button class="btn btn-outline-secondary range-btn" data-range="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div class="skel-chart-wrap" style="height:300px;">
+                    <div id="chart-skeleton"></div>
+                    <canvas id="revenue-chart" style="width:100%;height:300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Bottom row: Top-Selling + Recent Orders ─────────────────── --}}
+        <div class="row g-4">
+
+            {{-- Top-Selling Products --}}
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 rounded-3 h-100" id="top-selling-section">
+                    <div class="card-body p-4">
+                        <h6 class="fw-semibold mb-3">Top-Selling Products</h6>
+
+                        <form method="GET" class="row g-2 align-items-end mb-3">
+                            <div class="col-5">
+                                <label for="top_selling_start" class="form-label small fw-semibold">From</label>
+                                <input type="date" id="top_selling_start" name="top_selling_start"
+                                    class="form-control form-control-sm" value="{{ $dateStart }}">
+                            </div>
+                            <div class="col-5">
+                                <label for="top_selling_end" class="form-label small fw-semibold">To</label>
+                                <input type="date" id="top_selling_end" name="top_selling_end"
+                                    class="form-control form-control-sm" value="{{ $dateEnd }}">
+                            </div>
+                            <div class="col-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Go</button>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle small mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-label ps-3 py-2">#</th>
+                                        <th class="text-label py-2">Product</th>
+                                        <th class="text-label text-end py-2">Units Sold</th>
+                                        <th class="text-label text-end pe-3 py-2">Revenue ($)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($topSelling as $i => $row)
+                                        <tr>
+                                            <td class="ps-3 text-muted">{{ $i + 1 }}</td>
+                                            <td>{{ $row->product_name }}</td>
+                                            <td class="text-end">{{ $row->units_sold }}</td>
+                                            <td class="text-end pe-3">${{ number_format($row->total_revenue, 2) }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="tbl-empty text-center text-muted py-4">No sales in this period.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Recent Orders --}}
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 rounded-3 h-100" id="recent-orders-section">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-semibold mb-0">Recent Orders</h6>
+                            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary btn-sm">
+                                View all <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle small mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-label ps-3 py-2">Order #</th>
+                                        <th class="text-label py-2">Customer</th>
+                                        <th class="text-label py-2">Status</th>
+                                        <th class="text-label text-end pe-3 py-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentOrders as $order)
+                                        <tr>
+                                            <td class="ps-3">
+                                                <a href="{{ route('admin.orders.show', $order) }}"
+                                                    class="text-decoration-none fw-medium">
+                                                    #{{ $order->id }}
+                                                </a>
+                                            </td>
+                                            <td class="text-muted">{{ $order->user ? $order->user->name : 'Guest' }}</td>
+                                            <td>
+                                                @php
+                                                    $statusClass = match ($order->status) {
+                                                        'paid', 'delivered' => 'bg-success bg-opacity-10 text-success',
+                                                        'pending' => 'bg-warning bg-opacity-10 text-warning',
+                                                        'cancelled', 'failed' => 'bg-danger bg-opacity-10 text-danger',
+                                                        default => 'bg-primary bg-opacity-10 text-primary',
+                                                    };
+                                                @endphp
+                                                <span class="badge rounded-pill {{ $statusClass }} fw-medium">
+                                                    {{ ucfirst($order->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <a href="{{ route('admin.orders.show', $order) }}"
+                                                    class="btn btn-outline-primary btn-sm">View</a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="tbl-empty text-center text-muted py-4">No recent orders.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+@endsection
 
-    <div class="chart-section" id="recent-orders-section" style="margin-top:2.5rem;">
-        <h2>Recent Orders</h2>
-        <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="background:#f3f4f6;">
-                        <th style="padding:0.5rem 1rem;text-align:left;">Order #</th>
-                        <th style="padding:0.5rem 1rem;text-align:left;">Customer</th>
-                        <th style="padding:0.5rem 1rem;text-align:left;">Date</th>
-                        <th style="padding:0.5rem 1rem;text-align:left;">Status</th>
-                        <th style="padding:0.5rem 1rem;text-align:right;">Total ($)</th>
-                        <th style="padding:0.5rem 1rem;text-align:center;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recentOrders as $order)
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:0.5rem 1rem;">{{ $order->id }}</td>
-                            <td style="padding:0.5rem 1rem;">{{ $order->user ? $order->user->name : 'Guest' }}</td>
-                            <td style="padding:0.5rem 1rem;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                            <td style="padding:0.5rem 1rem;">
-                                <span
-                                    style="display:inline-block;padding:0.2em 0.7em;border-radius:12px;font-size:0.95em;background:#eef;">{{ ucfirst($order->status) }}</span>
-                            </td>
-                            <td style="padding:0.5rem 1rem;text-align:right;">${{ number_format($order->total, 2) }}</td>
-                            <td style="padding:0.5rem 1rem;text-align:center;">
-                                <a href="{{ route('admin.orders.show', $order) }}"
-                                    style="color:#2563eb;text-decoration:underline;">View</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="tbl-empty">No recent orders.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
+@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>
         const chartDataUrl = '{{ route("admin.chart-data") }}';
         let currentRange = 'daily';
         let chart = null;
 
-        // Remove KPI loading skeleton once DOM is fully painted
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.kpi-card.kpi-loading').forEach(function (card) {
-                card.classList.remove('kpi-loading');
-            });
-        });
-
         async function loadChart(range) {
             const skeleton = document.getElementById('chart-skeleton');
-
-            // Show skeleton while fetching
             skeleton.classList.remove('hidden');
 
             const res = await fetch(chartDataUrl + '?range=' + range);
@@ -298,7 +297,8 @@
                     ],
                 },
                 options: {
-                    responsive: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: { position: 'left', title: { display: true, text: 'Revenue ($)' } },
                         y1: { position: 'right', title: { display: true, text: 'Orders' }, grid: { drawOnChartArea: false } },
@@ -306,7 +306,6 @@
                 },
             });
 
-            // Hide skeleton after chart renders
             skeleton.classList.add('hidden');
         }
 
@@ -314,14 +313,15 @@
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                loadChart(btn.dataset.range);
+                currentRange = btn.dataset.range;
+                loadChart(currentRange);
             });
         });
 
         loadChart(currentRange);
     </script>
 
-    {{-- IMP-017: Firebase real-time listener — refreshes Recent Orders section on new order --}}
+    {{-- IMP-017: Firebase real-time listener — refreshes Recent Orders on new order --}}
     @if(config('services.firebase.api_key'))
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
         <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
@@ -336,7 +336,6 @@
                         firebase.initializeApp({ apiKey: _fbApiKey, databaseURL: _fbDbUrl });
                         firebase.database().ref('admin/latest_notification').on('value', function (snap) {
                             if (!snap.val()) return;
-                            // Show non-intrusive refresh hint on the Recent Orders section
                             var section = document.getElementById('recent-orders-section');
                             if (section && !document.getElementById('rtdb-refresh-hint')) {
                                 var hint = document.createElement('p');
@@ -351,6 +350,4 @@
             }
         })();
     </script>
-</body>
-
-</html>
+@endpush
