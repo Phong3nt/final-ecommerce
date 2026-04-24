@@ -1,405 +1,224 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.admin')
+{{-- @include('partials.toast') --}}
 
-<head>
-    <title>Admin — Order #{{ $order->id }}</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 2rem;
-            background: #f5f5f5;
-        }
+@section('title', 'Admin — Order #{{ $order->id }}')
+@section('page-title', 'Order Detail')
 
-        h1 {
-            margin-bottom: .25rem;
-        }
+@section('content')
+<div x-data x-init="$el.classList.add('fade-in')">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0">Order #{{ $order->id }}</h5>
+            <small class="text-muted">
+                Placed {{ $order->created_at->format('d M Y, H:i') }}
+                &mdash;
+                <span class="badge bg-{{ $order->status === 'pending' ? 'warning text-dark' : ($order->status === 'cancelled' || $order->status === 'failed' ? 'danger' : ($order->status === 'delivered' || $order->status === 'paid' ? 'success' : 'primary')) }}">
+                    {{ $order->status }}
+                </span>
+            </small>
+        </div>
+        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> All Orders
+        </a>
+    </div>
 
-        .meta {
-            color: #6b7280;
-            font-size: .95rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card {
-            background: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 1rem 1.25rem;
-        }
-
-        .card h2 {
-            font-size: 1rem;
-            margin: 0 0 .75rem;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: .4rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: .55rem .75rem;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: .9rem;
-        }
-
-        th {
-            background: #f8f9fa;
-            font-weight: 700;
-        }
-
-        td.right,
-        th.right {
-            text-align: right;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: .3rem 0;
-            font-size: .9rem;
-        }
-
-        .summary-total {
-            font-weight: 700;
-            border-top: 2px solid #111;
-            margin-top: .25rem;
-            padding-top: .4rem;
-        }
-
-        address {
-            font-style: normal;
-            line-height: 1.7;
-            font-size: .9rem;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: .2rem .55rem;
-            border-radius: 20px;
-            font-size: .8rem;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-paid {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .badge-processing {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .badge-shipped {
-            background: #e0cffc;
-            color: #432874;
-        }
-
-        .badge-delivered {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .badge-cancelled {
-            background: #f8d7da;
-            color: #842029;
-        }
-
-        .badge-failed {
-            background: #f8d7da;
-            color: #842029;
-        }
-
-        .badge-refunded {
-            background: #d0f0fd;
-            color: #0c4a6e;
-        }
-
-        .timeline {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .timeline-step {
-            padding: .45rem 0 .45rem 1.4rem;
-            border-left: 3px solid #e5e7eb;
-            margin-bottom: .2rem;
-            font-size: .9rem;
-        }
-
-        .timeline-step--done {
-            border-left-color: #10b981;
-        }
-
-        .timeline-step--pending {
-            color: #9ca3af;
-        }
-
-        .timeline-ts {
-            margin-left: .6rem;
-            font-size: .82rem;
-            color: #6b7280;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: .4rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: .875rem;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #0d6efd;
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: #fff;
-        }
-
-        .btn-sm {
-            padding: .3rem .75rem;
-            font-size: .82rem;
-        }
-
-        .alert-success {
-            background: #d1e7dd;
-            border: 1px solid #badbcc;
-            color: #0f5132;
-            padding: .75rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c2c7;
-            color: #842029;
-            padding: .75rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .status-form {
-            margin-top: .75rem;
-            display: flex;
-            gap: .5rem;
-            align-items: center;
-        }
-
-        .status-form select {
-            padding: .35rem .6rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: .875rem;
-        }
-    </style>
-</head>
-
-<body>
-    @include('partials.toast')
-
-    <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary btn-sm" style="margin-bottom:1rem;">&larr; All
-        Orders</a>
-
-    <h1>Order #{{ $order->id }}</h1>
-    <p class="meta">
-        Placed {{ $order->created_at->format('d M Y, H:i') }}
-        &mdash; <span class="badge badge-{{ $order->status }}">{{ $order->status }}</span>
-    </p>
-
-    <div class="grid">
+    <div class="row g-3 mb-3">
         {{-- Customer --}}
-        <div class="card">
-            <h2>Customer</h2>
-            <p style="margin:0;font-size:.9rem;">
-                <strong>{{ $order->user?->name ?? '—' }}</strong><br>
-                {{ $order->user?->email ?? '—' }}
-            </p>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title border-bottom pb-2 mb-3">Customer</h6>
+                    <p class="mb-0">
+                        <strong>{{ $order->user?->name ?? '—' }}</strong><br>
+                        <span class="text-muted">{{ $order->user?->email ?? '—' }}</span>
+                    </p>
+                </div>
+            </div>
         </div>
 
         {{-- Shipping Address --}}
-        <div class="card">
-            <h2>Shipping Address</h2>
-            <address>
-                {{ $order->address['name'] }}<br>
-                {{ $order->address['address_line1'] }}
-                @if(!empty($order->address['address_line2']))
-                    <br>{{ $order->address['address_line2'] }}
-                @endif
-                <br>{{ $order->address['city'] }}, {{ $order->address['state'] ?? '' }}
-                {{ $order->address['postal_code'] }}<br>
-                {{ $order->address['country'] }}
-            </address>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title border-bottom pb-2 mb-3">Shipping Address</h6>
+                    <address class="mb-0" style="font-style:normal;line-height:1.7;font-size:.9rem;">
+                        {{ $order->address['name'] }}<br>
+                        {{ $order->address['address_line1'] }}
+                        @if(!empty($order->address['address_line2']))
+                            <br>{{ $order->address['address_line2'] }}
+                        @endif
+                        <br>{{ $order->address['city'] }}, {{ $order->address['state'] ?? '' }}
+                        {{ $order->address['postal_code'] }}<br>
+                        {{ $order->address['country'] }}
+                    </address>
+                </div>
+            </div>
         </div>
 
         {{-- Payment --}}
-        <div class="card">
-            <h2>Payment</h2>
-            <p style="margin:0;font-size:.9rem;">
-                <strong>Method:</strong> Stripe PaymentIntent<br>
-                <strong>Status:</strong> <span class="badge badge-{{ $order->status }}">{{ $order->status }}</span><br>
-                @if($order->stripe_payment_intent_id)
-                    <strong>Intent:</strong> <small style="color:#6b7280">{{ $order->stripe_payment_intent_id }}</small>
-                @endif
-            </p>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title border-bottom pb-2 mb-3">Payment</h6>
+                    <p class="mb-0 small">
+                        <strong>Method:</strong> Stripe PaymentIntent<br>
+                        <strong>Status:</strong>
+                        <span class="badge bg-{{ $order->status === 'pending' ? 'warning text-dark' : ($order->status === 'cancelled' || $order->status === 'failed' ? 'danger' : ($order->status === 'delivered' || $order->status === 'paid' ? 'success' : 'primary')) }}">
+                            {{ $order->status }}
+                        </span><br>
+                        @if($order->stripe_payment_intent_id)
+                            <strong>Intent:</strong> <small class="text-muted">{{ $order->stripe_payment_intent_id }}</small>
+                        @endif
+                    </p>
+                </div>
+            </div>
         </div>
 
-        {{-- Status Timeline --}}
-        <div class="card">
-            <h2>Status History</h2>
-            <ol class="timeline">
-                <li class="timeline-step timeline-step--done">
-                    <strong>Placed</strong>
-                    <span class="timeline-ts">{{ $order->created_at->format('d M Y, H:i') }}</span>
-                </li>
-                <li
-                    class="timeline-step {{ $order->processing_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
-                    <strong>Processing</strong>
-                    @if($order->processing_at)
-                        <span class="timeline-ts">{{ $order->processing_at->format('d M Y, H:i') }}</span>
-                    @endif
-                </li>
-                <li class="timeline-step {{ $order->shipped_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
-                    <strong>Shipped</strong>
-                    @if($order->shipped_at)
-                        <span class="timeline-ts">{{ $order->shipped_at->format('d M Y, H:i') }}</span>
-                    @endif
-                </li>
-                <li class="timeline-step {{ $order->delivered_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
-                    <strong>Delivered</strong>
-                    @if($order->delivered_at)
-                        <span class="timeline-ts">{{ $order->delivered_at->format('d M Y, H:i') }}</span>
-                    @endif
-                </li>
-                @if($order->cancelled_at)
-                    <li class="timeline-step timeline-step--done" style="border-left-color:#dc3545;">
-                        <strong>Cancelled</strong>
-                        <span class="timeline-ts">{{ $order->cancelled_at->format('d M Y, H:i') }}</span>
-                    </li>
-                @endif
-                @if($order->refunded_at)
-                    <li class="timeline-step timeline-step--done" style="border-left-color:#0c4a6e;">
-                        <strong>Refunded</strong>
-                        <span class="timeline-ts">{{ $order->refunded_at->format('d M Y, H:i') }}</span>
-                    </li>
-                @endif
-            </ol>
+        {{-- Status History + Update Form --}}
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-body">
+                    <h6 class="card-title border-bottom pb-2 mb-3">Status History</h6>
+                    <ol class="timeline mb-3">
+                        <li class="timeline-step timeline-step--done">
+                            <strong>Placed</strong>
+                            <span class="timeline-ts">{{ $order->created_at->format('d M Y, H:i') }}</span>
+                        </li>
+                        <li class="timeline-step {{ $order->processing_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+                            <strong>Processing</strong>
+                            @if($order->processing_at)
+                                <span class="timeline-ts">{{ $order->processing_at->format('d M Y, H:i') }}</span>
+                            @endif
+                        </li>
+                        <li class="timeline-step {{ $order->shipped_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+                            <strong>Shipped</strong>
+                            @if($order->shipped_at)
+                                <span class="timeline-ts">{{ $order->shipped_at->format('d M Y, H:i') }}</span>
+                            @endif
+                        </li>
+                        <li class="timeline-step {{ $order->delivered_at ? 'timeline-step--done' : 'timeline-step--pending' }}">
+                            <strong>Delivered</strong>
+                            @if($order->delivered_at)
+                                <span class="timeline-ts">{{ $order->delivered_at->format('d M Y, H:i') }}</span>
+                            @endif
+                        </li>
+                        @if($order->cancelled_at)
+                            <li class="timeline-step timeline-step--done" style="border-left-color:#dc3545;">
+                                <strong>Cancelled</strong>
+                                <span class="timeline-ts">{{ $order->cancelled_at->format('d M Y, H:i') }}</span>
+                            </li>
+                        @endif
+                        @if($order->refunded_at)
+                            <li class="timeline-step timeline-step--done" style="border-left-color:#0c4a6e;">
+                                <strong>Refunded</strong>
+                                <span class="timeline-ts">{{ $order->refunded_at->format('d M Y, H:i') }}</span>
+                            </li>
+                        @endif
+                    </ol>
 
-            {{-- Status update form (OH-003 reuse) --}}
-            <form method="POST" action="{{ route('admin.orders.status', $order) }}" class="status-form">
-                @csrf
-                @method('PATCH')
-                <select name="status">
-                    @foreach($updatableStatuses as $s)
-                        <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
-            </form>
+                    {{-- Status update form --}}
+                    <form method="POST" action="{{ route('admin.orders.status', $order) }}" class="d-flex gap-2 align-items-center">
+                        @csrf
+                        @method('PATCH')
+                        <select name="status" class="form-select form-select-sm" style="max-width:160px;">
+                            @foreach($updatableStatuses as $s)
+                                <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+                    </form>
 
-            {{-- OM-005: Process Refund button (only for cancelled orders with a payment intent) --}}
-            @if($order->status === 'cancelled' && $order->stripe_payment_intent_id)
-                @error('order')
-                    <div class="alert-error" style="margin-top:.75rem;">{{ $message }}</div>
-                @enderror
-                <form method="POST" action="{{ route('admin.orders.refund', $order) }}" style="margin-top:.75rem;"
-                    onsubmit="return confirm('Process a refund of ${{ number_format($order->total, 2) }} for Order #{{ $order->id }}?')">
-                    @csrf
-                    <button type="submit" class="btn btn-sm" style="background:#0c4a6e;color:#fff;">
-                        Process Refund (${{ number_format($order->total, 2) }})
-                    </button>
-                </form>
-            @endif
+                    {{-- OM-005: Refund button --}}
+                    @if($order->status === 'cancelled' && $order->stripe_payment_intent_id)
+                        @error('order')
+                            <div class="alert alert-danger mt-2 py-2 small">{{ $message }}</div>
+                        @enderror
+                        <form method="POST" action="{{ route('admin.orders.refund', $order) }}" class="mt-2"
+                            onsubmit="return confirm('Process a refund of ${{ number_format($order->total, 2) }} for Order #{{ $order->id }}?')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm" style="background:#0c4a6e;color:#fff;">
+                                Process Refund (${{ number_format($order->total, 2) }})
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
     {{-- Items --}}
-    <div class="card" style="margin-bottom:1.25rem;">
-        <h2>Items</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th class="right">Qty</th>
-                    <th class="right">Unit Price</th>
-                    <th class="right">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($order->items as $item)
-                    <tr>
-                        <td>{{ $item->product_name }}</td>
-                        <td class="right">{{ $item->quantity }}</td>
-                        <td class="right">${{ number_format($item->unit_price, 2) }}</td>
-                        <td class="right">${{ number_format($item->subtotal, 2) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        {{-- Totals --}}
-        <div style="max-width:280px;margin-left:auto;margin-top:.75rem;">
-            <div class="summary-row"><span>Subtotal</span><span>${{ number_format($order->subtotal, 2) }}</span></div>
-            <div class="summary-row"><span>Shipping
-                    ({{ $order->shipping_label }})</span><span>${{ number_format($order->shipping_cost, 2) }}</span>
+    <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-body">
+            <h6 class="card-title border-bottom pb-2 mb-3">Items</h6>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($order->items as $item)
+                            <tr>
+                                <td>{{ $item->product_name }}</td>
+                                <td class="text-end">{{ $item->quantity }}</td>
+                                <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
+                                <td class="text-end">${{ number_format($item->subtotal, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-            <div class="summary-row summary-total"><span>Total</span><span>${{ number_format($order->total, 2) }}</span>
+            <div class="d-flex justify-content-end mt-3">
+                <div style="min-width:240px;">
+                    <div class="d-flex justify-content-between small mb-1"><span>Subtotal</span><span>${{ number_format($order->subtotal, 2) }}</span></div>
+                    <div class="d-flex justify-content-between small mb-1"><span>Shipping ({{ $order->shipping_label }})</span><span>${{ number_format($order->shipping_cost, 2) }}</span></div>
+                    <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>Total</span><span>${{ number_format($order->total, 2) }}</span></div>
+                </div>
             </div>
         </div>
     </div>
+
     {{-- OM-005: Refund Transactions --}}
     @if($order->refundTransactions->isNotEmpty())
-        <div class="card" style="margin-bottom:1.25rem;">
-            <h2>Refund Transactions</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th class="right">Amount</th>
-                        <th>Stripe Refund ID</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($order->refundTransactions as $refund)
-                        <tr>
-                            <td>{{ $refund->created_at->format('d M Y, H:i') }}</td>
-                            <td class="right">${{ number_format($refund->amount, 2) }}</td>
-                            <td><small style="color:#6b7280">{{ $refund->stripe_refund_id ?? '—' }}</small></td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="card shadow-sm border-0 rounded-3 mb-3">
+            <div class="card-body">
+                <h6 class="card-title border-bottom pb-2 mb-3">Refund Transactions</h6>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th class="text-end">Amount</th>
+                                <th>Stripe Refund ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($order->refundTransactions as $refund)
+                                <tr>
+                                    <td>{{ $refund->created_at->format('d M Y, H:i') }}</td>
+                                    <td class="text-end">${{ number_format($refund->amount, 2) }}</td>
+                                    <td><small class="text-muted">{{ $refund->stripe_refund_id ?? '—' }}</small></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     @endif
+</div>
+@endsection
 
-</body>
-
-</html>
+@push('styles')
+<style>
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline-step { padding: .45rem 0 .45rem 1.4rem; border-left: 3px solid #e5e7eb; margin-bottom: .2rem; font-size: .9rem; }
+    .timeline-step--done { border-left-color: #10b981; }
+    .timeline-step--pending { color: #9ca3af; }
+    .timeline-ts { margin-left: .6rem; font-size: .82rem; color: #6b7280; }
+</style>
+@endpush

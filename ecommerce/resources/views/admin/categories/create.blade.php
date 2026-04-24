@@ -1,51 +1,51 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.admin')
 
-<head>
-    <title>Admin — New Category</title>
-    <style>
-        body { font-family: sans-serif; margin: 2rem; background: #f5f5f5; }
-        h1 { margin-bottom: 1rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-weight: 600; margin-bottom: .25rem; }
-        input, select { width: 100%; max-width: 480px; padding: .5rem; border: 1px solid #ccc; border-radius: 4px; }
-        .error { color: #dc3545; font-size: .875rem; margin-top: .25rem; }
-        button[type=submit] {
-            padding: .5rem 1.5rem; background: #198754; color: #fff;
-            border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;
-        }
-        a { color: #0d6efd; }
-    </style>
-</head>
+@section('title', 'Admin — New Category')
+@section('page-title', 'New Category')
 
-<body>
-    <h1>New Category</h1>
-
-    <form method="POST" action="{{ route('admin.categories.store') }}">
-        @csrf
-
-        <div class="form-group">
-            <label for="name">Name *</label>
-            <input type="text" id="name" name="name" value="{{ old('name') }}" required>
-            @error('name')<div class="error">{{ $message }}</div>@enderror
+@section('content')
+    <div x-data x-init="$el.classList.add('fade-in')">
+        <div class="mb-3">
+            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Categories
+            </a>
         </div>
 
-        <div class="form-group">
-            <label for="parent_id">Parent Category (optional)</label>
-            <select id="parent_id" name="parent_id">
-                <option value="">— None —</option>
-                @foreach($parents as $parent)
-                    <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
-                        {{ $parent->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('parent_id')<div class="error">{{ $message }}</div>@enderror
+        <div class="card shadow-sm border-0 rounded-3" style="max-width:540px;">
+            <div class="card-body">
+                <h5 class="card-title mb-4">New Category</h5>
+
+                <form method="POST" action="{{ route('admin.categories.store') }}">
+                    @csrf
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}"
+                            class="form-control @error('name') is-invalid @enderror" required>
+                        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="parent_id" class="form-label fw-semibold">Parent Category <span
+                                class="text-muted fw-normal">(optional)</span></label>
+                        <select id="parent_id" name="parent_id"
+                            class="form-select @error('parent_id') is-invalid @enderror">
+                            <option value="">— None —</option>
+                            @foreach($parents as $parent)
+                                <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
+                                    {{ $parent->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('parent_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Create Category</button>
+                        <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <button type="submit">Create Category</button>
-        <a href="{{ route('admin.categories.index') }}" style="margin-left:1rem;">Cancel</a>
-    </form>
-</body>
-
-</html>
+    </div>
+@endsection
