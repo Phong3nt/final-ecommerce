@@ -172,7 +172,7 @@
     <a href="{{ route('admin.products.create') }}" class="btn">+ New Product</a>
 
     <div class="card">
-        <h2>Import Products via CSV (PM-005)</h2>
+        <h2>Import Products via CSV</h2>
         <p style="margin:.25rem 0 .75rem;color:#555;">Expected headers:
             <strong>name,description,price,stock,status,category</strong>
         </p>

@@ -1,0 +1,106 @@
+8c135ae feat(IMP-019): redesign Login page with Bootstrap 5 card layout
+69fbd54 feat(IMP-018,IMP-031): Bootstrap 5 shared layout + user navbar + migrate products/checkout pages
+3fc5056 feat(IMP-017): real-time admin notifications via Firebase RTDB
+73df257 feat(IMP-015,IMP-016): DB cart persistence + consolidated audit log; fix(FIX-005): AuditLogController @var annotation
+f1d12bf docs: finalize IMP-010 documentation
+a8a31da improve: IMP-010 - Product image lightbox + zoom on detail page (PC-005)
+57720f3 chore: fix gitignore to allow tracking .vscode/settings.json
+d393da1 chore: track .vscode/settings.json ΓÇö suppress Blade false positives in VS Code
+fd8ca3f fix(UM-003,IMP-003): add @property docblock to User model (PHP0416 ) + .vscode/settings.json (Blade false positives)
+add0ab4 fix(IMP-003,CP-001,PC-001,PC-002,AU-002): IDE annotation gaps ΓÇö addresses(), withQueryString(), getMiddlewareGroups()
+63c5642 fix(AU-001,AU-002,PC-001,PC-002,PC-005): add EmailVerificationController + IDE annotation fixes ΓÇö 6 new tests
+a58a217 improve: IMP-009 - Global toast notification system - 10 tests [UIUX_MODE]
+152aa3f Merge improve/IMP-008: Switch queue driver sync to database
+2721c2c improve: IMP-008 ΓÇö Switch queue driver syncΓåÆdatabase ΓÇö 10 tests [INFRA_MODE]
+ec429eb Merge improve/IMP-007: Alpine.js micro-interactions
+13e7ce2 improve: IMP-007 ╬ô├ç├╢ Alpine.js micro-interactions on cart actions ╬ô├ç├╢ 10 tests (UIUX scope) [UIUX_MODE]
+db6a839 Merge improve/IMP-006: N+1 eager loading fixes
+085d5ad improve: IMP-006 ΓÇö Eliminate N+1 queries via eager-loading ΓÇö 10 tests [LOGIC_MODE]
+86de3ef improve: IMP-005 ΓÇö Off-canvas cart drawer ΓÇö 0 tests (UIUX scope) [UIUX_MODE]
+335ad09 merge: improve/IMP-004 into master
+9cd43c6 docs: format cleanup before IMP-005
+5b8d1ac improve: IMP-004 ΓÇö Guest Checkout ΓÇö 18/18 tests pass [FULL_STACK_MODE]
+774f042 docs: format cleanup before IMP-004
+48ba6a1 improve: IMP-003 ΓÇö One-Page Checkout ΓÇö 18/18 tests pass [FULL_STACK_MODE]
+cbda779 docs: format cleanup before IMP-003
+origin	https://github.com/Phong3nt/final-ecommerce.git (fetch)
+origin	https://github.com/Phong3nt/final-ecommerce.git (push)
+  docs/restructure-instructions 9e62830 docs: restructure instruction system ΓÇö git_workflow.md, security_checks.md, task_template.md, Rule 10 Architectural Conflict, pre-commit hook
+  feature/AD-001                4f5b4b3 feat(AD-001): admin dashboard KPI cards -- total revenue, orders today, new users today, low-stock products, 5-min auto-refresh -- 12/12 tests pass
+  feature/AD-002                a76cade feat(AD-002): revenue chart -- Chart.js bar+line, daily/weekly/monthly toggle, JSON endpoint /admin/chart-data -- 12/12 tests pass
+  feature/AD-003                0ec49cc feat(AD-003): admin top-selling products - top 10 by revenue/units, date range filter, dashboard table
+  feature/AD-004                b3ec143 feat(AD-004): recent orders on admin dashboard - last 10 orders, newest first, status, quick-action link, empty state
+  feature/AU-001                49bc44f feat: AU-001 ΓÇö user registration (email/password) ΓÇö 12/12 tests pass
+  feature/AU-002                10908cc feat: AU-002 ΓÇö user login (email/password) ΓÇö 12/12 tests pass
+  feature/AU-003                22ee0c8 chore: normalize backlog.md whitespace in AU-003 row
+  feature/AU-004                f386a46 feat(AU-004): logout ΓÇö session invalidated, redirects to home ΓÇö 12/12 tests pass
+  feature/AU-005                437e038 feat(AU-005): password reset via email ΓÇö 12/12 tests pass, 62 total
+  feature/AU-006                ec95b15 feat(AU-006): role-based access control ΓÇö role:admin middleware, admin routes, seeder ΓÇö 12/12 tests pass
+  feature/CP-001                1fc5861 feat(CP-001): checkout address step (saved addresses, new address form, validation) -- 12/12 tests pass
+  feature/CP-002                2531571 feat(CP-002): checkout shipping method (standard/express, cost in session) -- 12/12 tests pass
+  feature/CP-003                c1e29b0 feat(CP-003): payment gateway (Stripe PaymentIntent, webhook, tokenization) -- 12/12 tests pass
+  feature/CP-004                3ef4663 feat(CP-004): order confirmation email via queued job (ShouldQueue, Mailable) -- 12/12 tests pass
+  feature/CP-005                9b05e50 feat(CP-005): success/failure page after Stripe redirect -- 12/12 tests pass
+  feature/NF-001                3d6f0d3 feat(NF-001): CSRF protection audit -- middleware, route exclusion, view tokens -- 12/12 tests pass
+  feature/NF-002                ebdb0dc feat(NF-002): input sanitization audit -- Eloquent-only, fillable, XSS, SQLi -- 12/12 tests pass
+  feature/NF-003                830b4a6 feat(NF-003): payment tokenization audit -- Stripe SDK, no card data stored, Stripe.js elements -- 12/12 tests pass
+  feature/NF-004                4577f54 feat(NF-004): enforce HTTPS in production via URL::forceScheme -- 12/12 tests pass
+  feature/NF-005                200785d feat(NF-005): admin route middleware audit -- role+auth on every admin route -- 12/12 tests pass
+  feature/NF-006                7ee2d47 feat(NF-006): rate limiting on login, register, forgot-password -- throttle:10,1 -- 12/12 tests pass
+  feature/NF-007                34c4343 feat(NF-007): cloud image storage via configurable IMAGE_DISK - 785/785 tests pass
+  feature/NF-008                87cc3ef feat(NF-008): queued heavy operations audit - 12/12 tests pass
+  feature/NF-009                4c4647f feat(NF-009): application logging - Telescope (dev) + Sentry (prod) - 12/12 tests pass
+  feature/NF-010                a862c31 feat(NF-010): critical flow PHPUnit audit - auth/checkout/webhook - 12/12 tests pass
+  feature/NT-001                fc2f2bd feat(NT-001): queued email notifications for order placed, status change, delivery - 743/743 tests pass
+  feature/NT-002                61bf097 feat(NT-002): admin in-app notification bell for new orders with email + mark as read - 758/758 tests pass
+  feature/NT-003                057aad4 feat(NT-003): admin low-stock threshold alert per product - 773/773 tests pass
+  feature/OH-001                e1fdaf7 feat(OH-001): order history page -- newest-first, paginated 10/page, data isolation -- 12/12 tests pass
+  feature/OH-002                d256a25 feat(OH-002): order detail page -- items, address, payment method, status, 403 isolation -- 12/12 tests pass
+  feature/OH-003                e7be35c feat(OH-003): order status tracking -- Pending/Processing/Shipped/Delivered timeline, status timestamps, email notification, admin PATCH endpoint -- 12/12 tests pass
+  feature/OH-004                15653ce feat(OH-004): order cancellation -- pending-only, PaymentIntent cancel, stock restore, cancel button -- 12/12 tests pass
+  feature/OM-001                409affb feat(OM-001): admin order list -- filter by status/date/customer, sort, paginate 20/page
+  feature/OM-002                2ca0a18 style(OM-002): formatter applied to show.blade.php and AdminOrderDetailTest
+  feature/OM-003                77742a6 feat(OM-003): admin order status update - cancelled transition, cancelled_at, email notification
+  feature/OM-004                b7e694c feat(OM-004): export orders to CSV - filtered result set, all required columns, download attachment
+  feature/OM-005                a323af7 feat(OM-005): process refund - Stripe refund API, refunded status, transaction log
+  feature/PC-001                5dccbfe feat(PC-001): product listing page with pagination ΓÇö 12/12 tests pass
+  feature/PC-002                2a0bfc0 feat(PC-002): product search by name and description ΓÇö 12/12 tests pass
+  feature/PC-003                b1b2747 feat(PC-003): product filters by category, price range, rating -- 12/12 tests pass
+  feature/PC-004                63e180e feat(PC-004): product sort by newest, oldest, price, rating -- 12/12 tests pass
+  feature/PC-005                974adab feat(PC-005): product detail page with slug, SKU, related products -- 12/12 tests pass
+  feature/PM-001                8369bc7 feat(PM-001): admin product create ΓÇö migration, controller, views, routes, storefront filter
+  feature/PM-002                0da2ea6 feat(PM-002): admin product edit ΓÇö audit_logs, edit/update controller, edit view, routes
+  feature/PM-003                9634b6d feat(PM-003): admin product archive (soft delete) ΓÇö SoftDeletes, destroy, routes, view, confirmation; update task_template regression rule
+  feature/PM-004                4b34579 feat(PM-004): admin category CRUD -- parent/child hierarchy, category filter on products index
+  feature/PM-005                15abbdf feat(PM-005): admin product CSV import - migration, model, queued job, controller import/history, index UI, per-row error reporting
+  feature/PM-006                b77bfb9 feat(PM-006): admin product image management - images page, drag-to-reorder, set thumbnail, remove individual image
+  feature/RM-001                c48ea6b feat(RM-001): admin revenue report by period ΓÇö 686/686 tests pass
+  feature/RM-002                fb15a11 feat(RM-002): admin revenue by product/category sortable table + CSV export ΓÇö 707/707 tests pass
+  feature/RM-003                d2c331d feat(RM-003): admin coupon management CRUD + active/inactive toggle - 728/728 tests pass
+  feature/RV-001                5db709d feat(RV-001): product reviews - create review, purchase gate, one review per user per product
+  feature/RV-002                9ea50ba feat(RV-002): review listing - paginated 5/page, average rating prominent, product rating sync
+  feature/SC-001                3357904 feat(SC-001): add to cart (session-based, guest+auth, AJAX JSON) -- 12/12 tests pass
+  feature/SC-002                4f0749d feat(SC-002): view cart page with items, subtotals, order total -- 12/12 tests pass
+  feature/SC-003                205c065 feat(SC-003): update cart qty (AJAX JSON, stock cap, total recalc) -- 12/12 tests pass
+  feature/SC-004                7cbba48 feat(SC-004): remove cart item (AJAX JSON, cart_count + order_total recalc) -- 12/12 tests pass
+  feature/SC-005                eab06b4 feat(SC-005): coupon/discount code - coupons table, CouponController apply/remove, cart discount display, checkout review discount line
+  feature/UM-001                9bf7256 docs: OM-005 evaluation history and backlog Done, regression 601/601, tag v1.0-OM-005-stable
+  feature/UM-002                2a19a9c feat(UM-002): admin view user profile and order history ΓÇö 15/15 tests pass
+  feature/UM-003                af7cbad feat(UM-003): admin activate/suspend user account ΓÇö 17/17 tests pass
+  feature/UM-004                b56a9c5 feat(UM-004): admin assign/change user roles ΓÇö 17/17 tests pass
+  feature/UP-001                fd714a4 feat(UP-001): user profile view/edit with avatar upload ΓÇö 12/12 tests pass
+  feature/UP-002                edf203d feat(UP-002): user saved addresses CRUD - index, store, update, destroy, setDefault
+  improve/IMP-001               c3a57b4 docs: format cleanup in backlog and evaluation_history
+  improve/IMP-002               cbda779 docs: format cleanup before IMP-003
+  improve/IMP-003               774f042 docs: format cleanup before IMP-004
+  improve/IMP-004               9cd43c6 docs: format cleanup before IMP-005
+  improve/IMP-005               86de3ef improve: IMP-005 ΓÇö Off-canvas cart drawer ΓÇö 0 tests (UIUX scope) [UIUX_MODE]
+  improve/IMP-006               085d5ad improve: IMP-006 ΓÇö Eliminate N+1 queries via eager-loading ΓÇö 10 tests [LOGIC_MODE]
+  improve/IMP-007               13e7ce2 improve: IMP-007 ╬ô├ç├╢ Alpine.js micro-interactions on cart actions ╬ô├ç├╢ 10 tests (UIUX scope) [UIUX_MODE]
+  improve/IMP-008               2721c2c improve: IMP-008 ΓÇö Switch queue driver syncΓåÆdatabase ΓÇö 10 tests [INFRA_MODE]
+  improve/IMP-009               57720f3 chore: fix gitignore to allow tracking .vscode/settings.json
+* improve/IMP-010               8c135ae [origin/improve/IMP-010] feat(IMP-019): redesign Login page with Bootstrap 5 card layout
+  master                        152aa3f [origin/master: ahead 17] Merge improve/IMP-008: Switch queue driver sync to database
+M  ecommerce/resources/views/auth/register.blade.php
+?? output_log.txt
+?? test_output_2093880170.txt

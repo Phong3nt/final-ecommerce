@@ -80,78 +80,78 @@
 @endpush
 
 @section('content')
-@include('partials.toast')
+    @include('partials.toast')
 
-        {{-- Page header --}}
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h1 class="h3 fw-bold mb-1">My Orders</h1>
-                <p class="text-muted mb-0">View and track all your past purchases.</p>
-            </div>
-            <a href="{{ route('products.index') }}" class="btn btn-primary btn-sm px-3">
-                <i class="bi bi-shop me-1"></i>Continue Shopping
-            </a>
+    {{-- Page header --}}
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">My Orders</h1>
+            <p class="text-muted mb-0">View and track all your past purchases.</p>
         </div>
+        <a href="{{ route('products.index') }}" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-shop me-1"></i>Continue Shopping
+        </a>
+    </div>
 
-        @if ($orders->isEmpty())
-            {{-- Empty state --}}
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body text-center py-5">
-                    <div class="d-inline-flex align-items-center justify-content-center
-                                    bg-secondary bg-opacity-10 rounded-circle mb-3" style="width:64px;height:64px;">
-                        <i class="bi bi-bag fs-2 text-secondary"></i>
-                    </div>
-                    <p class="text-muted mb-3">You haven't placed any orders yet.</p>
-                    <a href="{{ route('products.index') }}" class="btn btn-primary px-4">
-                        <i class="bi bi-shop me-1"></i>Start shopping
-                    </a>
+    @if ($orders->isEmpty())
+        {{-- Empty state --}}
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body text-center py-5">
+                <div class="d-inline-flex align-items-center justify-content-center
+                                            bg-secondary bg-opacity-10 rounded-circle mb-3" style="width:64px;height:64px;">
+                    <i class="bi bi-bag fs-2 text-secondary"></i>
                 </div>
+                <p class="text-muted mb-3">You haven't placed any orders yet.</p>
+                <a href="{{ route('products.index') }}" class="btn btn-primary px-4">
+                    <i class="bi bi-shop me-1"></i>Start shopping
+                </a>
             </div>
-        @else
-            {{-- Orders table --}}
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+        </div>
+    @else
+        {{-- Orders table --}}
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($orders as $order)
                             <tr>
-                                <th>Order #</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th></th>
+                                <td class="fw-semibold">#{{ $order->id }}</td>
+                                <td class="text-muted">{{ $order->created_at->format('d M Y') }}</td>
+                                <td>${{ number_format($order->total, 2) }}</td>
+                                <td><span class="status-{{ $order->status }}">{{ ucfirst($order->status) }}</span></td>
+                                <td class="text-end">
+                                    <a href="{{ route('orders.show', $order) }}" class="btn btn-outline-secondary btn-sm">
+                                        View <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($orders as $order)
-                                <tr>
-                                    <td class="fw-semibold">#{{ $order->id }}</td>
-                                    <td class="text-muted">{{ $order->created_at->format('d M Y') }}</td>
-                                    <td>${{ number_format($order->total, 2) }}</td>
-                                    <td><span class="status-{{ $order->status }}">{{ ucfirst($order->status) }}</span></td>
-                                    <td class="text-end">
-                                        <a href="{{ route('orders.show', $order) }}" class="btn btn-outline-secondary btn-sm">
-                                            View <i class="bi bi-arrow-right ms-1"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-
-            {{-- Pagination --}}
-            <div class="mt-3 pagination-wrapper">
-                {{ $orders->links() }}
-            </div>
-        @endif
-
-        {{-- Back link --}}
-        <div class="mt-4">
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
-            </a>
         </div>
+
+        {{-- Pagination --}}
+        <div class="mt-3 pagination-wrapper">
+            {{ $orders->links() }}
+        </div>
+    @endif
+
+    {{-- Back link --}}
+    <div class="mt-4">
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
 
     </div>
 @endsection

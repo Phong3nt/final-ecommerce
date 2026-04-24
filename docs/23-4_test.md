@@ -313,3 +313,144 @@ Additionally, there is **no shared layout** (`layouts/app.blade.php`). Each page
 | 7   | Profile, Addresses, Order History have no design consistency | Medium   | → IMP-022/023/025 in backlog       |
 | 8   | Admin has no sidebar/topbar layout                           | Medium   | → IMP-026 in backlog (Not Started) |
 | 9   | Welcome page shows Laravel default, not e-commerce homepage  | Low      | → IMP-028 in backlog (Not Started) |
+
+---
+
+## 24/4 — Bug Fixes Applied
+
+> Fixed 2026-04-24. `php artisan config:clear` run after changes.
+
+| #   | Bug                                                     | Fix Applied                                                                        | Status                              |
+| --- | ------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------- |
+| 1   | 405 / error debug page shows on wrong-method requests   | `Handler.php` — redirects back + flash instead of Whoops                           | ✅ Fixed in code                    |
+| 2   | WebSocket ping error in `stripe listen` terminal        | Normal Stripe CLI disconnect — not a code bug                                      | ℹ️ Informational                    |
+| 3   | Google OAuth: `redirect_uri_mismatch` (Error 400)       | `.env` GOOGLE_REDIRECT_URI updated to `http://127.0.0.1:8000/auth/google/callback` | ⚠️ Needs Google Console (see below) |
+| 4   | Login/Register button spins forever, form never submits | `x-data` + `@click` moved from `<button>` to `<form>` using `@submit`              | ✅ Fixed in code                    |
+| 4.2 | Button clickable with empty fields, no feedback         | HTML5 `required` works again now that Alpine bug is fixed                          | ✅ Fixed (same)                     |
+| 5   | URL with `//` causes 404 or error page                  | New `NormalizeUrl` middleware added to global stack                                | ✅ Fixed in code                    |
+
+### Bug #2 — WebSocket error explanation
+
+```
+[Fri, 24 Apr 2026 01:17:52 +07] ERROR websocket.Client.writePump: Error when writing ping message: websocket: close sent
+```
+
+This comes from the **`stripe listen`** terminal (Stripe CLI), not from the Laravel app. It means the CLI lost its WebSocket connection to Stripe's servers (idle timeout, sleep, or network drop). It automatically reconnects. **No code change needed** — just restart `stripe listen` if it stops forwarding events.
+
+### Bug #3 — Google OAuth needs Google Console action ⚠️
+
+The `.env` has been updated:
+
+```
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
+```
+
+**You must also add this URI in Google Console:**
+
+1. Go to → https://console.cloud.google.com/apis/credentials
+2. Open your OAuth 2.0 Client ID
+3. Under **Authorized redirect URIs**, add: `http://127.0.0.1:8000/auth/google/callback`
+4. Save
+5. Wait ~5 minutes for changes to propagate
+
+> ⚠️ Google OAuth will remain broken until step 3–4 are done. Email/password login works now.
+
+---
+
+## PART 5 — Local Testing Roadmap
+
+> Start the server: `cd ecommerce && php artisan serve`  
+> Base URL: **`http://127.0.0.1:8000`**  
+> Also run (optional for payments): `stripe listen --forward-to http://127.0.0.1:8000/webhook/stripe`
+
+### Flow A — Guest / Public Pages
+
+| Step | Page            | URL                                          | What to Test                                                   |
+| ---- | --------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| A1   | Welcome         | http://127.0.0.1:8000/                       | Page loads, links work                                         |
+| A2   | Product Catalog | http://127.0.0.1:8000/products               | Grid renders, pagination works, filter/sort dropdowns work     |
+| A3   | Product Filter  | http://127.0.0.1:8000/products?category=1    | Filter by category, price, rating                              |
+| A4   | Product Search  | http://127.0.0.1:8000/products/search?q=shoe | Search results show, "no results" for garbage query            |
+| A5   | Product Detail  | http://127.0.0.1:8000/products/{slug}        | Images, lightbox click, Add to Cart button, reviews section    |
+| A6   | Cart (guest)    | http://127.0.0.1:8000/cart                   | Add product first via A5 → cart shows item, qty update, remove |
+
+### Flow B — Register & Login
+
+| Step | Page            | URL                                        | What to Test                                                                                                         |
+| ---- | --------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| B1   | Register        | http://127.0.0.1:8000/register             | Submit empty → browser validation shows. Submit weak password → server error. Submit valid → redirected to dashboard |
+| B2   | Login           | http://127.0.0.1:8000/login                | Wrong password → "Invalid credentials" flash. Correct → dashboard                                                    |
+| B3   | Forgot Password | http://127.0.0.1:8000/forgot-password      | Enter email → success flash (email queued). Check logs/Mailpit                                                       |
+| B4   | Google OAuth    | http://127.0.0.1:8000/auth/google/redirect | ⚠️ Only works after Google Console redirect URI is added (see Bug #3)                                                |
+| B5   | Logout          | click Logout in navbar                     | Session cleared, redirected to home                                                                                  |
+
+### Flow C — Authenticated User
+
+> Login first at B2, then continue:
+
+| Step | Page          | URL                             | What to Test                                                           |
+| ---- | ------------- | ------------------------------- | ---------------------------------------------------------------------- |
+| C1   | Dashboard     | http://127.0.0.1:8000/dashboard | Welcome message, nav links visible                                     |
+| C2   | Profile       | http://127.0.0.1:8000/profile   | Update name/email → saved. Upload avatar → preview updates             |
+| C3   | Addresses     | http://127.0.0.1:8000/addresses | Add address, set as default, edit, delete                              |
+| C4   | Order History | http://127.0.0.1:8000/orders    | Shows past orders (empty if none)                                      |
+| C5   | Cart (auth)   | http://127.0.0.1:8000/cart      | Items persist across sessions (DB-backed). Badge in navbar shows count |
+
+### Flow D — Checkout (requires auth + cart item)
+
+> Add a product to cart first, then:
+
+| Step | Page              | URL                                     | What to Test                                                                                        |
+| ---- | ----------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| D1   | Checkout Address  | http://127.0.0.1:8000/checkout/address  | Fill new address or select saved → Next                                                             |
+| D2   | Checkout Shipping | http://127.0.0.1:8000/checkout/shipping | Select Standard or Express → Next                                                                   |
+| D3   | Checkout Review   | http://127.0.0.1:8000/checkout/review   | Review summary, Stripe card form loads. Use test card `4242 4242 4242 4242`, exp `12/29`, CVC `123` |
+| D4   | Success           | http://127.0.0.1:8000/checkout/success  | Order created, confirmation shown                                                                   |
+
+### Flow E — Admin Panel
+
+> Login as admin account, then:
+
+| Step | Page              | URL                                          | What to Test                                                        |
+| ---- | ----------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| E1   | Admin Dashboard   | http://127.0.0.1:8000/admin/dashboard        | KPI cards, revenue chart, top products, recent orders               |
+| E2   | Manage Orders     | http://127.0.0.1:8000/admin/orders           | List, sort, advance status (Processing → Shipped → Delivered)       |
+| E3   | Manage Products   | http://127.0.0.1:8000/admin/products         | Create product, edit, delete, upload images, reorder, set thumbnail |
+| E4   | Manage Categories | http://127.0.0.1:8000/admin/categories       | Create, edit, delete categories                                     |
+| E5   | Manage Users      | http://127.0.0.1:8000/admin/users            | Search users, toggle suspend/activate, assign role                  |
+| E6   | Revenue Report    | http://127.0.0.1:8000/admin/revenue          | Filter by date range, period (daily/weekly/monthly), export CSV     |
+| E7   | Product Revenue   | http://127.0.0.1:8000/admin/revenue/products | Sort by revenue/units, filter by category, export CSV               |
+| E8   | Coupons           | http://127.0.0.1:8000/admin/coupons          | Create % and fixed coupons, toggle active/inactive                  |
+| E9   | Notifications     | http://127.0.0.1:8000/admin/notifications    | Mark as read, mark all read                                         |
+| E10  | Audit Log         | http://127.0.0.1:8000/admin/audit-log        | Filter by action type, see timestamps                               |
+
+### Flow F — Error Handling
+
+| Step | Test                   | URL                                        | Expected Result                                 |
+| ---- | ---------------------- | ------------------------------------------ | ----------------------------------------------- |
+| F1   | 404 page               | http://127.0.0.1:8000/this-does-not-exist  | Clean 404 page with "Browse Products" button    |
+| F2   | Double-slash URL       | http://127.0.0.1:8000//products            | 301 redirect → `http://127.0.0.1:8000/products` |
+| F3   | Triple-slash           | http://127.0.0.1:8000///login              | 301 redirect → `http://127.0.0.1:8000/login`    |
+| F4   | 405 Method Not Allowed | Open browser to a POST-only route directly | Redirected back, no Whoops debug page           |
+
+### Notes on Running Services
+
+```
+Terminal 1 — Laravel app:
+  cd ecommerce
+  php artisan serve
+  → http://127.0.0.1:8000
+
+Terminal 2 — Stripe webhooks (for checkout):
+  stripe listen --forward-to http://127.0.0.1:8000/webhook/stripe
+
+Terminal 3 — Vite (if editing frontend assets):
+  cd ecommerce
+  npm run dev
+
+Terminal 4 — Queue worker (for emails/jobs):
+  cd ecommerce
+  php artisan queue:work
+```
+
+> **WebSocket ping error in stripe listen** (`websocket.Client.writePump`) = connection timeout. Just press Ctrl+C and re-run `stripe listen`. Not a bug.

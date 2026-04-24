@@ -4514,8 +4514,8 @@ None at this time.
 
 <!-- EVAL-IMP-029 END -->
 
-<!-- EVAL-IMP-031 START -->
----
+## <!-- EVAL-IMP-031 START -->
+
 ## EVAL-IMP-031 — Global Navbar (Persistent Top Navbar + Mobile Hamburger)
 
 **Date:** 2026-04-24
@@ -4529,26 +4529,26 @@ None at this time.
 
 ### Changes Made
 
-| File | Change |
-|------|--------|
+| File                                        | Change                                                                                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ecommerce/tests/Feature/GlobalNavTest.php` | **New** — 12 test cases verifying navbar partial structure, layout inclusion, guest/auth rendering, cart badge, mobile toggle, sticky class, dropdown links |
 
 ### Test Cases (GlobalNavTest — 12/12 passed)
 
-| TC | Description | Type |
-|----|-------------|------|
-| TC01 | Navbar partial file exists with required markup (`navbar-expand-lg`, `sticky-top`, `navbar-toggler`, `bi-cart3`, `bi-shop`) | View source |
-| TC02 | `layouts/app.blade.php` includes `@include('partials.navbar')` | View source |
-| TC03 | Guest user sees Login link on products page | HTTP GET |
-| TC04 | Guest user sees Register link on products page | HTTP GET |
-| TC05 | Authenticated user's name appears in navbar | HTTP GET + actingAs |
-| TC06 | Authenticated user does NOT see Login href | HTTP GET + actingAs |
-| TC07 | Navbar renders cart icon link to `route('cart.index')` | HTTP GET |
-| TC08 | Cart badge shows count when `cart_count` in session | HTTP GET + session |
-| TC09 | Mobile hamburger toggle button present (`navbar-toggler`, `data-bs-toggle="collapse"`) | HTTP GET |
-| TC10 | Navbar has `sticky-top` class (rendered output) | HTTP GET |
-| TC11 | Auth user dropdown renders Dashboard, Profile, Orders, Addresses, Logout routes | HTTP GET + actingAs |
-| TC12 | Navbar renders within 1 second | HTTP GET + timing |
+| TC   | Description                                                                                                                 | Type                |
+| ---- | --------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| TC01 | Navbar partial file exists with required markup (`navbar-expand-lg`, `sticky-top`, `navbar-toggler`, `bi-cart3`, `bi-shop`) | View source         |
+| TC02 | `layouts/app.blade.php` includes `@include('partials.navbar')`                                                              | View source         |
+| TC03 | Guest user sees Login link on products page                                                                                 | HTTP GET            |
+| TC04 | Guest user sees Register link on products page                                                                              | HTTP GET            |
+| TC05 | Authenticated user's name appears in navbar                                                                                 | HTTP GET + actingAs |
+| TC06 | Authenticated user does NOT see Login href                                                                                  | HTTP GET + actingAs |
+| TC07 | Navbar renders cart icon link to `route('cart.index')`                                                                      | HTTP GET            |
+| TC08 | Cart badge shows count when `cart_count` in session                                                                         | HTTP GET + session  |
+| TC09 | Mobile hamburger toggle button present (`navbar-toggler`, `data-bs-toggle="collapse"`)                                      | HTTP GET            |
+| TC10 | Navbar has `sticky-top` class (rendered output)                                                                             | HTTP GET            |
+| TC11 | Auth user dropdown renders Dashboard, Profile, Orders, Addresses, Logout routes                                             | HTTP GET + actingAs |
+| TC12 | Navbar renders within 1 second                                                                                              | HTTP GET + timing   |
 
 ### Navbar Spec Compliance (RULE 8)
 

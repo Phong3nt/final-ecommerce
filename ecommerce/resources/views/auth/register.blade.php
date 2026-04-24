@@ -10,7 +10,7 @@
                 {{-- Brand header --}}
                 <div class="text-center mb-4">
                     <div class="d-inline-flex align-items-center justify-content-center
-                                    bg-primary bg-opacity-10 rounded-circle mb-3" style="width:56px;height:56px;">
+                                        bg-primary bg-opacity-10 rounded-circle mb-3" style="width:56px;height:56px;">
                         <i class="bi bi-shop fs-4 text-primary"></i>
                     </div>
                     <h1 class="h4 fw-bold mb-0">E-Commerce</h1>
@@ -18,7 +18,8 @@
                 </div>
 
                 {{-- Register form --}}
-                <form method="POST" action="{{ route('register.store') }}">
+                <form method="POST" action="{{ route('register.store') }}" x-data="{ loading: false }"
+                    @submit="loading = true">
                     @csrf
 
                     <div class="mb-3">
@@ -59,8 +60,7 @@
                             required autocomplete="new-password">
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100" x-data="{ loading: false }" @click="loading = true"
-                        :disabled="loading">
+                    <button type="submit" class="btn btn-primary w-100" :disabled="loading">
                         <span x-show="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
                         <span x-text="loading ? 'Creating account…' : 'Create account'">Create account</span>
                     </button>

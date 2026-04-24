@@ -1,76 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
+{{-- @include('partials.toast') --}}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout — Order Review</title>
-    <script src="https://js.stripe.com/v3/"></script>
-</head>
+@section('title', 'Checkout — Order Review')
 
-<body>
-    @include('partials.toast')
-    <h1>Order Review</h1>
+@section('content')
+    <div x-data x-init="$el.classList.add('fade-in')">
+        {{-- Breadcrumb --}}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('cart.index') }}">Cart</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('checkout.address') }}">Address</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('checkout.shipping') }}">Shipping</a></li>
+                <li class="breadcrumb-item active">Review</li>
+            </ol>
+        </nav>
 
-    <a href="{{ route('checkout.shipping') }}">&larr; Back to Shipping</a>
+        <div class="row g-4">
+            {{-- Left column: address + shipping + items --}}
+            <div class="col-lg-7">
 
-    <section id="address-summary">
-        <h2>Shipping Address</h2>
-        <p>{{ $address['name'] }}</p>
-        <p>{{ $address['address_line1'] }}@if($address['address_line2']), {{ $address['address_line2'] }}@endif</p>
-        <p>{{ $address['city'] }}, {{ $address['state'] }} {{ $address['postal_code'] }}</p>
-        <p>{{ $address['country'] }}</p>
-    </section>
+                {{-- Address summary --}}
+                <div class="card shadow-sm border-0 rounded-3 mb-3">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h2 class="h6 fw-semibold text-label mb-0">Shipping Address</h2>
+                            <a href="{{ route('checkout.address') }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                        </div>
+                        <p class="mb-0 small">
+                            <strong>{{ $address['name'] }}</strong><br>
+                            {{ $address['address_line1'] }}@if($address['address_line2']),
+                            {{ $address['address_line2'] }}@endif<br>
+                            {{ $address['city'] }}, {{ $address['state'] }} {{ $address['postal_code'] }}<br>
+                            {{ $address['country'] }}
+                        </p>
+                    </div>
+                </div>
 
-    <section id="shipping-summary">
-        <h2>Shipping Method</h2>
-        <p>{{ $shipping['label'] }} — ${{ number_format($shipping['cost'], 2) }}</p>
-    </section>
+                {{-- Shipping method --}}
+                <div class="card shadow-sm border-0 rounded-3 mb-3">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="h6 fw-semibold text-label mb-1">Shipping Method</h2>
+                                <span class="small">{{ $shipping['label'] }}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold">${{ number_format($shipping['cost'], 2) }}</span>
+                                <a href="{{ route('checkout.shipping') }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <section id="cart-summary">
-        <h2>Order Items</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Unit Price</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($cart as $item)
-                    <tr>
-                        <td>{{ $item['name'] }}</td>
-                        <td>{{ $item['quantity'] }}</td>
-                        <td>${{ number_format($item['price'], 2) }}</td>
-                        <td>${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                {{-- Order items --}}
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+                        <h2 class="h6 fw-semibold text-label mb-0">Order Items</h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Product</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-end">Price</th>
+                                        <th class="text-end pe-4">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($cart as $item)
+                                        <tr>
+                                            <td class="ps-4">{{ $item['name'] }}</td>
+                                            <td class="text-center">{{ $item['quantity'] }}</td>
+                                            <td class="text-end">${{ number_format($item['price'], 2) }}</td>
+                                            <td class="text-end pe-4">
+                                                ${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-        <p>Subtotal: <span id="subtotal">${{ number_format($subtotal, 2) }}</span></p>
-        <p>Shipping: <span id="shipping-cost">${{ number_format($shipping['cost'], 2) }}</span></p>
-        @if($discount > 0)
-            <p id="discount-line">Discount ({{ $coupon['code'] }}): -${{ number_format($discount, 2) }}</p>
-        @endif
-        <p><strong>Total: <span id="grand-total">${{ number_format($total, 2) }}</span></strong></p>
-    </section>
+            </div>
 
-    <section id="payment-section">
-        <h2>Payment</h2>
-        <p>Your card details are handled securely by Stripe. Your card number never touches our server.</p>
+            {{-- Right column: order summary + payment --}}
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 rounded-3 sticky-top" style="top:80px;">
+                    <div class="card-body p-4">
+                        <h2 class="h6 fw-semibold text-label mb-3">Order Summary</h2>
 
-        <div id="payment-element">
-            <!-- Stripe Elements will inject card fields here -->
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Subtotal</span>
+                            <span>${{ number_format($subtotal, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Shipping</span>
+                            <span>${{ number_format($shipping['cost'], 2) }}</span>
+                        </div>
+                        @if($discount > 0)
+                            <div class="d-flex justify-content-between mb-1 text-success">
+                                <span>Discount ({{ $coupon['code'] }})</span>
+                                <span>-${{ number_format($discount, 2) }}</span>
+                            </div>
+                        @endif
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                            <span>Total</span>
+                            <span class="text-primary">${{ number_format($total, 2) }}</span>
+                        </div>
+
+                        <hr class="mb-3">
+
+                        {{-- Stripe Payment Element --}}
+                        <h2 class="h6 fw-semibold text-label mb-3">
+                            <i class="bi bi-lock-fill me-1 text-success"></i>
+                            Secure Payment
+                        </h2>
+                        <p class="text-muted small mb-3">Your card details are handled securely by Stripe. Your card number
+                            never touches our server.</p>
+
+                        <div id="payment-element" class="mb-3">
+                            {{-- Stripe Elements injected here --}}
+                        </div>
+
+                        <div id="payment-message" class="alert alert-danger mb-3" style="display:none;"></div>
+
+                        <button id="pay-button" type="button" class="btn btn-success w-100 py-2 fw-semibold">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Pay ${{ number_format($total, 2) }}
+                        </button>
+
+                        <p class="text-center text-muted mt-2" style="font-size:0.75rem;">
+                            <i class="bi bi-lock me-1"></i> SSL encrypted · Powered by Stripe
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+@endsection
 
-        <div id="payment-message" style="display:none;"></div>
-
-        <button id="pay-button" type="button">Pay ${{ number_format($total, 2) }}</button>
-    </section>
-
+@push('scripts')
+    <script src="https://js.stripe.com/v3/"></script>
     <script>
         (function () {
             const placeOrderUrl = "{{ route('checkout.place-order') }}";
@@ -78,9 +152,9 @@
             const csrfToken = "{{ csrf_token() }}";
 
             if (!stripeKey) {
-                document.getElementById('payment-message').textContent =
-                    'Payment is temporarily unavailable.';
-                document.getElementById('payment-message').style.display = 'block';
+                const msg = document.getElementById('payment-message');
+                msg.textContent = 'Payment is temporarily unavailable.';
+                msg.style.display = 'block';
                 return;
             }
 
@@ -98,21 +172,20 @@
             })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    if (data.error) {
-                        showMessage(data.error);
-                        return;
-                    }
-
-                    // Step 2: Mount Stripe Payment Element using the client_secret
+                    if (data.error) { showMessage(data.error); return; }
+                    // Step 2: Mount Stripe Payment Element (handles all card validation incl. digit limits)
                     elements = stripe.elements({ clientSecret: data.client_secret });
                     const paymentElement = elements.create('payment');
                     paymentElement.mount('#payment-element');
                 })
                 .catch(function () { showMessage('Could not initialise payment.'); });
 
-            // Step 3: On button click, confirm the payment via Stripe.js (card data stays in Stripe)
+            // Step 3: On button click, confirm the payment via Stripe.js
             document.getElementById('pay-button').addEventListener('click', async function () {
                 if (!elements) return;
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing…';
 
                 const { error } = await stripe.confirmPayment({
                     elements,
@@ -123,6 +196,8 @@
 
                 if (error) {
                     showMessage(error.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay ${{ number_format($total, 2) }}';
                 }
             });
 
@@ -133,6 +208,4 @@
             }
         })();
     </script>
-</body>
-
-</html>
+@endpush
