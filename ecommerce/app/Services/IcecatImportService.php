@@ -40,6 +40,14 @@ class IcecatImportService
      */
     public function run(string $category = 'all', int $limit = 20): array
     {
+        // Abort early if credentials are missing; notify admin so failure is visible
+        if (empty(config('services.icecat.username'))) {
+            $msg = 'Icecat import aborted: ICECAT_USERNAME is not configured in .env';
+            Log::channel('icecat')->error('[ABORT] ' . $msg);
+            AdminNotification::create(['order_id' => null, 'message' => $msg]);
+            return ['attempted' => 0, 'succeeded' => 0, 'skipped' => 0];
+        }
+
         $categories = $category === 'all'
             ? array_keys(self::CATEGORY_MAP)
             : [$category];
@@ -118,23 +126,65 @@ class IcecatImportService
             return [];
         }
 
-        $body  = $response->json();
-        $items = $body['data'] ?? $body['items'] ?? $body['products'] ?? [];
+        $body = $response->json() ?? [];
 
-        if (! is_array($items)) {
+        if (! is_array($body)) {
+            Log::channel('icecat')->warning(
+                "[PARSE_ERROR] category={$categoryName} non_array_body=" . substr($response->body(), 0, 1000)
+            );
+            return [];
+        }
+
+        // Icecat may wrap the list under several different keys depending on API version.
+        // Try each variant in order; also handle data being a dict with a nested ProductsList.
+        $items = null;
+
+        if (isset($body['data']) && is_array($body['data'])) {
+            // data is either a flat list  →  ['data' => [product, product, ...]]
+            // OR a dict with a nested key →  ['data' => ['ProductsList' => [...]]]
+            $items = array_is_list($body['data'])
+                ? $body['data']
+                : ($body['data']['ProductsList'] ?? $body['data']['products'] ?? []);
+        }
+
+        $items ??= $body['items']
+            ?? $body['products']
+            ?? $body['Products']
+            ?? $body['ProductsList']
+            ?? [];
+
+        if (! is_array($items) || empty($items)) {
+            Log::channel('icecat')->info(
+                '[NO_ITEMS] category=' . $categoryName
+                . ' code='  . ($body['code'] ?? '?')
+                . ' msg='   . ($body['msg']  ?? '?')
+                . ' keys='  . implode(',', array_keys($body))
+            );
             return [];
         }
 
         $result = [];
         foreach ($items as $item) {
-            $ean = $item['EAN'] ?? ($item['Eans'][0] ?? '');
+            // EAN field naming varies across Icecat API versions
+            $ean = $item['EAN'] ?? $item['Ean'] ?? $item['ean'] ?? $item['GTIN'] ?? $item['gtin'] ?? null;
+
+            // Some versions wrap EAN in an array; others have a separate Eans/GTINs array
+            if (is_array($ean)) {
+                $ean = $ean[0] ?? null;
+            }
+            if (empty($ean)) {
+                $ean = $item['Eans'][0] ?? $item['GTINs'][0] ?? $item['eans'][0] ?? '';
+            }
+
+            $ean = (string) ($ean ?? '');
             if (empty($ean)) {
                 continue;
             }
+
             $result[] = [
                 'ean'               => $ean,
-                'icecat_product_id' => $item['Prod_id'] ?? ($item['ProductID'] ?? ''),
-                'name'              => $item['Title'] ?? ($item['ShortSummaryDescription'] ?? ''),
+                'icecat_product_id' => $item['Prod_id'] ?? $item['ProductID'] ?? $item['product_id'] ?? '',
+                'name'              => $item['Title'] ?? $item['title'] ?? $item['ShortSummaryDescription'] ?? '',
             ];
         }
 
@@ -382,9 +432,21 @@ class IcecatImportService
     {
         $params['UserName'] = config('services.icecat.username');
 
-        return Http::withBasicAuth(
-            config('services.icecat.username'),
-            config('services.icecat.password')
-        )->timeout(30)->get(self::BASE_URL, $params);
+        try {
+            $response = Http::withBasicAuth(
+                config('services.icecat.username'),
+                config('services.icecat.password')
+            )->timeout(30)->withoutVerifying()->get(self::BASE_URL, $params);
+
+            Log::channel('icecat')->debug(
+                '[HTTP] status=' . $response->status()
+                . ' body_excerpt=' . substr($response->body(), 0, 500)
+            );
+
+            return $response;
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::channel('icecat')->error('[HTTP_EXCEPTION] ' . $e->getMessage());
+            return Http::response(['msg' => 'Connection failed', 'code' => '-1'], 503);
+        }
     }
 }

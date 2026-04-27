@@ -132,6 +132,13 @@ return [
             'level' => env('LOG_LEVEL', 'error'),
             'bubble' => true,
         ],
+
+        // IMP-038: Icecat import per-run log (appended, never overwritten)
+        'icecat' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/icecat_import.log'),
+            'level'  => 'debug',
+        ],
     ],
 
 ];
