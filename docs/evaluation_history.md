@@ -6131,3 +6131,65 @@ Extended the Stripe webhook handler to process `charge.refunded` events fired wh
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-IMP-036 END -->
+
+<!-- EVAL-IMP-037 START -->
+
+## EVAL-IMP-037 — Real CRUD Seed Data + Dynamic Homepage Widgets
+
+**Version:** A  
+**Date:** 2026-04-28  
+**Status in Backlog:** Done  
+**Linked Task:** [IMP-037](backlog.md)  
+**Commit:** `e4e02db`  
+**Tag:** `v1.0-IMP-037-stable`
+
+### Test Results
+
+| Test Case ID | Scenario | Type | Result | Notes |
+|---|---|---|---|---|
+| TC-01 | CategorySeeder creates exactly 7 categories | Unit/Seeder | ✅ Pass | `Category::count() === 7` |
+| TC-02 | All 7 expected category names exist in DB | Unit/Seeder | ✅ Pass | All 7 names verified via `assertDatabaseHas` |
+| TC-03 | ProductSeeder creates ≥ 20 products per category | Unit/Seeder | ✅ Pass | 20 per × 7 = 140 total products |
+| TC-04 | UserSeeder creates 5 verified users with Spatie role=user | Unit/Seeder | ✅ Pass | Verified via `hasRole('user')` |
+| TC-05 | CouponSeeder creates exactly 5 coupons | Unit/Seeder | ✅ Pass | `Coupon::count() === 5` |
+| TC-06 | All 5 coupon codes exist and are active | Unit/Seeder | ✅ Pass | SUMMER10, NEWUSER20, FLASH15, LOYALTY5, BUNDLE30 |
+| TC-07 | Homepage returns HTTP 200 with empty DB | Feature | ✅ Pass | `@forelse` handles empty gracefully |
+| TC-08 | Homepage renders Browse by Category heading | Feature | ✅ Pass | Section heading always visible |
+| TC-09 | Homepage shows DB category names | Feature | ✅ Pass | Electronics, Laptops, etc. rendered dynamically |
+| TC-10 | Homepage renders Featured Products heading | Feature | ✅ Pass | Section heading always visible |
+| TC-11 | Homepage shows DB product names | Feature | ✅ Pass | Latest seeded product appears in DOM |
+| TC-12 | Homepage category links use integer IDs not string slugs | Feature | ✅ Pass | `?category=1` not `?category=electronics` |
+| TC-13 | Featured product card shows formatted price | Feature | ✅ Pass | `$1,299.00` format verified |
+| TC-14 | Featured product card links to product show page | Feature | ✅ Pass | `route('products.show', ['product' => slug])` |
+| TC-15 | Empty-state message when no categories in DB | Feature | ✅ Pass | "No categories available yet" shown |
+
+**Suite Summary:** 1051 tests, 2460 assertions — all green (was 1036/2405 before IMP-037)  
+**New tests added:** 15 (HomepageDataTest) + ExampleTest RefreshDatabase fix
+
+### Quality Scores
+
+| Dimension | Score | Notes |
+|---|---|---|
+| Functionality | 10/10 | All 7 sub-tasks (a)–(g) delivered |
+| Test Coverage | 10/10 | 15 tests covering seeders + dynamic UI |
+| Code Quality | 9/10 | Clean seeder structure; ProductSeeder is verbose by design (real data) |
+| UI/UX Design | 10/10 | Category icons mapped per name; uniform 220px image cards; no inline styles added |
+| Security | 10/10 | `e()` escape on product name in image alt; category ID is integer (no injection) |
+| Performance | 9/10 | `with('category')` eager-load prevents N+1; `take(8)` limits query size |
+
+### Bugs Fixed
+
+- `ExampleTest` was broken by the new DB-dependent homepage route (no `RefreshDatabase`) → fixed by adding trait
+- Category filter previously used string slugs like `'electronics'`; now corrected to use integer `$category->id`
+
+### Improvement Proposals
+
+| ID | Title | Priority |
+|---|---|---|
+| IMP-037.1 | Add a `featured` boolean flag to products so admins can hand-pick featured products (vs. latest-created order) | Medium |
+| IMP-037.2 | Cache homepage `$featuredProducts` + `$categories` in Redis for 5 minutes to reduce DB queries per page view | Low |
+| IMP-037.3 | Add category icon/color columns to DB so icons can be managed from admin UI rather than hardcoded in Blade | Low |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-037 END -->
