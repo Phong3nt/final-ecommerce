@@ -95,72 +95,136 @@
         @endif
     </form>
 
-    {{-- IMP-013: Products table --}}
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body p-0">
-            <div class="imp013-table-wrap" data-imp013="table-wrap" x-data="imp013TableSort()">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(0, 'num')">
-                                ID <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(1, 'str')">
-                                Name <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(2, 'num')">
-                                Price <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(3, 'num')">
-                                Stock <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th>Category</th>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(5, 'str')">
-                                Status <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th class="imp013-th--sort" data-imp013="sortable-th" aria-sort="none" x-on:click="sort(6, 'date')">
-                                Created <span class="imp013-sort-icon" aria-hidden="true">↕</span>
-                            </th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($products as $product)
-                            <tr>
-                                <td>{{ $product->id }}</td>
-                                <td>{{ $product->name }}</td>
-                                <td>${{ number_format($product->price, 2) }}</td>
-                                <td>{{ $product->stock }}</td>
-                                <td>{{ $product->category?->name ?? '—' }}</td>
-                                <td>
-                                    <span class="badge bg-{{ $product->status === 'published' ? 'success' : 'secondary' }}">
-                                        {{ ucfirst($product->status) }}
-                                    </span>
-                                </td>
-                                <td>{{ $product->created_at->format('Y-m-d') }}</td>
-                                <td>
-                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
-                                    <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
-                                        style="display:inline"
-                                        data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm ms-1">Archive</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No products yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    {{-- IMP-039: Bulk select + IMP-013 sort unified wrapper --}}
+    <div x-data="productListAdmin(
+            {{ $products->total() }},
+            {{ request('category_id') ? 'true' : 'false' }},
+            {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }}
+        )">
+
+        {{-- Hidden bulk-submit form (populated dynamically by Alpine) --}}
+        <form method="POST" action="{{ route('admin.products.bulkStatus') }}" x-ref="bulkForm">
+            @csrf
+            <input type="hidden" name="bulk_action" x-ref="bulkActionInput" value="">
+            <input type="hidden" name="select_all_in_category" x-ref="bulkAllInCat" value="0">
+            <input type="hidden" name="bulk_category_id" value="{{ request('category_id', '') }}">
+            <template x-for="id in (allInCategory ? [] : selected)" :key="id">
+                <input type="hidden" name="product_ids[]" :value="id">
+            </template>
+        </form>
+
+        {{-- Bulk action bar (visible when ≥1 item selected) --}}
+        <div x-show="hasSelection" x-cloak
+             class="alert alert-primary d-flex align-items-center gap-3 flex-wrap py-2 mb-3">
+            <span class="fw-semibold small">
+                <span x-text="selectionCount"></span> product(s) selected
+                <template x-if="showSelectAllBanner">
+                    <span> &mdash;
+                        <button type="button" class="btn btn-link btn-sm p-0"
+                                @click="selectAllInCategory()">
+                            Select all {{ $products->total() }} in this category
+                        </button>
+                    </span>
+                </template>
+            </span>
+            <div class="d-flex gap-2 ms-auto">
+                <button type="button" class="btn btn-success btn-sm"
+                        @click="submitBulk('published')">
+                    <i class="bi bi-check-circle me-1"></i>Publish
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        @click="submitBulk('draft')">
+                    <i class="bi bi-file-earmark me-1"></i>Set Draft
+                </button>
+                <button type="button" class="btn btn-danger btn-sm"
+                        @click="if(confirm('Archive selected products?')) submitBulk('delete')">
+                    <i class="bi bi-archive me-1"></i>Archive
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        @click="clearSelection()">
+                    Cancel
+                </button>
             </div>
         </div>
-    </div>
 
-    <div class="mt-3">{{ $products->links() }}</div>
+        {{-- IMP-013 + IMP-039: Products table --}}
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-0">
+                <div class="imp013-table-wrap" data-imp013="table-wrap">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:42px">
+                                    <input type="checkbox" class="form-check-input"
+                                           @change="toggleAll($event.target.checked)"
+                                           :checked="isAllPageChecked">
+                                </th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="1" aria-sort="none" x-on:click="sort(1, 'num')">
+                                    ID <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="2" aria-sort="none" x-on:click="sort(2, 'str')">
+                                    Name <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="3" aria-sort="none" x-on:click="sort(3, 'num')">
+                                    Price <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="4" aria-sort="none" x-on:click="sort(4, 'num')">
+                                    Stock <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th>Category</th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="6" aria-sort="none" x-on:click="sort(6, 'str')">
+                                    Status <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="7" aria-sort="none" x-on:click="sort(7, 'date')">
+                                    Created <span class="imp013-sort-icon" aria-hidden="true">↕</span>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($products as $product)
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input"
+                                               data-product-id="{{ $product->id }}"
+                                               :checked="selected.includes('{{ $product->id }}')"
+                                               @change="toggleRow('{{ $product->id }}')">
+                                    </td>
+                                    <td>{{ $product->id }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>${{ number_format($product->price, 2) }}</td>
+                                    <td>{{ $product->stock }}</td>
+                                    <td>{{ $product->category?->name ?? '—' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $product->status === 'published' ? 'success' : 'secondary' }}">
+                                            {{ ucfirst($product->status) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $product->created_at->format('Y-m-d') }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
+                                            style="display:inline"
+                                            data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm ms-1">Archive</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">No products yet.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">{{ $products->links() }}</div>
+    </div>
 </div>
 
 {{-- IMP-038: Icecat Import Modal --}}
@@ -232,6 +296,7 @@
 
 @push('styles')
 <style>
+    [x-cloak] { display: none !important; }
     .imp013-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .imp013-th--sort { cursor: pointer; user-select: none; white-space: nowrap; }
     .imp013-th--sort:hover { background: #edf0f3; }
@@ -242,14 +307,54 @@
 
 @push('scripts')
 <script>
-    function imp013TableSort() {
+    // IMP-039 + IMP-013: unified Alpine component for product list admin
+    function productListAdmin(totalInFilter, hasCategoryFilter, pageIds) {
         return {
-            col: null, dir: 'asc',
+            // ─── selection state ─────────────────────────────────────
+            selected: [],             // array of string IDs checked on current page
+            allInCategory: false,     // true when user chose "select all in category"
+
+            // ─── sort state (IMP-013) ──────────────────────────────
+            sortCol: null, sortDir: 'asc',
+
+            // ─── computed ─────────────────────────────────────────
+            get hasSelection()        { return this.allInCategory || this.selected.length > 0; },
+            get selectionCount()      { return this.allInCategory ? totalInFilter : this.selected.length; },
+            get isAllPageChecked()    { return pageIds.length > 0 && pageIds.every(id => this.selected.includes(id)); },
+            // Show "select all N in category" banner only when: a category filter is active,
+            // all items on this page are checked, and not already in all-category mode.
+            get showSelectAllBanner() {
+                return hasCategoryFilter && !this.allInCategory && this.isAllPageChecked;
+            },
+
+            // ─── selection actions ────────────────────────────────
+            toggleRow(id) {
+                this.allInCategory = false;
+                const idx = this.selected.indexOf(id);
+                if (idx >= 0) { this.selected.splice(idx, 1); }
+                else          { this.selected.push(id); }
+            },
+            toggleAll(checked) {
+                this.allInCategory = false;
+                this.selected = checked ? [...pageIds] : [];
+            },
+            selectAllInCategory() { this.allInCategory = true; },
+            clearSelection()      { this.selected = []; this.allInCategory = false; },
+
+            // ─── bulk submit ───────────────────────────────────────
+            submitBulk(action) {
+                this.$refs.bulkActionInput.value = action;
+                this.$refs.bulkAllInCat.value = this.allInCategory ? '1' : '0';
+                this.$refs.bulkForm.submit();
+            },
+
+            // ─── sort (IMP-013) ─────────────────────────────────────
             sort(colIndex, type) {
-                if (this.col === colIndex) { this.dir = this.dir === 'asc' ? 'desc' : 'asc'; }
-                else { this.col = colIndex; this.dir = 'asc'; }
-                const dir = this.dir;
-                const tbody = this.$el.querySelector('tbody');
+                if (this.sortCol === colIndex) { this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'; }
+                else { this.sortCol = colIndex; this.sortDir = 'asc'; }
+                const dir = this.sortDir;
+                const wrap = this.$el.querySelector('[data-imp013="table-wrap"]');
+                const tbody = wrap ? wrap.querySelector('tbody') : null;
                 if (!tbody) return;
                 const rows = [...tbody.querySelectorAll('tr')];
                 rows.sort((a, b) => {
@@ -262,8 +367,7 @@
                     return dir === 'asc' ? cmp : -cmp;
                 });
                 rows.forEach(r => tbody.appendChild(r));
-                const ths = this.$el.querySelectorAll('[data-imp013="sortable-th"]');
-                ths.forEach(th => {
+                wrap.querySelectorAll('[data-imp013="sortable-th"]').forEach(th => {
                     const idx = parseInt(th.getAttribute('data-col-index') || '-1');
                     th.setAttribute('aria-sort', idx === colIndex ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
                     const icon = th.querySelector('.imp013-sort-icon');
@@ -272,9 +376,10 @@
                         else { th.classList.remove('imp013-th--asc', 'imp013-th--desc'); icon.textContent = '↕'; }
                     }
                 });
-            }
+            },
         };
     }
+
     document.querySelectorAll('form[data-confirm]').forEach(function (form) {
         form.addEventListener('submit', function (e) {
             if (!confirm(form.dataset.confirm)) { e.preventDefault(); }

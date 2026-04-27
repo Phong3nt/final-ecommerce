@@ -6294,16 +6294,78 @@ returned `"0/0 products imported, 0 skipped"` despite valid credentials.
 
 **Root causes fixed:**
 
-| # | File | Problem | Fix |
-|---|------|---------|-----|
-| 1 | `config/logging.php` | `icecat` log channel not defined → `InvalidArgumentException` on any API failure path, masking the real error | Added `'icecat' => ['driver' => 'single', 'path' => storage_path('logs/icecat_import.log'), 'level' => 'debug']` |
-| 2 | `IcecatImportService::fetchEans()` | Response parser only checked lowercase keys (`data`, `items`, `products`) — real Icecat Search API can return `Products`, `ProductsList`, or nested `data.ProductsList` | Multi-key cascade: checks flat `data[]`, `data.ProductsList`, `items`, `products`, `Products`, `ProductsList`; EAN field handles `EAN`/`Ean`/`ean`/`GTIN`/`Eans[]`/`GTINs[]` |
-| 3 | `IcecatImportService::apiGet()` | Network / TLS errors threw uncaught exceptions silently swallowed up the call stack | Wrapped in `try/catch ConnectionException` → returns `Http::response([],503)` so callers can handle gracefully |
-| 4 | `IcecatImportService::run()` | No early-abort if `ICECAT_USERNAME` empty; would silently run with bad creds and return 0/0 | Credential guard at top of `run()` — creates `AdminNotification` and returns early |
-| 5 | `IcecatImportCommand::handle()` | Post-dispatch message was always "job dispatched" regardless of result; with `QUEUE_CONNECTION=sync` the job has already completed by the time `dispatch()` returns | Reads the latest Icecat `AdminNotification` created by the job and prints its message to CLI |
+| #   | File                               | Problem                                                                                                                                                                 | Fix                                                                                                                                                                          |
+| --- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `config/logging.php`               | `icecat` log channel not defined → `InvalidArgumentException` on any API failure path, masking the real error                                                           | Added `'icecat' => ['driver' => 'single', 'path' => storage_path('logs/icecat_import.log'), 'level' => 'debug']`                                                             |
+| 2   | `IcecatImportService::fetchEans()` | Response parser only checked lowercase keys (`data`, `items`, `products`) — real Icecat Search API can return `Products`, `ProductsList`, or nested `data.ProductsList` | Multi-key cascade: checks flat `data[]`, `data.ProductsList`, `items`, `products`, `Products`, `ProductsList`; EAN field handles `EAN`/`Ean`/`ean`/`GTIN`/`Eans[]`/`GTINs[]` |
+| 3   | `IcecatImportService::apiGet()`    | Network / TLS errors threw uncaught exceptions silently swallowed up the call stack                                                                                     | Wrapped in `try/catch ConnectionException` → returns `Http::response([],503)` so callers can handle gracefully                                                               |
+| 4   | `IcecatImportService::run()`       | No early-abort if `ICECAT_USERNAME` empty; would silently run with bad creds and return 0/0                                                                             | Credential guard at top of `run()` — creates `AdminNotification` and returns early                                                                                           |
+| 5   | `IcecatImportCommand::handle()`    | Post-dispatch message was always "job dispatched" regardless of result; with `QUEUE_CONNECTION=sync` the job has already completed by the time `dispatch()` returns     | Reads the latest Icecat `AdminNotification` created by the job and prints its message to CLI                                                                                 |
 
 **Diagnostic aid added:** Every HTTP call now logs `[HTTP] status=... body_excerpt=...` to `storage/logs/icecat_import.log` at debug level. On empty parse: `[NO_ITEMS] category=... code=... msg=... keys=...` is logged so the exact API response structure is visible.
 
 **Test result after fix:** 1069 tests, 2509 assertions — all passed.
 
 <!-- EVAL-IMP-038 END -->
+
+<!-- EVAL-IMP-039 START -->
+## EVAL-IMP-039 — Admin Products Bulk Status Change `[UIUX_MODE]`
+
+**Version:** A
+**Date:** 2026-04-28
+**Status in Backlog:** Done
+**Linked Task:** [IMP-039](backlog.md)
+
+### Test Results
+
+| Test Case ID     | Scenario                                                        | Type     | Result  | Notes                              |
+| ---------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------------------- |
+| TC-IMP039-01     | Admin bulk-publishes selected products by ID                    | Happy    | PASS ✅ |                                    |
+| TC-IMP039-02     | Admin bulk-sets draft                                           | Happy    | PASS ✅ |                                    |
+| TC-IMP039-03     | Admin bulk-archives (soft-deletes) selected products            | Happy    | PASS ✅ |                                    |
+| TC-IMP039-04     | Admin selects all in category → publishes entire category       | Happy    | PASS ✅ |                                    |
+| TC-IMP039-05     | Admin selects all in category → archives entire category        | Happy    | PASS ✅ |                                    |
+| TC-IMP039-06     | Guest → redirect to login                                       | Security | PASS ✅ |                                    |
+| TC-IMP039-07     | Regular user → 403                                              | Security | PASS ✅ |                                    |
+| TC-IMP039-08     | Empty selection → validation error on `product_ids`             | Negative | PASS ✅ |                                    |
+| TC-IMP039-09     | Invalid bulk_action → validation error                          | Negative | PASS ✅ |                                    |
+| TC-IMP039-10     | Only selected products changed; others untouched                | Edge     | PASS ✅ |                                    |
+| TC-IMP039-11     | Category bulk does not affect other categories                  | Edge     | PASS ✅ |                                    |
+| TC-IMP039-12     | Success flash message contains the product count                | Edge     | PASS ✅ |                                    |
+
+**Summary:** 12 Passed · 0 Failed · 0 Skipped
+**Regression:** All 60 product management tests PASS ✅ · No regression.
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                            |
+| ------------- | ----- | ---------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Single route, single controller method, Alpine state component — no new dependencies |
+| Security      | 5/5   | Auth+role guard, `Rule::in` whitelist, `intval` cast on IDs, CSRF form             |
+| Performance   | 5/5   | Bulk `update()` for status change (1 query); `each()->delete()` for soft-delete    |
+| Test Coverage | 5/5   | 12 cases: 3× happy, 2× security, 2× negative, 3× edge                              |
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description | Severity | Status |
+| ------ | ----------- | -------- | ------ |
+| —      | No bugs — all 12 tests passed on first run | — | — |
+
+### Technical Notes
+
+- **Alpine component** `productListAdmin(totalInFilter, hasCategoryFilter, pageIds)` replaces and extends the old `imp013TableSort()` function — column sorting is fully preserved.
+- **"Select all in category" banner** only appears when: a `?category_id=` filter is active, all current-page items are checked, and the user has not yet entered all-category mode.
+- **`allInCategory` mode** — when active, the hidden form sends `select_all_in_category=1` + `bulk_category_id` instead of individual IDs. The controller queries `Product::where('category_id', ...)`.
+- **`[x-cloak]`** CSS added so the bulk action bar doesn't flash on page load.
+- **IDs coerced with `intval()`** before `whereIn()` to prevent type-confusion injection.
+- **Archive uses soft-delete** (`$p->delete()`) consistent with PM-003.
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                 | Benefit                              | Complexity |
+| ----------- | ----------------------------------------------------------- | ------------------------------------ | ---------- |
+| IMP-039.1   | Cross-page selection: persist selected IDs in `localStorage` so pagination doesn't reset the selection | Better bulk UX for large catalogs | Medium |
+| IMP-039.2   | Inline status dropdown per row (PATCH AJAX, no reload)      | Faster single-item status editing    | Low        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+<!-- EVAL-IMP-039 END -->

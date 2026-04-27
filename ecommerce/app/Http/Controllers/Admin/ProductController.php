@@ -12,6 +12,7 @@ use App\Models\ProductImport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -113,6 +114,42 @@ class ProductController extends Controller
             $slug = $base . '-' . $count++;
         }
         return $slug;
+    }
+
+    // IMP-039: Bulk status change for multiple products
+    public function bulkStatus(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'bulk_action'            => ['required', Rule::in(['published', 'draft', 'delete'])],
+            'product_ids'            => ['nullable', 'array'],
+            'product_ids.*'          => ['integer', 'exists:products,id'],
+            'bulk_category_id'       => ['nullable', 'integer', 'exists:categories,id'],
+            'select_all_in_category' => ['nullable', 'boolean'],
+        ]);
+
+        $hasIds      = !empty($request->product_ids);
+        $hasCategory = $request->boolean('select_all_in_category')
+                       && $request->filled('bulk_category_id');
+
+        if (!$hasIds && !$hasCategory) {
+            return back()->withErrors(['product_ids' => 'Select at least one product.']);
+        }
+
+        $action = $request->bulk_action;
+        $query  = $hasCategory
+            ? Product::where('category_id', (int) $request->bulk_category_id)
+            : Product::whereIn('id', array_map('intval', (array) $request->product_ids));
+
+        if ($action === 'delete') {
+            $count = $query->count();
+            $query->each(fn (Product $p) => $p->delete());
+            $label = 'archived';
+        } else {
+            $count = $query->update(['status' => $action]);
+            $label = "set to '" . ucfirst($action) . "'";
+        }
+
+        return back()->with('success', "{$count} product(s) {$label}.");
     }
 
     private function readCsvHeaders(string $path): array

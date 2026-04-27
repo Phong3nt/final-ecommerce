@@ -198,6 +198,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
     Route::post('/products/import', [AdminProductController::class, 'import'])->name('products.import');
 
+    // IMP-039: Admin bulk product status change
+    Route::post('/products/bulk-status', [AdminProductController::class, 'bulkStatus'])->name('products.bulkStatus');
+
     // PM-002: Admin product edit
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
     Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
