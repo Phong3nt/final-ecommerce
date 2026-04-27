@@ -109,7 +109,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc01_fetch_eans_parses_response(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::response($this->fakeSearchResponse(), 200),
+            'live.icecat.biz/*' => Http::response($this->fakeSearchResponse(), 200),
         ]);
 
         $service = new IcecatImportService();
@@ -126,7 +126,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc02_fetch_product_detail_maps_fields(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::response($this->fakeDetailResponse(), 200),
+            'live.icecat.biz/*' => Http::response($this->fakeDetailResponse(), 200),
         ]);
 
         $service = new IcecatImportService();
@@ -148,7 +148,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc03_fetch_product_detail_returns_null_on_404(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::response([], 404),
+            'live.icecat.biz/*' => Http::response([], 404),
         ]);
 
         $service = new IcecatImportService();
@@ -163,7 +163,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc04_fetch_product_detail_null_when_title_missing(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::response(['data' => ['GeneralInfo' => []]], 200),
+            'live.icecat.biz/*' => Http::response(['data' => ['GeneralInfo' => []]], 200),
         ]);
 
         $service = new IcecatImportService();
@@ -180,7 +180,7 @@ class IcecatImportTest extends TestCase
         $badImage = 'https://evil.com/img/malware.jpg';
 
         Http::fake([
-            'live.icecat.us/*' => Http::response($this->fakeDetailResponse(image: $badImage), 200),
+            'live.icecat.biz/*' => Http::response($this->fakeDetailResponse(image: $badImage), 200),
         ]);
 
         $service = new IcecatImportService();
@@ -198,7 +198,7 @@ class IcecatImportTest extends TestCase
         $validImage = 'https://images.icecat.biz/img/product.jpg';
 
         Http::fake([
-            'live.icecat.us/*' => Http::response($this->fakeDetailResponse(image: $validImage), 200),
+            'live.icecat.biz/*' => Http::response($this->fakeDetailResponse(image: $validImage), 200),
         ]);
 
         $service = new IcecatImportService();
@@ -214,7 +214,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc07_run_creates_product_with_draft_status(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200),
         ]);
@@ -234,7 +234,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc08_run_sets_import_source_icecat(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200),
         ]);
@@ -252,7 +252,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc09_run_sets_is_icecat_locked(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200),
         ]);
@@ -270,7 +270,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc10_run_stock_between_50_and_100(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200),
         ]);
@@ -289,7 +289,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc11_run_creates_admin_notification(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200),
         ]);
@@ -310,7 +310,7 @@ class IcecatImportTest extends TestCase
     public function test_imp038_tc12_run_deduplicates_products(): void
     {
         Http::fake([
-            'live.icecat.us/*' => Http::sequence()
+            'live.icecat.biz/*' => Http::sequence()
                 ->push($this->fakeSearchResponse(), 200)
                 ->push($this->fakeDetailResponse(), 200)
                 ->push($this->fakeSearchResponse(), 200)
