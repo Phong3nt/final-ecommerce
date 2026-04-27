@@ -26,13 +26,9 @@
             grid-row: span 2;
         }
 
-        .bento-featured .card-img-top {
-            height: 340px;
-            object-fit: cover;
-        }
-
-        .bento-card:not(.bento-featured) .card-img-top {
-            height: 180px;
+        /* IMP-037(g): uniform 220px fixed height for all product card images */
+        .bento-card .card-img-top {
+            height: 220px;
             object-fit: cover;
         }
 
@@ -87,7 +83,7 @@
                 grid-row: span 1;
             }
 
-            .bento-featured .card-img-top {
+            .bento-card .card-img-top {
                 height: 220px;
             }
         }

@@ -72,6 +72,18 @@
             font-weight: 700;
             color: #0f172a;
         }
+
+        /* IMP-037: Fixed-height product image thumbnail */
+        .imp028-product-img {
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .imp028-product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 @endpush
 
@@ -162,7 +174,7 @@
             </div>
         </div>
 
-        {{-- Browse Categories --}}
+        {{-- Browse Categories — IMP-037(f): dynamic from DB --}}
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h5 class="fw-bold mb-0">Browse by Category</h5>
             <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -170,53 +182,40 @@
             </a>
         </div>
         <div class="row g-3 mb-5">
-            <div class="col-6 col-md-3">
-                <a href="{{ route('products.index', ['category' => 'electronics']) }}"
-                    class="imp028-category-card card border-0 shadow-sm">
-                    <div class="text-center p-4">
-                        <div class="imp028-feature-icon bg-primary bg-opacity-10 mx-auto mb-3">
-                            <i class="bi bi-laptop text-primary fs-3"></i>
+            @php
+                $categoryIcons = [
+                    'Electronics'           => ['icon' => 'bi-cpu',              'bg' => 'bg-primary',   'text' => 'text-primary'],
+                    'Laptops'               => ['icon' => 'bi-laptop',           'bg' => 'bg-info',      'text' => 'text-info'],
+                    'Smartphones'           => ['icon' => 'bi-phone',            'bg' => 'bg-success',   'text' => 'text-success'],
+                    'Smartwatches'          => ['icon' => 'bi-smartwatch',       'bg' => 'bg-warning',   'text' => 'text-warning'],
+                    'Tablets'               => ['icon' => 'bi-tablet',           'bg' => 'bg-danger',    'text' => 'text-danger'],
+                    'Headphones & Headsets' => ['icon' => 'bi-headphones',       'bg' => 'bg-secondary', 'text' => 'text-secondary'],
+                    'Battery Chargers'      => ['icon' => 'bi-battery-charging', 'bg' => 'bg-primary',   'text' => 'text-primary'],
+                ];
+            @endphp
+            @forelse($categories as $category)
+                @php
+                    $meta = $categoryIcons[$category->name] ?? ['icon' => 'bi-tag', 'bg' => 'bg-primary', 'text' => 'text-primary'];
+                @endphp
+                <div class="col-6 col-md-3">
+                    <a href="{{ route('products.index', ['category' => $category->id]) }}"
+                        class="imp028-category-card card border-0 shadow-sm">
+                        <div class="text-center p-4">
+                            <div class="imp028-feature-icon {{ $meta['bg'] }} bg-opacity-10 mx-auto mb-3">
+                                <i class="bi {{ $meta['icon'] }} {{ $meta['text'] }} fs-3"></i>
+                            </div>
+                            <div class="fw-semibold small">{{ $category->name }}</div>
                         </div>
-                        <div class="fw-semibold small">Electronics</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="{{ route('products.index', ['category' => 'clothing']) }}"
-                    class="imp028-category-card card border-0 shadow-sm">
-                    <div class="text-center p-4">
-                        <div class="imp028-feature-icon bg-success bg-opacity-10 mx-auto mb-3">
-                            <i class="bi bi-handbag text-success fs-3"></i>
-                        </div>
-                        <div class="fw-semibold small">Clothing</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="{{ route('products.index', ['category' => 'home']) }}"
-                    class="imp028-category-card card border-0 shadow-sm">
-                    <div class="text-center p-4">
-                        <div class="imp028-feature-icon bg-warning bg-opacity-10 mx-auto mb-3">
-                            <i class="bi bi-house text-warning fs-3"></i>
-                        </div>
-                        <div class="fw-semibold small">Home &amp; Garden</div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="{{ route('products.index', ['category' => 'sports']) }}"
-                    class="imp028-category-card card border-0 shadow-sm">
-                    <div class="text-center p-4">
-                        <div class="imp028-feature-icon bg-danger bg-opacity-10 mx-auto mb-3">
-                            <i class="bi bi-bicycle text-danger fs-3"></i>
-                        </div>
-                        <div class="fw-semibold small">Sports</div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+            @empty
+                <div class="col-12">
+                    <p class="text-muted text-center py-3">No categories available yet.</p>
+                </div>
+            @endforelse
         </div>
 
-        {{-- Featured Products --}}
+        {{-- Featured Products — IMP-037(e): dynamic from DB --}}
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h5 class="fw-bold mb-0">Featured Products</h5>
             <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -224,62 +223,30 @@
             </a>
         </div>
         <div class="row g-3 mb-5">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 card-hover">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <span class="imp028-product-chip text-primary mb-2">Electronics</span>
-                        <h6 class="fw-semibold mb-2">Wireless Headphones</h6>
-                        <p class="text-muted small mb-3">Immersive sound with 30-hour battery life.</p>
-                        <div class="d-flex align-items-center justify-content-between mt-auto">
-                            <span class="imp028-price-tag">$79</span>
-                            <a href="{{ route('products.search', ['q' => 'headphones']) }}"
-                                class="btn btn-primary btn-sm">Shop</a>
+            @forelse($featuredProducts as $product)
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100 card-hover">
+                        <div class="imp028-product-img">
+                            <img src="{{ $product->image }}" alt="{{ e($product->name) }}">
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column">
+                            <span class="imp028-product-chip text-primary mb-2">
+                                {{ $product->category->name ?? '&mdash;' }}
+                            </span>
+                            <h6 class="fw-semibold mb-2">{{ $product->name }}</h6>
+                            <div class="d-flex align-items-center justify-content-between mt-auto">
+                                <span class="imp028-price-tag">${{ number_format($product->price, 2) }}</span>
+                                <a href="{{ route('products.show', ['product' => $product->slug]) }}"
+                                    class="btn btn-primary btn-sm">View</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 card-hover">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <span class="imp028-product-chip text-success mb-2">Wearables</span>
-                        <h6 class="fw-semibold mb-2">Smart Fitness Watch</h6>
-                        <p class="text-muted small mb-3">Track activity, sleep, and health in real time.</p>
-                        <div class="d-flex align-items-center justify-content-between mt-auto">
-                            <span class="imp028-price-tag">$129</span>
-                            <a href="{{ route('products.search', ['q' => 'watch']) }}"
-                                class="btn btn-primary btn-sm">Shop</a>
-                        </div>
-                    </div>
+            @empty
+                <div class="col-12">
+                    <p class="text-muted text-center py-3">No featured products available yet.</p>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 card-hover">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <span class="imp028-product-chip text-warning mb-2">Home</span>
-                        <h6 class="fw-semibold mb-2">Minimal Desk Lamp</h6>
-                        <p class="text-muted small mb-3">Warm, adjustable lighting for any workspace.</p>
-                        <div class="d-flex align-items-center justify-content-between mt-auto">
-                            <span class="imp028-price-tag">$39</span>
-                            <a href="{{ route('products.search', ['q' => 'lamp']) }}"
-                                class="btn btn-primary btn-sm">Shop</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100 card-hover">
-                    <div class="card-body p-4 d-flex flex-column">
-                        <span class="imp028-product-chip text-danger mb-2">Sports</span>
-                        <h6 class="fw-semibold mb-2">Running Shoes Pro</h6>
-                        <p class="text-muted small mb-3">Lightweight comfort designed for daily runs.</p>
-                        <div class="d-flex align-items-center justify-content-between mt-auto">
-                            <span class="imp028-price-tag">$89</span>
-                            <a href="{{ route('products.search', ['q' => 'shoes']) }}"
-                                class="btn btn-primary btn-sm">Shop</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforelse
         </div>
 
         {{-- Why Shop With Us --}}

@@ -26,10 +26,20 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+    $featuredProducts = Product::with('category')
+        ->where('status', 'active')
+        ->where('stock', '>', 0)
+        ->whereNotNull('image')
+        ->latest()
+        ->take(8)
+        ->get();
+    return view('welcome', compact('categories', 'featuredProducts'));
 });
 
 // PC-001: Public product browsing — no auth required
