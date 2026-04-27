@@ -6145,37 +6145,37 @@ Extended the Stripe webhook handler to process `charge.refunded` events fired wh
 
 ### Test Results
 
-| Test Case ID | Scenario | Type | Result | Notes |
-|---|---|---|---|---|
-| TC-01 | CategorySeeder creates exactly 7 categories | Unit/Seeder | ✅ Pass | `Category::count() === 7` |
-| TC-02 | All 7 expected category names exist in DB | Unit/Seeder | ✅ Pass | All 7 names verified via `assertDatabaseHas` |
-| TC-03 | ProductSeeder creates ≥ 20 products per category | Unit/Seeder | ✅ Pass | 20 per × 7 = 140 total products |
-| TC-04 | UserSeeder creates 5 verified users with Spatie role=user | Unit/Seeder | ✅ Pass | Verified via `hasRole('user')` |
-| TC-05 | CouponSeeder creates exactly 5 coupons | Unit/Seeder | ✅ Pass | `Coupon::count() === 5` |
-| TC-06 | All 5 coupon codes exist and are active | Unit/Seeder | ✅ Pass | SUMMER10, NEWUSER20, FLASH15, LOYALTY5, BUNDLE30 |
-| TC-07 | Homepage returns HTTP 200 with empty DB | Feature | ✅ Pass | `@forelse` handles empty gracefully |
-| TC-08 | Homepage renders Browse by Category heading | Feature | ✅ Pass | Section heading always visible |
-| TC-09 | Homepage shows DB category names | Feature | ✅ Pass | Electronics, Laptops, etc. rendered dynamically |
-| TC-10 | Homepage renders Featured Products heading | Feature | ✅ Pass | Section heading always visible |
-| TC-11 | Homepage shows DB product names | Feature | ✅ Pass | Latest seeded product appears in DOM |
-| TC-12 | Homepage category links use integer IDs not string slugs | Feature | ✅ Pass | `?category=1` not `?category=electronics` |
-| TC-13 | Featured product card shows formatted price | Feature | ✅ Pass | `$1,299.00` format verified |
-| TC-14 | Featured product card links to product show page | Feature | ✅ Pass | `route('products.show', ['product' => slug])` |
-| TC-15 | Empty-state message when no categories in DB | Feature | ✅ Pass | "No categories available yet" shown |
+| Test Case ID | Scenario                                                  | Type        | Result  | Notes                                            |
+| ------------ | --------------------------------------------------------- | ----------- | ------- | ------------------------------------------------ |
+| TC-01        | CategorySeeder creates exactly 7 categories               | Unit/Seeder | ✅ Pass | `Category::count() === 7`                        |
+| TC-02        | All 7 expected category names exist in DB                 | Unit/Seeder | ✅ Pass | All 7 names verified via `assertDatabaseHas`     |
+| TC-03        | ProductSeeder creates ≥ 20 products per category          | Unit/Seeder | ✅ Pass | 20 per × 7 = 140 total products                  |
+| TC-04        | UserSeeder creates 5 verified users with Spatie role=user | Unit/Seeder | ✅ Pass | Verified via `hasRole('user')`                   |
+| TC-05        | CouponSeeder creates exactly 5 coupons                    | Unit/Seeder | ✅ Pass | `Coupon::count() === 5`                          |
+| TC-06        | All 5 coupon codes exist and are active                   | Unit/Seeder | ✅ Pass | SUMMER10, NEWUSER20, FLASH15, LOYALTY5, BUNDLE30 |
+| TC-07        | Homepage returns HTTP 200 with empty DB                   | Feature     | ✅ Pass | `@forelse` handles empty gracefully              |
+| TC-08        | Homepage renders Browse by Category heading               | Feature     | ✅ Pass | Section heading always visible                   |
+| TC-09        | Homepage shows DB category names                          | Feature     | ✅ Pass | Electronics, Laptops, etc. rendered dynamically  |
+| TC-10        | Homepage renders Featured Products heading                | Feature     | ✅ Pass | Section heading always visible                   |
+| TC-11        | Homepage shows DB product names                           | Feature     | ✅ Pass | Latest seeded product appears in DOM             |
+| TC-12        | Homepage category links use integer IDs not string slugs  | Feature     | ✅ Pass | `?category=1` not `?category=electronics`        |
+| TC-13        | Featured product card shows formatted price               | Feature     | ✅ Pass | `$1,299.00` format verified                      |
+| TC-14        | Featured product card links to product show page          | Feature     | ✅ Pass | `route('products.show', ['product' => slug])`    |
+| TC-15        | Empty-state message when no categories in DB              | Feature     | ✅ Pass | "No categories available yet" shown              |
 
 **Suite Summary:** 1051 tests, 2460 assertions — all green (was 1036/2405 before IMP-037)  
 **New tests added:** 15 (HomepageDataTest) + ExampleTest RefreshDatabase fix
 
 ### Quality Scores
 
-| Dimension | Score | Notes |
-|---|---|---|
-| Functionality | 10/10 | All 7 sub-tasks (a)–(g) delivered |
-| Test Coverage | 10/10 | 15 tests covering seeders + dynamic UI |
-| Code Quality | 9/10 | Clean seeder structure; ProductSeeder is verbose by design (real data) |
-| UI/UX Design | 10/10 | Category icons mapped per name; uniform 220px image cards; no inline styles added |
-| Security | 10/10 | `e()` escape on product name in image alt; category ID is integer (no injection) |
-| Performance | 9/10 | `with('category')` eager-load prevents N+1; `take(8)` limits query size |
+| Dimension     | Score | Notes                                                                             |
+| ------------- | ----- | --------------------------------------------------------------------------------- |
+| Functionality | 10/10 | All 7 sub-tasks (a)–(g) delivered                                                 |
+| Test Coverage | 10/10 | 15 tests covering seeders + dynamic UI                                            |
+| Code Quality  | 9/10  | Clean seeder structure; ProductSeeder is verbose by design (real data)            |
+| UI/UX Design  | 10/10 | Category icons mapped per name; uniform 220px image cards; no inline styles added |
+| Security      | 10/10 | `e()` escape on product name in image alt; category ID is integer (no injection)  |
+| Performance   | 9/10  | `with('category')` eager-load prevents N+1; `take(8)` limits query size           |
 
 ### Bugs Fixed
 
@@ -6184,12 +6184,105 @@ Extended the Stripe webhook handler to process `charge.refunded` events fired wh
 
 ### Improvement Proposals
 
-| ID | Title | Priority |
-|---|---|---|
-| IMP-037.1 | Add a `featured` boolean flag to products so admins can hand-pick featured products (vs. latest-created order) | Medium |
-| IMP-037.2 | Cache homepage `$featuredProducts` + `$categories` in Redis for 5 minutes to reduce DB queries per page view | Low |
-| IMP-037.3 | Add category icon/color columns to DB so icons can be managed from admin UI rather than hardcoded in Blade | Low |
+| ID        | Title                                                                                                          | Priority |
+| --------- | -------------------------------------------------------------------------------------------------------------- | -------- |
+| IMP-037.1 | Add a `featured` boolean flag to products so admins can hand-pick featured products (vs. latest-created order) | Medium   |
+| IMP-037.2 | Cache homepage `$featuredProducts` + `$categories` in Redis for 5 minutes to reduce DB queries per page view   | Low      |
+| IMP-037.3 | Add category icon/color columns to DB so icons can be managed from admin UI rather than hardcoded in Blade     | Low      |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-IMP-037 END -->
+
+<!-- EVAL-IMP-038 START -->
+
+## EVAL-IMP-038 — Icecat API Auto-Import Pipeline `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-28 | **Branch:** `improve/IMP-010` | **Commit:** _see tag v1.0-IMP-038-stable_
+
+---
+
+### A. Test Results
+
+| TC    | Name                                              | Result |
+|-------|---------------------------------------------------|--------|
+| TC-01 | fetchEans parses API response                     | ✅ PASS |
+| TC-02 | fetchProductDetail maps all fields correctly      | ✅ PASS |
+| TC-03 | fetchProductDetail returns null on 404            | ✅ PASS |
+| TC-04 | fetchProductDetail returns null when title missing | ✅ PASS |
+| TC-05 | Rejects image URLs from non-Icecat domains        | ✅ PASS |
+| TC-06 | Accepts valid Icecat image URLs (icecat.biz)      | ✅ PASS |
+| TC-07 | service.run creates product with status=draft     | ✅ PASS |
+| TC-08 | service.run sets import_source = 'icecat'         | ✅ PASS |
+| TC-09 | service.run sets is_icecat_locked = true          | ✅ PASS |
+| TC-10 | service.run stock between 50 and 100              | ✅ PASS |
+| TC-11 | service.run creates AdminNotification on completion | ✅ PASS |
+| TC-12 | Duplicate EAN updates existing product (no dupe)  | ✅ PASS |
+| TC-13 | ImportProductsIcecatJob implements ShouldQueue    | ✅ PASS |
+| TC-14 | POST /admin/icecat/import dispatches job(s)       | ✅ PASS |
+| TC-15 | Guest gets 401; regular user gets 403             | ✅ PASS |
+| TC-16 | categories field required — 422 on empty array    | ✅ PASS |
+| TC-17 | limit > 50 rejected — 422                        | ✅ PASS |
+| TC-18 | artisan icecat:import dispatches job              | ✅ PASS |
+
+**Suite totals:** 1069 tests, 2509 assertions — 0 failures, 0 regressions.
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes |
+|-------------|-------|-------|
+| Simplicity  | 4/5   | Service cleanly separated; no over-engineering |
+| Security    | 5/5   | Creds only in `.env`; image URL domain whitelist; CSRF on POST; `role:admin` middleware |
+| Performance | 4/5   | HTTP calls mocked in tests; real calls use 30s timeout; job is queued (non-blocking) |
+| Coverage    | 5/5   | All 5 pipeline steps + UI trigger + CLI + auth guards + validation tested |
+
+---
+
+### C. Impact Check
+
+| Area                         | Risk | Result |
+|------------------------------|------|--------|
+| `products` table schema      | Medium | New nullable columns — backwards-compatible; migration provided |
+| `Product::$fillable`         | Low  | Additive only; existing create/update flows unaffected |
+| Admin products page UI       | Low  | Button + modal appended; no existing markup altered |
+| `QueuedHeavyOperationsTest`  | Low  | New job structure same as CSV job — `ShouldQueue` confirmed by TC-13 |
+| `admin.products.index` route | None | New route added under same middleware group |
+
+No regressions detected.
+
+---
+
+### D. Bugs / Side Effects
+
+| # | Severity | Description | Fix |
+|---|----------|-------------|-----|
+| 1 | Minor | TC-12 had duplicate `Http::fake()` call — second overrode first | Removed duplicate call |
+| 2 | Minor | TC-15 used `assertStatus(302)` for `postJson` guest; JSON requests return 401 | Corrected to 401 |
+
+---
+
+### E. Technical Notes
+
+- **Architectural impact:** None. New controller/service/job/command files only. Zero changes to existing controllers, models (except additive fillable), or middleware.
+- **Icecat auth:** HTTP Basic Auth via `config('services.icecat.username/password')` — never logged, never in Blade.
+- **Image security:** `isValidIcecatImageUrl()` rejects any non-`https://` URL or non-Icecat domain before storing.
+- **Draft mode:** All imported products start as `status=draft` — invisible to shoppers until admin publishes.
+- **Category auto-create:** `Category::firstOrCreate()` uses Icecat's returned category name; slug generated via `Str::slug()`.
+- **No new npm packages:** Modal uses Bootstrap 5 + Alpine.js 3 from existing CDN per uiux_design_spec.md Rule 0.
+- **MySQL migration:** Migration file created at `2026_04_29_000001_add_icecat_fields_to_products.php`. Run `php artisan migrate` once MySQL is up.
+
+---
+
+### F. Improvement Proposals
+
+| ID | Proposal | Benefit | Complexity |
+|----|----------|---------|------------|
+| IMP-038.1 | Download Icecat images to local `storage/app/public/products/` instead of storing external URLs | Prevents broken images if Icecat CDN changes; GDPR-safer | Medium (3 pts) |
+| IMP-038.2 | Add `import_source` filter to admin products table (dropdown: all / manual / icecat / csv) | Easier post-import review; no code changes to service | Low (2 pts) |
+| IMP-038.3 | Real-time import progress via Laravel Echo / SSE — stream per-EAN status back to modal log | Better UX for large imports | High (8 pts) |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-038 END -->
