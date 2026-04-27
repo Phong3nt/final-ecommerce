@@ -24,6 +24,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -107,6 +108,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+    // IMP-035: Card Vault — saved payment methods
+    Route::get('/profile/payment-methods/setup-intent', [PaymentMethodController::class, 'setupIntent'])->name('payment-methods.setup-intent');
+    Route::post('/profile/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::patch('/profile/payment-methods/{pm}/default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.setDefault');
+    Route::delete('/profile/payment-methods/{pm}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
     // UP-002: Saved addresses CRUD
     Route::get('/addresses', [UserAddressController::class, 'index'])->name('addresses.index');
     Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
@@ -141,6 +148,9 @@ Route::middleware(['auth'])->group(function () {
 
     // CP-005: Checkout — success / failure page (Stripe redirects here after confirmPayment)
     Route::get('/checkout/success', [CheckoutController::class, 'showSuccess'])->name('checkout.success');
+
+    // IMP-035: Store "save card" preference in session before Stripe confirmPayment redirect
+    Route::post('/checkout/save-card-flag', [CheckoutController::class, 'flagSaveCard'])->name('checkout.save-card-flag');
 
 });
 

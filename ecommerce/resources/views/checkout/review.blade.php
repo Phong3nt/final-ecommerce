@@ -114,7 +114,9 @@
 
                         <hr class="mb-3">
 
-                        {{-- Stripe Payment Element --}}
+                        {{-- IMP-035: Saved card selection --}}
+                        @php $defaultCard = $savedPaymentMethods->firstWhere('is_default', true); @endphp
+
                         <h2 class="h6 fw-semibold text-label mb-3">
                             <i class="bi bi-lock-fill me-1 text-success"></i>
                             Secure Payment
@@ -122,9 +124,62 @@
                         <p class="text-muted small mb-3">Your card details are handled securely by Stripe. Your card number
                             never touches our server.</p>
 
-                        <div id="payment-element" class="mb-3">
+                        @if ($savedPaymentMethods->isNotEmpty())
+                            {{-- Saved card radio buttons --}}
+                            <div class="mb-3" id="saved-cards-section">
+                                @foreach ($savedPaymentMethods as $card)
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="payment_choice"
+                                            id="card-{{ $card->id }}"
+                                            value="{{ $card->stripe_payment_method_id }}"
+                                            {{ $card->is_default ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="card-{{ $card->id }}">
+                                            <i class="bi bi-credit-card me-1"></i>
+                                            {{ $card->display_label }}
+                                            <span class="text-muted small">exp {{ $card->expiry }}</span>
+                                            @if ($card->is_default)
+                                                <span class="badge bg-primary ms-1 small">Default</span>
+                                            @endif
+                                        </label>
+                                    </div>
+                                @endforeach
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_choice"
+                                        id="card-new" value="">
+                                    <label class="form-check-label" for="card-new">
+                                        <i class="bi bi-plus-lg me-1"></i> Use a new card
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div id="payment-element" class="mb-3"
+                            style="{{ $savedPaymentMethods->isNotEmpty() && $defaultCard ? 'display:none;' : '' }}">
                             {{-- Stripe Elements injected here --}}
                         </div>
+
+                        {{-- IMP-035: Save card prompt (only for new card flow) --}}
+                        @if ($savedPaymentMethods->isNotEmpty())
+                            <div id="save-card-wrap" class="mb-3"
+                                style="display:{{ $defaultCard ? 'none' : 'block' }};">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="save-card">
+                                    <label class="form-check-label small" for="save-card">
+                                        Save this card for future purchases
+                                    </label>
+                                </div>
+                            </div>
+                        @else
+                            {{-- No saved cards: always show save prompt --}}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="save-card">
+                                    <label class="form-check-label small" for="save-card">
+                                        Save this card for future purchases
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
 
                         <div id="payment-message" class="alert alert-danger mb-3" style="display:none;"></div>
 
@@ -147,21 +202,32 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script>
         (function () {
-            const placeOrderUrl = "{{ route('checkout.place-order') }}";
-            const stripeKey = "{{ config('services.stripe.key') }}";
-            const csrfToken = "{{ csrf_token() }}";
+            const placeOrderUrl   = "{{ route('checkout.place-order') }}";
+            const saveFlagUrl     = "{{ route('checkout.save-card-flag') }}";
+            const stripeKey       = "{{ config('services.stripe.key') }}";
+            const csrfToken       = "{{ csrf_token() }}";
+            const successBase     = window.location.origin + '/checkout/success';
+            const totalFormatted  = "${{ number_format($total, 2) }}";
+            @php $defaultCard = $savedPaymentMethods->firstWhere('is_default', true); @endphp
+            const hasSavedCards   = {{ $savedPaymentMethods->isNotEmpty() ? 'true' : 'false' }};
+
+            // Currently selected PM (empty string = new card)
+            let selectedPmId = '{{ $defaultCard?->stripe_payment_method_id ?? '' }}';
 
             if (!stripeKey) {
-                const msg = document.getElementById('payment-message');
-                msg.textContent = 'Payment is temporarily unavailable.';
-                msg.style.display = 'block';
+                showMessage('Payment is temporarily unavailable.');
                 return;
             }
 
             const stripe = Stripe(stripeKey);
             let elements;
+            let clientSecret;
 
-            // Step 1: POST to place-order to create a PaymentIntent server-side
+            // ---------------------------------------------------------------
+            // Step 1: POST place-order to create PaymentIntent (and Order)
+            // We do this on page load. For saved-card flow we still create
+            // the PI here; confirmCardPayment works with automatic_payment_methods.
+            // ---------------------------------------------------------------
             fetch(placeOrderUrl, {
                 method: 'POST',
                 headers: {
@@ -170,34 +236,116 @@
                     'Accept': 'application/json',
                 },
             })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.error) { showMessage(data.error); return; }
-                    // Step 2: Mount Stripe Payment Element (handles all card validation incl. digit limits)
-                    elements = stripe.elements({ clientSecret: data.client_secret });
-                    const paymentElement = elements.create('payment');
-                    paymentElement.mount('#payment-element');
-                })
-                .catch(function () { showMessage('Could not initialise payment.'); });
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { showMessage(data.error); return; }
+                clientSecret = data.client_secret;
 
-            // Step 3: On button click, confirm the payment via Stripe.js
+                // Mount Elements only when new-card mode is active
+                if (!selectedPmId) {
+                    mountPaymentElement();
+                }
+            })
+            .catch(() => showMessage('Could not initialise payment.'));
+
+            function mountPaymentElement() {
+                if (elements) return; // already mounted
+                elements = stripe.elements({ clientSecret });
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+                document.getElementById('payment-element').style.display = 'block';
+            }
+
+            // ---------------------------------------------------------------
+            // Radio button changes (only present when hasSavedCards)
+            // ---------------------------------------------------------------
+            if (hasSavedCards) {
+                document.querySelectorAll('[name="payment_choice"]').forEach(function (radio) {
+                    radio.addEventListener('change', function () {
+                        selectedPmId = this.value;
+                        const pmEl     = document.getElementById('payment-element');
+                        const saveWrap = document.getElementById('save-card-wrap');
+
+                        if (selectedPmId === '') {
+                            // New card
+                            if (saveWrap) saveWrap.style.display = 'block';
+                            pmEl.style.display = 'block';
+                            if (clientSecret) mountPaymentElement();
+                        } else {
+                            // Saved card
+                            if (saveWrap) saveWrap.style.display = 'none';
+                            pmEl.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // ---------------------------------------------------------------
+            // Pay button
+            // ---------------------------------------------------------------
             document.getElementById('pay-button').addEventListener('click', async function () {
-                if (!elements) return;
+                if (!clientSecret) return;
+
                 const btn = this;
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing…';
 
-                const { error } = await stripe.confirmPayment({
-                    elements,
-                    confirmParams: {
-                        return_url: window.location.origin + '/checkout/success',
-                    },
-                });
+                if (selectedPmId) {
+                    // ---- Using saved card ----
+                    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: selectedPmId,
+                        return_url: successBase, // fallback for 3DS redirect
+                    });
 
-                if (error) {
-                    showMessage(error.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay ${{ number_format($total, 2) }}';
+                    if (error) {
+                        showMessage(error.message);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay ' + totalFormatted;
+                        return;
+                    }
+
+                    // Redirect manually on success (no 3DS redirect needed for most saved cards)
+                    if (paymentIntent && paymentIntent.status === 'succeeded') {
+                        const params = new URLSearchParams({
+                            payment_intent: paymentIntent.id,
+                            redirect_status: 'succeeded',
+                        });
+                        window.location.href = successBase + '?' + params.toString();
+                    }
+                    // If 3DS redirect happened, confirmCardPayment won't return here
+
+                } else {
+                    // ---- Using new card ----
+                    if (!elements) {
+                        showMessage('Please wait while the payment form loads.');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay ' + totalFormatted;
+                        return;
+                    }
+
+                    // Store "save card" flag in session before Stripe redirect
+                    const saveCard = document.getElementById('save-card')?.checked;
+                    if (saveCard) {
+                        try {
+                            await fetch(saveFlagUrl, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                                credentials: 'same-origin',
+                            });
+                        } catch (e) { /* non-fatal */ }
+                    }
+
+                    const { error } = await stripe.confirmPayment({
+                        elements,
+                        confirmParams: { return_url: successBase },
+                    });
+
+                    if (error) {
+                        showMessage(error.message);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay ' + totalFormatted;
+                    }
+                    // On success, Stripe redirects to successBase
                 }
             });
 

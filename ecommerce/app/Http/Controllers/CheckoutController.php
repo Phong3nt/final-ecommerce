@@ -442,7 +442,22 @@ class CheckoutController extends Controller
         $discount = self::computeCouponDiscount($subtotal, $coupon);
         $total = $subtotal + $shipping['cost'] - $discount;
 
-        return view('checkout.review', compact('cart', 'address', 'shipping', 'subtotal', 'discount', 'coupon', 'total'));
+        // IMP-035: Pass saved payment methods so the review page can pre-fill with a saved card
+        $savedPaymentMethods = collect();
+        if (auth()->check()) {
+            $savedPaymentMethods = auth()->user()->savedPaymentMethods()->get();
+        }
+
+        return view('checkout.review', compact(
+            'cart',
+            'address',
+            'shipping',
+            'subtotal',
+            'discount',
+            'coupon',
+            'total',
+            'savedPaymentMethods',
+        ));
     }
 
     /**
@@ -575,10 +590,40 @@ class CheckoutController extends Controller
         }
 
         if ($redirectStatus === 'succeeded') {
+            // IMP-035: Save card to vault if user requested it during checkout
+            if (session()->pull('checkout.save_card') && auth()->check()) {
+                /** @var \App\Models\User $user */
+                $user = auth()->user();
+                $pmId = $this->paymentService->getPaymentIntentPaymentMethodId($intentId);
+                if ($pmId && !$user->savedPaymentMethods()->where('stripe_payment_method_id', $pmId)->exists()) {
+                    $pm = $this->paymentService->retrievePaymentMethod($pmId);
+                    $isFirstCard = $user->savedPaymentMethods()->count() === 0;
+                    $user->savedPaymentMethods()->create([
+                        'stripe_payment_method_id' => $pm['id'],
+                        'last4'                    => $pm['last4'],
+                        'brand'                    => $pm['brand'],
+                        'exp_month'                => $pm['exp_month'],
+                        'exp_year'                 => $pm['exp_year'],
+                        'is_default'               => $isFirstCard,
+                    ]);
+                }
+            }
+
             session()->forget(['checkout.address', 'checkout.shipping', 'checkout.coupon', 'cart']);
             return view('checkout.success', compact('order'));
         }
 
         return view('checkout.failed', ['order' => $order, 'status' => $redirectStatus]);
+    }
+
+    /**
+     * IMP-035: Store the user's "save this card" preference in session.
+     * Called via AJAX just before stripe.confirmPayment() redirects away.
+     */
+    public function flagSaveCard(): JsonResponse
+    {
+        session()->put('checkout.save_card', true);
+
+        return response()->json(['ok' => true]);
     }
 }

@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_id',
         'is_active',
         'avatar',
+        'stripe_customer_id',
     ];
 
     protected $hidden = [
@@ -59,5 +60,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function savedPaymentMethods(): HasMany
+    {
+        return $this->hasMany(SavedPaymentMethod::class)->orderByDesc('is_default');
     }
 }

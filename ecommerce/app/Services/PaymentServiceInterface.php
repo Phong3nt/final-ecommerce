@@ -38,4 +38,39 @@ interface PaymentServiceInterface
      * @throws \Stripe\Exception\ApiErrorException
      */
     public function refund(string $intentId, int $amountCents): string;
+
+    // =========================================================================
+    // IMP-035: Card Vault — SetupIntent / saved payment method helpers
+    // =========================================================================
+
+    /**
+     * Find or create a Stripe Customer for the given email/name.
+     * Returns the Stripe customer ID (cus_...).
+     */
+    public function createOrRetrieveCustomer(string $email, string $name): string;
+
+    /**
+     * Create a Stripe SetupIntent for saving a card (attached to a Customer).
+     *
+     * @return array{id: string, client_secret: string}
+     */
+    public function createSetupIntent(string $stripeCustomerId): array;
+
+    /**
+     * Detach a PaymentMethod from its Stripe Customer so it can no longer be used.
+     */
+    public function detachPaymentMethod(string $paymentMethodId): void;
+
+    /**
+     * Retrieve card details for a PaymentMethod from Stripe.
+     *
+     * @return array{id: string, last4: string, brand: string, exp_month: int, exp_year: int}
+     */
+    public function retrievePaymentMethod(string $paymentMethodId): array;
+
+    /**
+     * Return the payment_method ID attached to a PaymentIntent after it succeeds.
+     * Used in showSuccess() to save a card when the user checked "Save this card?".
+     */
+    public function getPaymentIntentPaymentMethodId(string $intentId): ?string;
 }

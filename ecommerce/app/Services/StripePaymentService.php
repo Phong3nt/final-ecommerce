@@ -61,4 +61,67 @@ class StripePaymentService implements PaymentServiceInterface
 
         return $refund->id;
     }
+
+    // =========================================================================
+    // IMP-035: Card Vault
+    // =========================================================================
+
+    public function createOrRetrieveCustomer(string $email, string $name): string
+    {
+        $result = $this->client()->customers->search([
+            'query' => "email:'" . addslashes($email) . "'",
+            'limit' => 1,
+        ]);
+
+        if (!empty($result->data)) {
+            return $result->data[0]->id;
+        }
+
+        $customer = $this->client()->customers->create([
+            'email' => $email,
+            'name'  => $name,
+        ]);
+
+        return $customer->id;
+    }
+
+    public function createSetupIntent(string $stripeCustomerId): array
+    {
+        $intent = $this->client()->setupIntents->create([
+            'customer'             => $stripeCustomerId,
+            'payment_method_types' => ['card'],
+        ]);
+
+        return [
+            'id'            => $intent->id,
+            'client_secret' => $intent->client_secret,
+        ];
+    }
+
+    public function detachPaymentMethod(string $paymentMethodId): void
+    {
+        $this->client()->paymentMethods->detach($paymentMethodId);
+    }
+
+    public function retrievePaymentMethod(string $paymentMethodId): array
+    {
+        $pm = $this->client()->paymentMethods->retrieve($paymentMethodId);
+
+        return [
+            'id'        => $pm->id,
+            'last4'     => $pm->card->last4,
+            'brand'     => $pm->card->brand,
+            'exp_month' => $pm->card->exp_month,
+            'exp_year'  => $pm->card->exp_year,
+        ];
+    }
+
+    public function getPaymentIntentPaymentMethodId(string $intentId): ?string
+    {
+        $pi = $this->client()->paymentIntents->retrieve($intentId);
+
+        $pmId = $pi->payment_method;
+
+        return $pmId instanceof \Stripe\PaymentMethod ? $pmId->id : ($pmId ?: null);
+    }
 }
