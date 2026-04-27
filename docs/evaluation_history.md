@@ -6052,3 +6052,82 @@ Upgraded the admin notification bell from 30-second AJAX polling to Firebase Rea
 > Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-IMP-017 END -->
+
+---
+
+<!-- EVAL-IMP-036 START -->
+
+## EVAL-IMP-036 — Stripe Refund Webhook Sync + Double-Refund Guard
+
+**Date:** 2026-04-27
+**Tag:** `v1.0-IMP-036-stable`
+**Commit:** `e81276f`
+**Mode:** `[FULL_STACK_MODE]`
+**Tests:** 1036 passed / 0 failed (2405 assertions)
+
+### Summary
+
+Extended the Stripe webhook handler to process `charge.refunded` events fired when a refund is initiated externally (e.g., directly from the Stripe Dashboard). Added a double-refund guard in the admin `RefundController` to catch Stripe's `charge_already_refunded` exception and return a clean human-readable message instead of a raw Stripe error string. Fixed the refund button UI to comply with uiux_design_spec Rule 0-B (no inline `style=` attributes).
+
+### Changes Made
+
+| File                                               | Change                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/Http/Controllers/CheckoutController.php`      | Added `charge.refunded` branch in `handleWebhook()` — sets `order.status = 'refunded'`, records `refunded_at`, creates `RefundTransaction`, creates `AdminNotification`. No-ops if order already marked refunded. Added `@var \App\Models\User` cast in `showReview()` (Pylance fix).                     |
+| `app/Http/Controllers/Admin/RefundController.php`  | Wrapped `paymentService->refund()` call in `try/catch \Stripe\Exception\InvalidRequestException` — detects `charge_already_refunded` code, returns clean error via `back()->withErrors()`.                                                                                                                |
+| `resources/views/admin/orders/show.blade.php`      | Replaced inline `style="background:#0c4a6e;color:#fff;"` on refund button with Bootstrap `btn-danger btn-sm`. Added `bi-arrow-counterclockwise` icon. Replaced `onsubmit` with Alpine `x-data @submit.prevent confirm()` pattern. Added `@error('order')` alert with `bi-exclamation-triangle-fill` icon. |
+| `app/Http/Controllers/PaymentMethodController.php` | Added `@var \App\Models\User` casts in `setDefault()` and `destroy()` (Pylance fixes).                                                                                                                                                                                                                    |
+| `tests/Feature/StripeRefundWebhookTest.php`        | New file — 10 tests covering webhook happy path, no-op idempotency, missing PI field, invalid signature, admin double-refund guard, and notification content.                                                                                                                                             |
+
+### Test Results
+
+| Test Case ID | Scenario                                                                                                            | Type        | Result  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- | ----------- | ------- |
+| TC-IMP036-01 | `charge.refunded` updates order status to 'refunded' + sets `refunded_at`                                           | Happy       | PASS ✅ |
+| TC-IMP036-02 | `charge.refunded` creates `RefundTransaction` with correct amount + stripe_refund_id                                | Happy       | PASS ✅ |
+| TC-IMP036-03 | `charge.refunded` creates `AdminNotification` for external refund                                                   | Happy       | PASS ✅ |
+| TC-IMP036-04 | Already-refunded order → webhook is no-op (no duplicate records)                                                    | Idempotency | PASS ✅ |
+| TC-IMP036-05 | `charge.refunded` with no `payment_intent` field → 200 graceful                                                     | Edge        | PASS ✅ |
+| TC-IMP036-06 | Invalid Stripe webhook signature → 400                                                                              | Security    | PASS ✅ |
+| TC-IMP036-07 | Admin double-refund returns clean human-readable error message                                                      | Negative    | PASS ✅ |
+| TC-IMP036-08 | Admin double-refund — no exception propagated (response is 3xx not 500)                                             | Negative    | PASS ✅ |
+| TC-IMP036-09 | Webhook fires after admin-initiated refund → no-op (no second `AdminNotification` or duplicate `RefundTransaction`) | Idempotency | PASS ✅ |
+| TC-IMP036-10 | `AdminNotification` message contains order ID and dollar amount                                                     | Content     | PASS ✅ |
+
+**Summary:** 10 New Tests PASS ✅ · 1026 Regression Tests PASS ✅ · 0 Failed  
+**Regression:** All 1026 pre-existing tests pass — no regression detected.
+
+### Quality Scores
+
+| Dimension     | Score | Comment                                                                                                               |
+| ------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| Simplicity    | 5/5   | Single `if ($event->type === 'charge.refunded')` branch cleanly separates the new handler from existing webhook logic |
+| Security      | 5/5   | Webhook signature verified before any processing; no raw Stripe exception strings exposed to admin UI                 |
+| Performance   | 5/5   | All 10 new tests complete in < 0.3s each; full suite at 190s unchanged                                                |
+| Test Coverage | 5/5   | Happy path, idempotency ×2, edge case, security, negative ×2, content validation — all branches covered               |
+
+### Bugs / Side Effects Found
+
+| Bug ID | Description                                                         | Severity | Status |
+| ------ | ------------------------------------------------------------------- | -------- | ------ |
+| —      | No new bugs — all 10 tests passed on first run after implementation | —        | —      |
+
+### Technical Notes
+
+- **`charge.refunded` vs `payment_intent.*`** — The Stripe `charge.refunded` event delivers a `Charge` object (not a `PaymentIntent`). The `payment_intent` ID is nested inside `$event->data->object->payment_intent`. Separating the handler branches prevents the existing `payment_intent.succeeded` / `payment_intent.payment_failed` logic from accidentally trying to access a PI object on a Charge.
+- **Idempotency guard** — `if ($order && $order->status !== 'refunded')` prevents duplicate `RefundTransaction` rows and duplicate `AdminNotification` records when Stripe sends `charge.refunded` after an admin-UI-initiated refund (which already set the order to `refunded`).
+- **Clean error UX** — `getStripeCode()` returns the machine-readable code (`charge_already_refunded`) allowing a precise check. `str_contains(strtolower($e->getMessage()), 'already been refunded')` provides a fallback for Stripe API version variations.
+- **Pylance `@var` cast pattern** — `auth()->user()` returns `Illuminate\Contracts\Auth\Authenticatable` (interface) which doesn't declare model-specific methods. Adding `/** @var \App\Models\User $authUser */` before each call site resolves static analysis errors without any runtime impact.
+- **No new migrations or models** — `RefundTransaction`, `AdminNotification`, and `Order.refunded_at` were all created in prior tasks (IMP-021/OM-005). IMP-036 only adds the webhook handler and guard logic.
+
+### Improvement Proposals
+
+| Proposal ID | Description                                                                                                                        | Benefit                                  | Complexity                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------- |
+| IMP-036.1   | Push Firebase real-time notification to admin bell on external `charge.refunded` event (complements `AdminNotification` DB record) | Instant admin visibility without polling | Low — reuse `FirebaseService` from IMP-017   |
+| IMP-036.2   | Send email to customer on external refund (parallel to order confirmation email)                                                   | Customer awareness of their refund       | Low — dispatch `SendOrderStatusChangedEmail` |
+| IMP-036.3   | Add `source` field to `refund_transactions` to distinguish `admin_ui` vs `stripe_webhook` origin                                   | Auditability                             | Medium — migration + model update            |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-036 END -->
