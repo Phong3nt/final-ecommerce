@@ -376,7 +376,7 @@
                         </h6>
                         <p class="mb-1 text-muted small">Stripe &mdash; PaymentIntent</p>
                         @if ($order->stripe_payment_intent_id)
-                            <p class="mb-0 text-muted small">{{ $order->stripe_payment_intent_id }}</p>
+                            <p class="mb-0 text-muted small">Paid via Stripe</p>
                         @endif
                     </div>
                 </div>

@@ -38,6 +38,7 @@ class CheckoutAddressTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
+             ->withSession(['cart' => [1 => ['name' => 'Product', 'price' => 10.00, 'quantity' => 1]]])
              ->get(route('checkout.address'))
              ->assertOk();
     }
@@ -67,6 +68,7 @@ class CheckoutAddressTest extends TestCase
         ]);
 
         $this->actingAs($user)
+             ->withSession(['cart' => [1 => ['name' => 'Product', 'price' => 10.00, 'quantity' => 1]]])
              ->get(route('checkout.address'))
              ->assertOk()
              ->assertSee('John Smith')
@@ -83,6 +85,7 @@ class CheckoutAddressTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
+             ->withSession(['cart' => [1 => ['name' => 'Product', 'price' => 10.00, 'quantity' => 1]]])
              ->get(route('checkout.address'))
              ->assertOk()
              ->assertSee('new-address-form', false) // class name in the HTML

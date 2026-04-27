@@ -49,6 +49,12 @@ class CheckoutController extends Controller
     public function showCheckout(): View|RedirectResponse
     {
         $cart = session('cart', []);
+
+        if (empty($cart)) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Your cart is empty. Add items before checking out.');
+        }
+
         $addresses = auth()->user()->addresses;
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
@@ -311,8 +317,13 @@ class CheckoutController extends Controller
      * CP-001: Show the checkout address step.
      * Auth users see their saved addresses + a new address form.
      */
-    public function showAddress(): View
+    public function showAddress(): View|RedirectResponse
     {
+        if (empty(session('cart', []))) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Your cart is empty. Add items before checking out.');
+        }
+
         $addresses = auth()->user()->addresses;
 
         return view('checkout.address', compact('addresses'));

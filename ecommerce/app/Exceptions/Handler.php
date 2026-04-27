@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -35,6 +36,14 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        // Expired / invalid email verification link → redirect to notice page with a message
+        if ($e instanceof InvalidSignatureException) {
+            if ($request->is('email/verify/*')) {
+                return redirect()->route('verification.notice')
+                    ->with('error', 'The verification link has expired or is invalid. Please request a new one.');
+            }
+        }
+
         // 404 Not Found — show clean error page even when APP_DEBUG=true
         if ($e instanceof NotFoundHttpException) {
             if ($request->expectsJson()) {

@@ -23,7 +23,7 @@
                                     width="88" height="88" style="object-fit:cover;">
                             @else
                                 <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex
-                                                align-items-center justify-content-center border"
+                                                        align-items-center justify-content-center border"
                                     style="width:88px;height:88px;">
                                     <i class="bi bi-person fs-2 text-primary"></i>
                                 </div>
@@ -32,7 +32,8 @@
                         </div>
 
                         {{-- Profile form --}}
-                        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data"
+                            x-data="{ loading: false }" @submit="loading = true">
                             @csrf
                             @method('PUT')
 
@@ -73,8 +74,7 @@
 
                             {{-- Submit --}}
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary px-4" x-data="{ loading: false }"
-                                    @click="loading = true" :disabled="loading">
+                                <button type="submit" class="btn btn-primary px-4" :disabled="loading">
                                     <span x-show="loading" class="spinner-border spinner-border-sm me-2"
                                         role="status"></span>
                                     <span x-text="loading ? 'Saving…' : 'Save Changes'">Save Changes</span>

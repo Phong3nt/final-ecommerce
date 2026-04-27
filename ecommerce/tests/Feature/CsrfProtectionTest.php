@@ -135,6 +135,7 @@ class CsrfProtectionTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['cart' => [1 => ['name' => 'Product', 'price' => 10.00, 'quantity' => 1]]])
             ->get(route('checkout.address'))
             ->assertStatus(200)
             ->assertSee('name="_token"', false);
