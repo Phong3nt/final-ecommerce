@@ -26,7 +26,18 @@ class RefundController extends Controller
 
         $amountCents = (int) round($order->total * 100);
 
-        $stripeRefundId = $this->paymentService->refund($order->stripe_payment_intent_id, $amountCents);
+        try {
+            $stripeRefundId = $this->paymentService->refund($order->stripe_payment_intent_id, $amountCents);
+        } catch (\Stripe\Exception\InvalidRequestException $e) {
+            // IMP-036: Return clean error instead of raw Stripe exception string
+            $code = $e->getStripeCode() ?? '';
+            $isAlreadyRefunded = $code === 'charge_already_refunded'
+                || str_contains(strtolower($e->getMessage()), 'already been refunded');
+            $cleanMessage = $isAlreadyRefunded
+                ? 'This order has already been fully refunded.'
+                : 'Refund could not be processed. Please check the Stripe dashboard.';
+            return back()->withErrors(['order' => $cleanMessage]);
+        }
 
         $order->update([
             'status' => 'refunded',

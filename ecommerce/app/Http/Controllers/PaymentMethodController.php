@@ -96,7 +96,9 @@ class PaymentMethodController extends Controller
             abort(403);
         }
 
-        auth()->user()->savedPaymentMethods()->update(['is_default' => false]);
+        /** @var \App\Models\User $authUser */
+        $authUser = auth()->user();
+        $authUser->savedPaymentMethods()->update(['is_default' => false]);
         $pm->update(['is_default' => true]);
 
         return redirect()->route('profile.show')
@@ -120,7 +122,9 @@ class PaymentMethodController extends Controller
 
         // Promote the next remaining card to default
         if ($wasDefault) {
-            $next = auth()->user()->savedPaymentMethods()->first();
+            /** @var \App\Models\User $authUser */
+            $authUser = auth()->user();
+            $next = $authUser->savedPaymentMethods()->first();
             $next?->update(['is_default' => true]);
         }
 

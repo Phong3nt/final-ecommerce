@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\NotifyAdminOfNewOrder;
 use App\Jobs\SendOrderConfirmationEmail;
+use App\Models\AdminNotification;
 use App\Models\Order;
 use App\Models\UserAddress;
 use App\Services\PaymentServiceInterface;
@@ -445,7 +446,9 @@ class CheckoutController extends Controller
         // IMP-035: Pass saved payment methods so the review page can pre-fill with a saved card
         $savedPaymentMethods = collect();
         if (auth()->check()) {
-            $savedPaymentMethods = auth()->user()->savedPaymentMethods()->get();
+            /** @var \App\Models\User $authUser */
+            $authUser = auth()->user();
+            $savedPaymentMethods = $authUser->savedPaymentMethods()->get();
         }
 
         return view('checkout.review', compact(
@@ -546,18 +549,39 @@ class CheckoutController extends Controller
             return response('Invalid payload or signature.', 400);
         }
 
-        $intentId = $event->data->object->id ?? null;
-
-        if ($intentId) {
-            $order = Order::where('stripe_payment_intent_id', $intentId)->first();
-
-            if ($order) {
-                if ($event->type === 'payment_intent.succeeded') {
-                    $order->update(['status' => 'paid']);
-                    SendOrderConfirmationEmail::dispatch($order);
-                    NotifyAdminOfNewOrder::dispatch($order);
-                } elseif ($event->type === 'payment_intent.payment_failed') {
-                    $order->update(['status' => 'failed']);
+        // IMP-036: Handle charge.refunded separately — the object is a Charge, not a PaymentIntent
+        if ($event->type === 'charge.refunded') {
+            $piId = $event->data->object->payment_intent ?? null;
+            if ($piId) {
+                $order = Order::where('stripe_payment_intent_id', $piId)->first();
+                // Only process if not already marked refunded (prevents double-notification
+                // when admin-initiated refund already set the status via RefundController)
+                if ($order && $order->status !== 'refunded') {
+                    $amountRefunded = ($event->data->object->amount_refunded ?? 0) / 100;
+                    $stripeRefundId = $event->data->object->refunds->data[0]->id ?? null;
+                    $order->update(['status' => 'refunded', 'refunded_at' => now()]);
+                    $order->refundTransactions()->create([
+                        'amount'           => $amountRefunded,
+                        'stripe_refund_id' => $stripeRefundId,
+                    ]);
+                    AdminNotification::create([
+                        'order_id' => $order->id,
+                        'message'  => "Order #{$order->id} was refunded externally via Stripe — \$" . number_format($amountRefunded, 2) . '.',
+                    ]);
+                }
+            }
+        } else {
+            $intentId = $event->data->object->id ?? null;
+            if ($intentId) {
+                $order = Order::where('stripe_payment_intent_id', $intentId)->first();
+                if ($order) {
+                    if ($event->type === 'payment_intent.succeeded') {
+                        $order->update(['status' => 'paid']);
+                        SendOrderConfirmationEmail::dispatch($order);
+                        NotifyAdminOfNewOrder::dispatch($order);
+                    } elseif ($event->type === 'payment_intent.payment_failed') {
+                        $order->update(['status' => 'failed']);
+                    }
                 }
             }
         }
