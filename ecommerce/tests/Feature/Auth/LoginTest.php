@@ -186,6 +186,7 @@ class LoginTest extends TestCase
     {
         $this->assertTrue(class_exists(\App\Http\Middleware\VerifyCsrfToken::class));
 
+        /** @var \Illuminate\Foundation\Http\Kernel $kernel */
         $kernel = app(\Illuminate\Contracts\Http\Kernel::class);
         $webMiddleware = $kernel->getMiddlewareGroups()['web'] ?? [];
         $this->assertContains(\App\Http\Middleware\VerifyCsrfToken::class, $webMiddleware);

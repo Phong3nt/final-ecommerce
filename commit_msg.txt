@@ -1,0 +1,25 @@
+﻿feat(IMP-027): Admin Dashboard full redesign — Bootstrap 5.3 card layout
+
+## What
+- Full Redesign: removes standalone HTML wrapper + all inline <style> / style=" attrs
+- @extends('layouts.admin') — no duplicate Bootstrap CDN
+- @section('page-title', 'Dashboard') feeds layout topbar heading
+- @push('styles'): meta http-equiv refresh content=300 (TC-03) + skel-shimmer CSS
+- 4 KPI cards (row g-3): Total Revenue (success), Orders Today (primary),
+  New Users Today (info), Low-Stock Products (warning)
+  — Bootstrap card shadow-sm border-0, icon circle bg-*-opacity-10, text-label
+- Revenue & Orders chart card (full width): Bootstrap btn-group range toggles,
+  skel-chart-wrap with #chart-skeleton shimmer, responsive canvas
+- Bottom row g-4: Top-Selling Products + Recent Orders side by side (col-lg-6)
+  — Bootstrap table-hover, table-light thead, .tbl-empty on empty state
+- Recent Orders: status badges bg-*-opacity-10 (match), View all link to orders index
+- Top-Selling: date range filter with form-control-sm inputs + btn-primary Go button
+- data-imp017=realtime-enabled preserved on content wrapper (FirebaseNotificationTest TC-07)
+- Chart.js + Firebase scripts moved to @push('scripts')
+- Alpine.js fade-in on content wrapper (RULE 10)
+
+## Tests
+- AdminDashboardTest: 12/12 pass
+- FirebaseNotificationTest: 12/12 pass
+- AdminMiddlewareAuditTest: 12/12 pass
+- GlobalToastNotificationTest: 10/10 pass

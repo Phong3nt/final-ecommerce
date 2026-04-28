@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\OrderStatusController;
 use App\Http\Controllers\Admin\RefundController;
@@ -23,11 +24,22 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+    $featuredProducts = Product::with('category')
+        ->where('status', 'active')
+        ->where('stock', '>', 0)
+        ->whereNotNull('image')
+        ->latest()
+        ->take(8)
+        ->get();
+    return view('welcome', compact('categories', 'featuredProducts'));
 });
 
 // PC-001: Public product browsing — no auth required
@@ -106,6 +118,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+    // IMP-035: Card Vault — saved payment methods
+    Route::get('/profile/payment-methods/setup-intent', [PaymentMethodController::class, 'setupIntent'])->name('payment-methods.setup-intent');
+    Route::post('/profile/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::patch('/profile/payment-methods/{pm}/default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.setDefault');
+    Route::delete('/profile/payment-methods/{pm}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
     // UP-002: Saved addresses CRUD
     Route::get('/addresses', [UserAddressController::class, 'index'])->name('addresses.index');
     Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
@@ -122,6 +140,10 @@ Route::middleware(['auth'])->group(function () {
     // OH-004: Cancel order
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+    // IMP-003: One-Page Checkout — single view + session-save endpoint
+    Route::get('/checkout', [CheckoutController::class, 'showCheckout'])->name('checkout.index');
+    Route::post('/checkout/session', [CheckoutController::class, 'storeSession'])->name('checkout.session.store');
+
     // CP-001: Checkout — shipping address
     Route::get('/checkout/address', [CheckoutController::class, 'showAddress'])->name('checkout.address');
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
@@ -137,7 +159,16 @@ Route::middleware(['auth'])->group(function () {
     // CP-005: Checkout — success / failure page (Stripe redirects here after confirmPayment)
     Route::get('/checkout/success', [CheckoutController::class, 'showSuccess'])->name('checkout.success');
 
+    // IMP-035: Store "save card" preference in session before Stripe confirmPayment redirect
+    Route::post('/checkout/save-card-flag', [CheckoutController::class, 'flagSaveCard'])->name('checkout.save-card-flag');
+
 });
+
+// IMP-004: Guest Checkout — no auth required; guests supply email for order tracking
+Route::get('/checkout/guest', [CheckoutController::class, 'showGuestCheckout'])->name('checkout.guest.index');
+Route::post('/checkout/guest/session', [CheckoutController::class, 'storeGuestSession'])->name('checkout.guest.session.store');
+Route::post('/checkout/guest/order', [CheckoutController::class, 'placeGuestOrder'])->name('checkout.guest.place-order');
+Route::get('/checkout/guest/success', [CheckoutController::class, 'showGuestSuccess'])->name('checkout.guest.success');
 
 // AU-006: Admin routes — auth + role:admin required
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -167,6 +198,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
     Route::post('/products/import', [AdminProductController::class, 'import'])->name('products.import');
 
+    // IMP-039: Admin bulk product status change
+    Route::post('/products/bulk-status', [AdminProductController::class, 'bulkStatus'])->name('products.bulkStatus');
+
     // PM-002: Admin product edit
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
     Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
@@ -174,8 +208,25 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // PM-003: Admin product delete (soft delete)
     Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 
+    // IMP-038: Icecat API auto-import trigger
+    Route::post('/icecat/import', [\App\Http\Controllers\Admin\IcecatController::class, 'import'])->name('icecat.import');
+
+    // IMP-044: Icecat sync — update existing products with fresh Icecat data
+    Route::post('/icecat/sync', [\App\Http\Controllers\Admin\IcecatController::class, 'sync'])->name('icecat.sync');
+
+    // IMP-045: Import by Icecat Product ID or EAN/product code (synchronous, per-item results)
+    Route::post('/icecat/import-by-id', [\App\Http\Controllers\Admin\IcecatController::class, 'importById'])->name('icecat.import-by-id');
+
+    // IMP-046: Brand management — import route MUST precede {brand} wildcard
+    Route::post('/brands/import-from-icecat', [\App\Http\Controllers\Admin\BrandController::class, 'importFromIcecat'])->name('brands.import-from-icecat');
+    Route::get('/brands', [\App\Http\Controllers\Admin\BrandController::class, 'index'])->name('brands.index');
+    Route::post('/brands', [\App\Http\Controllers\Admin\BrandController::class, 'store'])->name('brands.store');
+    Route::patch('/brands/{brand}', [\App\Http\Controllers\Admin\BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [\App\Http\Controllers\Admin\BrandController::class, 'destroy'])->name('brands.destroy');
+
     // PM-006: Admin product image management
     Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
+    Route::post('/products/{product}/images', [AdminProductController::class, 'storeImages'])->name('products.images.store');
     Route::post('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');
     Route::post('/products/{product}/images/thumbnail', [AdminProductController::class, 'setThumbnail'])->name('products.images.thumbnail');
     Route::delete('/products/{product}/images/{index}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy')->where('index', '[0-9]+');
@@ -220,6 +271,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/read-all', [AdminNotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::patch('/notifications/{notification}/read', [AdminNotificationController::class, 'markRead'])->name('notifications.read');
+
+    // IMP-016: Consolidated audit log
+    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)

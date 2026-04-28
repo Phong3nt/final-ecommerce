@@ -264,6 +264,30 @@ class PaymentTokenizationTest extends TestCase
             {
                 return 're_stub';
             }
+
+            public function createOrRetrieveCustomer(string $email, string $name): string
+            {
+                return 'cus_stub';
+            }
+
+            public function createSetupIntent(string $stripeCustomerId): array
+            {
+                return ['id' => 'seti_stub', 'client_secret' => 'seti_stub_secret'];
+            }
+
+            public function detachPaymentMethod(string $paymentMethodId): void
+            {
+            }
+
+            public function retrievePaymentMethod(string $paymentMethodId): array
+            {
+                return ['id' => $paymentMethodId, 'last4' => '4242', 'brand' => 'visa', 'exp_month' => 12, 'exp_year' => 2028];
+            }
+
+            public function getPaymentIntentPaymentMethodId(string $intentId): ?string
+            {
+                return null;
+            }
         });
 
         $this->actingAs($user)->withSession([
@@ -344,6 +368,30 @@ class PaymentTokenizationTest extends TestCase
             public function refund(string $intentId, int $amountCents): string
             {
                 return 're_stub';
+            }
+
+            public function createOrRetrieveCustomer(string $email, string $name): string
+            {
+                return 'cus_stub';
+            }
+
+            public function createSetupIntent(string $stripeCustomerId): array
+            {
+                return ['id' => 'seti_stub', 'client_secret' => 'seti_stub_secret'];
+            }
+
+            public function detachPaymentMethod(string $paymentMethodId): void
+            {
+            }
+
+            public function retrievePaymentMethod(string $paymentMethodId): array
+            {
+                return ['id' => $paymentMethodId, 'last4' => '4242', 'brand' => 'visa', 'exp_month' => 12, 'exp_year' => 2028];
+            }
+
+            public function getPaymentIntentPaymentMethodId(string $intentId): ?string
+            {
+                return null;
             }
         });
 

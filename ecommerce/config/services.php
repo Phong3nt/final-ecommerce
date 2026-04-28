@@ -43,4 +43,18 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    // IMP-038: Icecat product content API
+    'icecat' => [
+        'username' => env('ICECAT_USERNAME', ''),
+        'password' => env('ICECAT_PASSWORD', ''),
+    ],
+
+    // IMP-017: Firebase Realtime Database — server-side push + client-side listener
+    'firebase' => [
+        'db_url'     => env('FIREBASE_DB_URL', ''),       // e.g. https://project.firebaseio.com
+        'secret'     => env('FIREBASE_SECRET', ''),       // Database Secret — server-side ONLY
+        'api_key'    => env('FIREBASE_API_KEY', ''),      // Web API Key — safe to expose to browser
+        'project_id' => env('FIREBASE_PROJECT_ID', ''),  // Firebase project ID
+    ],
+
 ];

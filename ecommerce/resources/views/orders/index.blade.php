@@ -1,133 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders</title>
+@section('title', 'My Orders — E-Commerce')
+
+@push('styles')
     <style>
-        body {
-            font-family: sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 1rem;
-        }
-
-        h1 {
-            margin-bottom: 1.5rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: .6rem .75rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        th {
-            background: #f9fafb;
+        /* IMP-023: order status badges */
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
             font-weight: 600;
         }
 
-        .status-pending {
-            color: #92400e;
-            background: #fef3c7;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: .85rem;
-        }
-
         .status-paid {
-            color: #065f46;
             background: #d1fae5;
-            padding: 2px 8px;
+            color: #065f46;
+            padding: 2px 10px;
             border-radius: 9999px;
-            font-size: .85rem;
+            font-size: .8rem;
+            font-weight: 600;
         }
 
         .status-failed {
-            color: #991b1b;
             background: #fee2e2;
-            padding: 2px 8px;
+            color: #991b1b;
+            padding: 2px 10px;
             border-radius: 9999px;
-            font-size: .85rem;
+            font-size: .8rem;
+            font-weight: 600;
         }
 
         .status-cancelled {
-            color: #374151;
             background: #f3f4f6;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: .85rem;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-
-        .pagination {
-            margin-top: 1.5rem;
-            display: flex;
-            gap: .5rem;
-        }
-
-        .pagination a,
-        .pagination span {
-            padding: .4rem .75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            text-decoration: none;
             color: #374151;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
+            font-weight: 600;
         }
 
-        .pagination .active span {
-            background: #1d4ed8;
-            color: #fff;
-            border-color: #1d4ed8;
+        .status-processing {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        .status-shipped {
+            background: #ede9fe;
+            color: #6d28d9;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        .status-delivered {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        .status-refunded {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: .8rem;
+            font-weight: 600;
         }
     </style>
-</head>
+@endpush
 
-<body>
-    <h1>My Orders</h1>
+@section('content')
+    @include('partials.toast')
+
+    {{-- Page header --}}
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">My Orders</h1>
+            <p class="text-muted mb-0">View and track all your past purchases.</p>
+        </div>
+        <a href="{{ route('products.index') }}" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-shop me-1"></i>Continue Shopping
+        </a>
+    </div>
 
     @if ($orders->isEmpty())
-        <p class="empty">You haven't placed any orders yet. <a href="{{ route('products.index') }}">Start shopping</a></p>
+        {{-- Empty state --}}
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body text-center py-5">
+                <div class="d-inline-flex align-items-center justify-content-center
+                                            bg-secondary bg-opacity-10 rounded-circle mb-3" style="width:64px;height:64px;">
+                    <i class="bi bi-bag fs-2 text-secondary"></i>
+                </div>
+                <p class="text-muted mb-3">You haven't placed any orders yet.</p>
+                <a href="{{ route('products.index') }}" class="btn btn-primary px-4">
+                    <i class="bi bi-shop me-1"></i>Start shopping
+                </a>
+            </div>
+        </div>
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>Order #</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($orders as $order)
-                    <tr>
-                        <td><a href="{{ route('orders.show', $order) }}">#{{ $order->id }}</a></td>
-                        <td>{{ $order->created_at->format('d M Y') }}</td>
-                        <td>${{ number_format($order->total, 2) }}</td>
-                        <td><span class="status-{{ $order->status }}">{{ ucfirst($order->status) }}</span></td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+        {{-- Orders table --}}
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($orders as $order)
+                            <tr>
+                                <td class="fw-semibold">#{{ $order->id }}</td>
+                                <td class="text-muted">{{ $order->created_at->format('d M Y') }}</td>
+                                <td>${{ number_format($order->total, 2) }}</td>
+                                <td><span class="status-{{ $order->status }}">{{ ucfirst($order->status) }}</span></td>
+                                <td class="text-end">
+                                    <a href="{{ route('orders.show', $order) }}" class="btn btn-outline-secondary btn-sm">
+                                        View <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        <div class="pagination">
+        {{-- Pagination --}}
+        <div class="mt-3 pagination-wrapper">
             {{ $orders->links() }}
         </div>
     @endif
 
-    <p><a href="{{ route('dashboard') }}">&larr; Back to Dashboard</a></p>
-</body>
+    {{-- Back link --}}
+    <div class="mt-4">
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
 
-</html>
+    </div>
+@endsection

@@ -1,0 +1,83 @@
+
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ..........⨯.⨯⨯..............................................................
+  ..............⨯.............................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  .......................
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\CheckoutAddressTest > cp001 address page returns 20…   
+  Expected response status code [200] but received 302.
+Failed asserting that 302 is identical to 200.
+
+  at tests\Feature\CheckoutAddressTest.php:42
+     38▕         $user = User::factory()->create();
+     39▕ 
+     40▕         $this->actingAs($user)
+     41▕              ->get(route('checkout.address'))
+  ➜  42▕              ->assertOk();
+     43▕     }
+     44▕ 
+     45▕     // -------------------------------------------------------------------------
+     46▕     // TC-02: Guest is redirected to login
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\CheckoutAddressTest > cp001 auth user sees saved ad…   
+  Expected response status code [200] but received 302.
+Failed asserting that 302 is identical to 200.
+
+  at tests\Feature\CheckoutAddressTest.php:71
+     67▕         ]);
+     68▕ 
+     69▕         $this->actingAs($user)
+     70▕              ->get(route('checkout.address'))
+  ➜  71▕              ->assertOk()
+     72▕              ->assertSee('John Smith')
+     73▕              ->assertSee($address->address_line1);
+     74▕     }
+     75▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\CheckoutAddressTest > cp001 user with no addresses…    
+  Expected response status code [200] but received 302.
+Failed asserting that 302 is identical to 200.
+
+  at tests\Feature\CheckoutAddressTest.php:87
+     83▕         $user = User::factory()->create();
+     84▕ 
+     85▕         $this->actingAs($user)
+     86▕              ->get(route('checkout.address'))
+  ➜  87▕              ->assertOk()
+     88▕              ->assertSee('new-address-form', false) // class name in the HTML
+     89▕              ->assertDontSee('saved-addresses');
+     90▕     }
+     91▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\CsrfProtectionTest > nf001 checkout address form co…   
+  Expected response status code [200] but received 302.
+Failed asserting that 302 is identical to 200.
+
+  at tests\Feature\CsrfProtectionTest.php:139
+    135▕         $user = User::factory()->create();
+    136▕ 
+    137▕         $this->actingAs($user)
+    138▕             ->get(route('checkout.address'))
+  ➜ 139▕             ->assertStatus(200)
+    140▕             ->assertSee('name="_token"', false);
+    141▕     }
+    142▕ 
+    143▕     // ─── TC-10: checkout shipping form renders CSRF token ────────────────────
+
+
+  Tests:    4 failed, 1007 passed (2319 assertions)
+  Duration: 90.23s
+

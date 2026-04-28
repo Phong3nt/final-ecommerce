@@ -11,7 +11,11 @@ class ProfileController extends Controller
 {
     public function show(): View
     {
-        return view('profile.show', ['user' => auth()->user()]);
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $user->load('savedPaymentMethods');
+
+        return view('profile.show', ['user' => $user]);
     }
 
     public function update(UpdateProfileRequest $request): RedirectResponse

@@ -389,6 +389,126 @@ BATCHING RULE — when to commit immediately vs. batch:
    Fix caused regression                   → DO NOT commit, fix regression first
 ```
 
+### Scenario D — Improvement Request (UI/UX, Logic, Infra)
+
+> **Entry point:** User prefixes request with a scope keyword.
+> **Full workflow →** [improvement_template.md](improvement_template.md)
+
+**Valid invocation patterns:**
+
+```
+[UIUX_MODE]       <description> — IMP-<NNN>
+[LOGIC_MODE]      <description> — IMP-<NNN>
+[INFRA_MODE]      <description> — IMP-<NNN>
+[FULL_STACK_MODE] <description> — IMP-<NNN>
+```
+
+```
+1. If no scope keyword → ask user to specify before proceeding
+2. Run improvement_template.md STEP 0 (Tech Stack Compatibility Check) FIRST
+   → No Tailwind if project uses Bootstrap
+   → No Vue/React if project uses Blade + Alpine.js
+   → No new library without user approval
+3. Run STEP 1 (Backlog & Evaluation Scan)
+   → Identify affected Task IDs from backlog.md
+   → Read their EVAL blocks in evaluation_history.md
+   → Check for duplicate or STALE proposals
+4. Run STEP 2 (Impact Analysis) — fill risk table and Rule 10 check
+5. Run STEP 3–4 (Plan + Apply) — scope-keyword checklist strictly enforced
+6. Run STEP 5 (Verify) — targeted regression + full suite
+7. Run STEP 6 (Evaluate & Document)
+   → Append EVAL-IMP-<NNN> to evaluation_history.md
+   → Update IMP-<NNN> status to Done in Improvement Backlog (backlog.md)
+8. Run STEP 7 (Commit) — use improve() prefix in commit message
+```
+
+---
+
+### Scenario E — Environment Setup / "Kiểm tra và khởi động môi trường"
+
+> **Entry point:** User nói "setup dự án", "check môi trường", "dự án không chạy", "cần khởi động lại từ đầu", hoặc bất kỳ yêu cầu nào liên quan đến cài đặt, kiểm tra, hay khởi động môi trường phát triển.
+> **Full workflow →** [setup_checklist.md](setup_checklist.md)
+
+```
+NGUYÊN TẮC: Mỗi bước phải KIỂM TRA trước — HÀNH ĐỘNG sau.
+Nếu bước nào trả về lỗi, PHẢI xử lý lỗi đó NGAY TẠI CHỖ trước khi
+chuyển sang bước tiếp theo. KHÔNG bao giờ bỏ qua lỗi và chạy tiếp.
+```
+
+```
+STEP 0  Xác định đúng thư mục làm việc (có file artisan)
+        → Lỗi: hỏi user đường dẫn, không tự đoán
+
+STEP 1  System Check — chạy từng lệnh, xử lý lỗi trước khi tiếp:
+        php -v       → Cần >= 8.1. Thiếu/thấp hơn: STOP + báo user
+        composer -V  → Chưa cài: STOP + hướng dẫn cài
+        node -v      → Chưa cài: STOP + hướng dẫn cài
+        npm -v       → Lỗi: thử npm install -g npm
+        mysql --version / XAMPP Check → Chưa chạy: STOP + báo user bật MySQL
+
+STEP 2  Backend Check:
+        Kiểm tra vendor/autoload.php có tồn tại
+        → Thiếu: chạy composer install
+        → Lỗi composer install: đọc bảng lỗi trong setup_checklist.md STEP 2
+        Chạy php artisan about → đọc kết quả
+        → Lỗi Key/DB: xử lý tại STEP 3/4
+        → Class not found: composer dump-autoload trước
+
+STEP 3  .env Check:
+        Kiểm tra file .env tồn tại
+        → Thiếu: copy từ .env.example
+        → Thiếu cả .env.example: STOP + báo user
+        Kiểm tra APP_KEY có giá trị
+        → Trống: php artisan key:generate
+        Kiểm tra DB_DATABASE, DB_USERNAME, DB_PASSWORD hợp lệ
+        → Bất kỳ giá trị nào trống/sai: STOP + báo user điền trước khi tiếp
+
+STEP 4  Database Check:
+        Kiểm tra kết nối DB trước
+        → Unknown database: tạo DB trong phpMyAdmin trước
+        → Access denied: STOP + báo user sửa credentials trong .env
+        → Connection refused: STOP + báo user bật MySQL
+        Chạy php artisan migrate:status
+        → Có Pending: chạy php artisan migrate
+        → Lỗi migrate: đọc bảng lỗi trong setup_checklist.md STEP 4
+        ⚠️ CẤMM tự ý chạy migrate:fresh hoặc migrate:rollback
+
+STEP 5  Frontend Check:
+        Kiểm tra node_modules/.bin/vite tồn tại
+        → Thiếu: chạy npm install
+        → Lỗi npm install: đọc bảng lỗi trong setup_checklist.md STEP 5
+        Quyết định: npm run dev (phát triển) hoặc npm run build (ổn định)
+
+STEP 6  Stripe Check (chỉ khi task liên quan payment):
+        stripe --version → Chưa cài: STOP + hướng dẫn
+        stripe whoami    → Chưa login: stripe login
+        Kiểm tra STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET trong .env
+        → Thiếu: STOP + báo user điền từ dashboard.stripe.com
+
+STEP 7  Khởi động server (CHỈ sau khi tất cả STEP trên pass):
+        php artisan serve
+        → Address in use: dùng --port=8001
+        → Autoload error: composer dump-autoload trước
+```
+
+**Reporting sau khi hoàn thành Scenario E:**
+
+```
+Báo cáo kết quả theo format:
+  ✅ STEP 1 — System: PHP 8.2, Composer 2.7, Node 20.x, MySQL Running
+  ✅ STEP 2 — Backend: vendor/ OK, php artisan about: no errors
+  ✅ STEP 3 — .env: file exists, APP_KEY set, DB config valid
+  ✅ STEP 4 — Database: connected, all migrations Ran
+  ✅ STEP 5 — Frontend: node_modules OK, built
+  ⚠️ STEP 6 — Stripe: STRIPE_WEBHOOK_SECRET missing (đã thông báo user)
+  ✅ STEP 7 — Server: running on http://127.0.0.1:8000
+
+Nếu có STEP nào FAIL: liệt kê lỗi đầy đủ, giải pháp đã thử,
+và trạng thái hiện tại trước khi kết thúc báo cáo.
+```
+
+---
+
 ### Scenario C — "Thực hiện đề xuất cải tiến [TASK-ID].1"
 
 ```
@@ -488,6 +608,14 @@ fix_template.md                                 (feeds fixlog.md entries)
   └─ 7-step fix workflow                          └─ FIX-<NNN> template
   └─ Fix type classification                      └─ Commit message format
   └─ Commit batching rules                        └─ Root cause checklist
+
+setup_checklist.md  ───────────────────────────────────────┐
+  └─ STEP 0–7: System → Backend → .env → DB → Frontend     │
+       → Stripe → Server                                    │
+  └─ Error-handling table per step (không bỏ qua lỗi)      │
+  └─ Quick-check summary (mỗi đầu phiên làm việc)          │
+  └─ Bảng lỗi phổ biến & lệnh sửa nhanh                    │
+  └─ Triggered by: Scenario E in instruction.md            │
 
                    ▲
                    └──────── instruction.md ───────────────┘

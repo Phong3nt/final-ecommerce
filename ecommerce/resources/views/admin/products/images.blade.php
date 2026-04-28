@@ -1,275 +1,132 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.admin')
+{{-- @include('partials.toast') --}}
 
-<head>
-    <title>Admin — Manage Images: {{ $product->name }}</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 2rem;
-            background: #f5f5f5;
-        }
+@section('title', 'Admin — Manage Images')
+@section('page-title', 'Manage Images')
 
-        h1 {
-            margin-bottom: 1.5rem;
-        }
-
-        .alert-success {
-            background: #d1e7dd;
-            border: 1px solid #badbcc;
-            color: #0f5132;
-            padding: .75rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c2c7;
-            color: #842029;
-            padding: .75rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .card {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card h2 {
-            margin: 0 0 .75rem;
-            font-size: 1.05rem;
-        }
-
-        #image-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #image-list li {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: .6rem .75rem;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            margin-bottom: .5rem;
-            cursor: grab;
-            user-select: none;
-        }
-
-        #image-list li.dragging {
-            opacity: .4;
-        }
-
-        #image-list li img {
-            width: 72px;
-            height: 72px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 2px solid transparent;
-        }
-
-        #image-list li img.is-thumbnail {
-            border-color: #198754;
-        }
-
-        .drag-handle {
-            font-size: 1.2rem;
-            color: #aaa;
-            cursor: grab;
-        }
-
-        .badge-thumbnail {
-            display: inline-block;
-            background: #198754;
-            color: #fff;
-            font-size: .72rem;
-            font-weight: 600;
-            padding: .1rem .4rem;
-            border-radius: 3px;
-            text-transform: uppercase;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: .35rem .9rem;
-            border: none;
-            border-radius: 4px;
-            font-size: .875rem;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: #0d6efd;
-            color: #fff;
-        }
-
-        .btn-success {
-            background: #198754;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: #fff;
-        }
-
-        .image-meta {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .image-path {
-            font-size: .8rem;
-            color: #6c757d;
-            word-break: break-all;
-        }
-
-        .image-actions {
-            display: flex;
-            gap: .5rem;
-            flex-shrink: 0;
-        }
-
-        .empty-state {
-            color: #6c757d;
-            padding: 1rem 0;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Manage Images: {{ $product->name }}</h1>
-
-    <p>
-        <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-secondary">← Back to Edit</a>
-        <a href="{{ route('admin.products.index') }}" class="btn btn-secondary" style="margin-left:.5rem;">Products List</a>
-    </p>
-
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
-
-    @if($errors->any())
-        <div class="alert-error">
-            @foreach($errors->all() as $err)
-                <div>{{ $err }}</div>
-            @endforeach
+@section('content')
+    <div x-data x-init="$el.classList.add('fade-in')">
+        <div class="d-flex gap-2 mb-3">
+            <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Edit
+            </a>
+            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">Products List</a>
         </div>
-    @endif
 
-    <div class="card">
-        <h2>Current Images</h2>
-        <p style="font-size:.875rem;color:#555;margin:.25rem 0 1rem;">
-            Drag rows to reorder. The <span class="badge-thumbnail">thumbnail</span> image is used as the primary product image.
-        </p>
+        <h5 class="mb-3">Manage Images: {{ $product->name }}</h5>
 
-        @if($product->images && count($product->images) > 0)
-            <form id="reorder-form" method="POST" action="{{ route('admin.products.images.reorder', $product) }}">
-                @csrf
-                {{-- Hidden inputs are injected by JS after drag --}}
-                @foreach($product->images as $path)
-                    <input type="hidden" name="image_order[]" value="{{ $path }}">
+        @if($errors->any())
+            <div class="alert alert-danger py-2 mb-3">
+                @foreach($errors->all() as $err)
+                    <div class="small">{{ $err }}</div>
                 @endforeach
-                <ul id="image-list">
-                    @foreach($product->images as $i => $path)
-                        <li data-path="{{ $path }}">
-                            <span class="drag-handle" title="Drag to reorder">&#8597;</span>
-                            <img
-                                src="{{ Storage::disk('public')->exists($path) ? Storage::url($path) : 'https://placehold.co/72x72?text=No+Image' }}"
-                                alt="Product image {{ $i + 1 }}"
-                                class="{{ $product->image === $path ? 'is-thumbnail' : '' }}"
-                            >
-                            <div class="image-meta">
-                                @if($product->image === $path)
-                                    <span class="badge-thumbnail">Thumbnail</span>
-                                @endif
-                                <div class="image-path">{{ $path }}</div>
-                            </div>
-                            <div class="image-actions">
-                                @if($product->image !== $path)
-                                    <form method="POST" action="{{ route('admin.products.images.thumbnail', $product) }}" style="display:inline;">
-                                        @csrf
-                                        <input type="hidden" name="thumbnail_index" value="{{ $i }}">
-                                        <button type="submit" class="btn btn-success">Set Thumbnail</button>
-                                    </form>
-                                @endif
-                                <form method="POST" action="{{ route('admin.products.images.destroy', [$product, $i]) }}" style="display:inline;"
-                                      onsubmit="return confirm('Remove this image?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Remove</button>
-                                </form>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-                <div style="margin-top:1rem;">
-                    <button type="submit" class="btn btn-primary">Save Order</button>
-                </div>
-            </form>
-        @else
-            <p class="empty-state">No images uploaded yet. <a href="{{ route('admin.products.edit', $product) }}">Go to Edit</a> to upload images.</p>
+            </div>
         @endif
+
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Current Images</h6>
+                <p class="small text-muted mb-3">
+                    Drag rows to reorder. The <span class="badge bg-success" style="font-size:.72rem;">thumbnail</span>
+                    image is used as the primary product image.
+                </p>
+
+                @if($product->images && count($product->images) > 0)
+                    {{-- Image list: standalone div to avoid nested-form HTML issue --}}
+                    <div id="image-list">
+                        @foreach($product->images as $i => $path)
+                            <div class="d-flex align-items-center gap-3 p-2 bg-light border rounded mb-2" data-path="{{ $path }}">
+                                <span class="text-muted fs-5" title="Drag to reorder" style="cursor:grab;">&#8597;</span>
+                                <img src="{{ str_starts_with($path, 'http') ? $path : (Storage::disk('public')->exists($path) ? Storage::url($path) : 'https://placehold.co/72x72?text=No+Image') }}"
+                                    alt="Product image {{ $i + 1 }}"
+                                    class="rounded {{ $product->image === $path ? 'border border-success border-2' : '' }}"
+                                    style="width:72px;height:72px;object-fit:cover;">
+                                <div class="flex-grow-1">
+                                    @if($product->image === $path)
+                                        <span class="badge bg-success" style="font-size:.72rem;">Thumbnail</span>
+                                    @endif
+                                    <div class="small text-muted text-break">{{ $path }}</div>
+                                </div>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    @if($product->image !== $path)
+                                        <form method="POST" action="{{ route('admin.products.images.thumbnail', $product) }}">
+                                            @csrf
+                                            <input type="hidden" name="thumbnail_index" value="{{ $i }}">
+                                            <button type="submit" class="btn btn-success btn-sm">Set Thumbnail</button>
+                                        </form>
+                                    @endif
+                                    <form method="POST" action="{{ route('admin.products.images.destroy', [$product, $i]) }}"
+                                        onsubmit="return confirm('Remove this image?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    {{-- Reorder form: separate from the image list, no nesting --}}
+                    <form id="reorder-form" method="POST" action="{{ route('admin.products.images.reorder', $product) }}">
+                        @csrf
+                        @foreach($product->images as $path)
+                            <input type="hidden" name="image_order[]" value="{{ $path }}">
+                        @endforeach
+                        <div class="mt-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Save Order</button>
+                        </div>
+                    </form>
+                @else
+                    <p class="text-muted">No images uploaded yet.</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Add more images --}}
+        <div class="card shadow-sm border-0 rounded-3 mt-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Add More Images</h6>
+                <form method="POST" action="{{ route('admin.products.images.store', $product) }}"
+                    enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-2">
+                        <input type="file" name="images[]" multiple accept="image/*"
+                            class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror">
+                        <div class="form-text">Up to 10 MB per file. Images are automatically resized to max 1920 px and converted to JPEG.</div>
+                        @error('images')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        @error('images.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Upload Images</button>
+                </form>
+            </div>
+        </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
-        const list = document.getElementById('image-list');
-        if (list) {
-            let dragged = null;
-
-            list.addEventListener('dragstart', function(e) {
-                dragged = e.target.closest('li');
-                if (dragged) dragged.classList.add('dragging');
-            });
-
-            list.addEventListener('dragend', function() {
-                if (dragged) dragged.classList.remove('dragging');
-                dragged = null;
-                syncHiddenInputs();
-            });
-
-            list.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                const target = e.target.closest('li');
-                if (target && dragged && target !== dragged) {
-                    const rect = target.getBoundingClientRect();
-                    const after = (e.clientY - rect.top) > (rect.height / 2);
-                    list.insertBefore(dragged, after ? target.nextSibling : target);
-                }
-            });
-
-            function syncHiddenInputs() {
-                const form = document.getElementById('reorder-form');
-                form.querySelectorAll('input[name="image_order[]"]').forEach(el => el.remove());
-                list.querySelectorAll('li[data-path]').forEach(function(li) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'image_order[]';
-                    input.value = li.dataset.path;
-                    form.appendChild(input);
+            const list = document.getElementById('image-list');
+            if (list) {
+                let dragged = null;
+                list.addEventListener('dragstart', function (e) { dragged = e.target.closest('[data-path]'); if (dragged) dragged.classList.add('opacity-50'); });
+                list.addEventListener('dragend', function () { if (dragged) dragged.classList.remove('opacity-50'); dragged = null; syncHiddenInputs(); });
+                list.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    const target = e.target.closest('[data-path]');
+                    if (target && dragged && target !== dragged) {
+                        const rect = target.getBoundingClientRect();
+                        list.insertBefore(dragged, (e.clientY - rect.top) > (rect.height / 2) ? target.nextSibling : target);
+                    }
                 });
-            }
-
-            // Set draggable on li items
-            list.querySelectorAll('li').forEach(function(li) {
-                li.setAttribute('draggable', 'true');
-            });
+                function syncHiddenInputs() {
+                    const form = document.getElementById('reorder-form');
+                    form.querySelectorAll('input[name="image_order[]"]').forEach(el => el.remove());
+                    list.querySelectorAll('[data-path]').forEach(function (el) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden'; input.name = 'image_order[]'; input.value = el.dataset.path;
+                        form.appendChild(input);
+                    });
         }
+                list.querySelectorAll('[data-path]').forEach(function (el) { el.setAttribute('draggable', 'true'); });
+            }
     </script>
-</body>
-
-</html>
+@endpush

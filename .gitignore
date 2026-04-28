@@ -20,7 +20,8 @@ ecommerce/Homestead.yaml
 
 # IDE & editors
 .idea/
-.vscode/
+.vscode/*
+!ecommerce/.vscode/settings.json
 .fleet/
 *.code-workspace
 

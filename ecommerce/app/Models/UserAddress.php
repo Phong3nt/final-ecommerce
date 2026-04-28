@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int         $id
+ * @property int         $user_id
+ * @property bool        $is_default
+ * @property string      $country
+ */
 class UserAddress extends Model
 {
     use HasFactory;

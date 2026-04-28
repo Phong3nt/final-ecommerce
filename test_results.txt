@@ -1,0 +1,1045 @@
+
+   PASS  Tests\Unit\ExampleTest
+  Γ£ô that true is true                                                    0.01s  
+
+   PASS  Tests\Feature\AdminCategoryTest
+  Γ£ô pm004 guest is redirected from categories index                      0.58s  
+  Γ£ô pm004 non admin gets 403 on categories index                         0.13s  
+  Γ£ô pm004 admin can view categories index                                0.09s  
+  Γ£ô pm004 admin can create category                                      0.10s  
+  Γ£ô pm004 category name is required                                      0.08s  
+  Γ£ô pm004 category name must be unique                                   0.12s  
+  Γ£ô pm004 admin can access edit form                                     0.08s  
+  Γ£ô pm004 admin can update category name                                 0.08s  
+  Γ£ô pm004 admin can assign parent category                               0.08s  
+  Γ£ô pm004 admin can delete category                                      0.08s  
+  Γ£ô pm004 deleting category nullifies product category                   0.08s  
+  Γ£ô pm004 admin products index filtered by category                      0.10s  
+
+   PASS  Tests\Feature\AdminCouponTest
+  Γ£ô rm003 tc01 guest redirected to coupon index                          0.08s  
+  Γ£ô rm003 tc02 non admin gets 403 on coupon index                        0.08s  
+  Γ£ô rm003 tc03 admin can view coupon index                               0.08s  
+  Γ£ô rm003 tc04 coupon appears in index                                   0.09s  
+  Γ£ô rm003 tc05 index shows active and inactive status                    0.10s  
+  Γ£ô rm003 tc06 admin can view create form                                0.09s  
+  Γ£ô rm003 tc07 admin can create coupon                                   0.08s  
+  Γ£ô rm003 tc08 code stored uppercase                                     0.08s  
+  Γ£ô rm003 tc09 code must be unique on create                             0.08s  
+  Γ£ô rm003 tc10 type must be percent or fixed                             0.09s  
+  Γ£ô rm003 tc11 value must be positive                                    0.08s  
+  Γ£ô rm003 tc12 usage limit must be positive integer                      0.08s  
+  Γ£ô rm003 tc13 min order amount must be non negative                     0.08s  
+  Γ£ô rm003 tc14 admin can view edit form                                  0.08s  
+  Γ£ô rm003 tc15 admin can update coupon                                   0.09s  
+  Γ£ô rm003 tc16 update allows same code for self                          0.09s  
+  Γ£ô rm003 tc17 admin can delete coupon                                   0.08s  
+  Γ£ô rm003 tc18 toggle active coupon becomes inactive                     0.09s  
+  Γ£ô rm003 tc19 toggle inactive coupon becomes active                     0.09s  
+  Γ£ô rm003 tc20 guest redirected on all mutating routes                   0.10s  
+  Γ£ô rm003 tc21 coupon with all fields stored correctly                   0.10s  
+
+   PASS  Tests\Feature\AdminDashboardTest
+  Γ£ô ad001 guest is redirected to login                                   0.15s  
+  Γ£ô ad001 non admin is forbidden                                         0.12s  
+  Γ£ô ad001 admin can access dashboard                                     0.15s  
+  Γ£ô ad001 dashboard shows total revenue label                            0.10s  
+  Γ£ô ad001 dashboard shows orders today label                             0.08s  
+  Γ£ô ad001 dashboard shows new users today label                          0.10s  
+  Γ£ô ad001 dashboard shows low stock label                                0.10s  
+  Γ£ô ad001 total revenue sums revenue statuses                            0.11s  
+  Γ£ô ad001 total revenue excludes non revenue statuses                    0.08s  
+  Γ£ô ad001 orders today excludes past orders                              0.11s  
+  Γ£ô ad001 new users today excludes past users                            0.09s  
+  Γ£ô ad001 low stock count is accurate                                    0.09s  
+
+   PASS  Tests\Feature\AdminMiddlewareAuditTest
+  Γ£ô nf005 role middleware alias is registered in kernel                  0.08s  
+  Γ£ô nf005 permission middleware alias is registered in kernel            0.07s  
+  Γ£ô nf005 role or permission middleware alias is registered in kernel    0.08s  
+  Γ£ô nf005 at least one admin route is registered                         0.09s  
+  Γ£ô nf005 every admin route has auth middleware                          0.10s  
+  Γ£ô nf005 every admin route has role admin middleware                    0.10s  
+  Γ£ô nf005 admin can access admin dashboard                               0.09s  
+  Γ£ô nf005 regular user is blocked from admin dashboard with 403          0.09s  
+  Γ£ô nf005 guest is redirected to login for admin dashboard               0.08s  
+  Γ£ô nf005 user with no role is blocked from admin dashboard              0.13s  
+  Γ£ô nf005 all admin routes use admin name prefix                         0.10s  
+  Γ£ô nf005 admin dashboard access check completes within one second       0.11s  
+
+   PASS  Tests\Feature\AdminOrderDetailTest
+  Γ£ô om002 guest is redirected from admin order detail                    0.15s  
+  Γ£ô om002 non admin gets 403 on order detail                             0.14s  
+  Γ£ô om002 admin gets 200 for order detail                                0.23s  
+  Γ£ô om002 order id shown on detail page                                  0.11s  
+  Γ£ô om002 customer name and email shown                                  0.13s  
+  Γ£ô om002 item details shown                                             0.10s  
+  Γ£ô om002 order totals shown                                             0.12s  
+  Γ£ô om002 shipping address shown                                         0.17s  
+  Γ£ô om002 payment section shows stripe info                              0.09s  
+  Γ£ô om002 status history section visible                                 0.08s  
+  Γ£ô om002 processing timestamp shown for processing order                0.10s  
+  Γ£ô om002 status update form present                                     0.09s  
+
+   PASS  Tests\Feature\AdminOrderExportCsvTest
+  Γ£ô om004 guest is redirected from export                                0.08s  
+  Γ£ô om004 non admin gets 403 on export                                   0.09s  
+  Γ£ô om004 admin gets csv response                                        0.09s  
+  Γ£ô om004 response has attachment disposition                            0.10s  
+  Γ£ô om004 csv contains header row                                        0.10s  
+  Γ£ô om004 csv contains order id and customer                             0.08s  
+  Γ£ô om004 csv contains items summary                                     0.08s  
+  Γ£ô om004 csv contains total                                             0.11s  
+  Γ£ô om004 csv contains status and date                                   0.10s  
+  Γ£ô om004 empty export returns only header                               0.11s  
+  Γ£ô om004 export respects status filter                                  0.10s  
+  Γ£ô om004 export respects date from filter                               0.10s  
+  Γ£ô om004 export respects customer filter                                0.10s  
+  Γ£ô om004 orders index shows export csv link                             0.10s  
+
+   PASS  Tests\Feature\AdminOrderListTest
+  Γ£ô pm001 guest is redirected from admin orders index                    0.11s  
+  Γ£ô om001 non admin gets 403 on orders index                             0.08s  
+  Γ£ô om001 admin can view orders list                                     0.08s  
+  Γ£ô om001 orders paginated at 20 per page                                0.12s  
+  Γ£ô om001 filter by status shows only matching orders                    0.08s  
+  Γ£ô om001 filter by date from excludes older orders                      0.09s  
+  Γ£ô om001 filter by date to excludes newer orders                        0.08s  
+  Γ£ô om001 filter by customer name returns matching orders                0.08s  
+  Γ£ô om001 combined status and customer filter                            0.07s  
+  Γ£ô om001 default sort is newest first                                   0.08s  
+  Γ£ô om001 sort by total desc shows highest total first                   0.07s  
+  Γ£ô om001 no filters returns all orders                                  0.09s  
+
+   PASS  Tests\Feature\AdminOrderNotificationTest
+  Γ£ô nt002 tc01 notify admin job implements should queue                  0.08s  
+  Γ£ô nt002 tc02 webhook dispatches notify admin job                       0.08s  
+  Γ£ô nt002 tc03 job creates admin notification                            0.07s  
+  Γ£ô nt002 tc04 notification is unread by default                         0.08s  
+  Γ£ô nt002 tc05 notification stores correct order id                      0.07s  
+  Γ£ô nt002 tc06 notification message contains order id                    0.10s  
+  Γ£ô nt002 tc07 job sends mail to admin users                             0.14s  
+  Γ£ô nt002 tc08 notifications endpoint returns json for admin             0.11s  
+  Γ£ô nt002 tc09 json has notifications array                              0.11s  
+  Γ£ô nt002 tc10 unread count reflects only unread                         0.09s  
+  Γ£ô nt002 tc11 non admin gets 403                                        0.08s  
+  Γ£ô nt002 tc12 guest redirected from notifications                       0.08s  
+  Γ£ô nt002 tc13 admin can mark notification as read                       0.08s  
+  Γ£ô nt002 tc14 after mark read read at is set                            0.07s  
+  Γ£ô nt002 tc15 admin can mark all notifications as read                  0.08s  
+
+   PASS  Tests\Feature\AdminOrderRefundTest
+  Γ£ô om005 tc01 guest is redirected to login                              0.08s  
+  Γ£ô om005 tc02 non admin receives 403                                    0.08s  
+  Γ£ô om005 tc03 cannot refund non cancelled order                         0.07s  
+  Γ£ô om005 tc04 cannot refund order without payment intent                0.07s  
+  Γ£ô om005 tc05 admin can process refund status becomes refunded          0.07s  
+  Γ£ô om005 tc06 refund creates transaction record with correct amount     0.08s  
+  Γ£ô om005 tc07 refund transaction stores stripe refund id                0.08s  
+  Γ£ô om005 tc08 show page displays refund button for cancelled order      0.09s  
+  Γ£ô om005 tc09 show page hides refund button for non cancelled order     0.10s  
+  Γ£ô om005 tc10 refund redirects with success message                     0.17s  
+  Γ£ô om005 tc11 cannot refund already refunded order                      0.16s  
+  Γ£ô om005 tc12 refunded at timestamp is set on order                     0.21s  
+  Γ£ô om005 tc13 exactly one transaction record created                    0.16s  
+  Γ£ô om005 tc14 show page displays refund transaction after refund        0.16s  
+  Γ£ô om005 tc15 payment service called with correct intent and amount     0.13s  
+
+   PASS  Tests\Feature\AdminOrderStatusUpdateTest
+  Γ£ô om003 guest is redirected from status update                         0.12s  
+  Γ£ô om003 non admin gets 403 on status update                            0.11s  
+  Γ£ô om003 admin can set status to processing                             0.20s  
+  Γ£ô om003 admin can set status to shipped                                0.16s  
+  Γ£ô om003 admin can set status to delivered                              0.15s  
+  Γ£ô om003 admin can cancel order                                         0.11s  
+  Γ£ô om003 email sent on status change to processing                      0.12s  
+  Γ£ô om003 email sent on cancellation                                     0.11s  
+  Γ£ô om003 invalid status value is rejected                               0.10s  
+  Γ£ô om003 missing status value is rejected                               0.14s  
+  Γ£ô om003 status update redirects with success message                   0.13s  
+  Γ£ô om003 non existent order returns 404                                 0.13s  
+
+   PASS  Tests\Feature\AdminProductCreateTest
+  Γ£ô pm001 guest is redirected from create page                           0.16s  
+  Γ£ô pm001 non admin gets 403 on create page                              0.11s  
+  Γ£ô pm001 admin can access create form                                   0.10s  
+  Γ£ô pm001 create form has expected fields                                0.10s  
+  Γ£ô pm001 admin can create published product                             0.09s  
+  Γ£ô pm001 admin can create draft product                                 0.09s  
+  Γ£ô pm001 slug is auto generated from name                               0.09s  
+  Γ£ô pm001 images are uploaded and stored                                 0.13s  
+  Γ£ô pm001 name is required                                               0.11s  
+  Γ£ô pm001 price must be positive                                         0.10s  
+  Γ£ô pm001 stock must be non negative                                     0.09s  
+  Γ£ô pm001 published product visible on storefront draft is not           0.08s  
+
+   PASS  Tests\Feature\AdminProductDeleteTest
+  Γ£ô pm003 guest is redirected from delete                                0.10s  
+  Γ£ô pm003 non admin gets 403 on delete                                   0.10s  
+  Γ£ô pm003 admin can archive product redirects to index                   0.12s  
+  Γ£ô pm003 product is soft deleted not hard deleted                       0.10s  
+  Γ£ô pm003 archived product hidden from storefront listing                0.12s  
+  Γ£ô pm003 archived product hidden from storefront search                 0.11s  
+  Γ£ô pm003 admin index excludes archived product                          0.11s  
+  Γ£ô pm003 audit log entry created on archive                             0.10s  
+  Γ£ô pm003 deleting already archived product returns 404                  0.11s  
+  Γ£ô pm003 admin index shows archive button                               0.10s  
+  Γ£ô pm003 delete form has csrf and method delete                         0.09s  
+  Γ£ô pm003 admin index has confirmation on delete form                    0.09s  
+
+   PASS  Tests\Feature\AdminProductEditTest
+  Γ£ô pm002 guest is redirected from edit page                             0.09s  
+  Γ£ô pm002 non admin gets 403 on edit page                                0.10s  
+  Γ£ô pm002 admin can access edit form pre populated                       0.09s  
+  Γ£ô pm002 admin can update product name and price                        0.09s  
+  Γ£ô pm002 all fields are editable                                        0.09s  
+  Γ£ô pm002 name change auto updates slug                                  0.08s  
+  Γ£ô pm002 publishing draft makes product visible on storefront           0.09s  
+  Γ£ô pm002 drafting published hides product on storefront                 0.10s  
+  Γ£ô pm002 audit log entry is created on update                           0.08s  
+  Γ£ô pm002 name is required                                               0.07s  
+  Γ£ô pm002 price must be positive                                         0.08s  
+  Γ£ô pm002 new images are appended and stored                             0.08s  
+
+   PASS  Tests\Feature\AdminProductImageManagementTest
+  Γ£ô pm006 guest is redirected from images page                           0.12s  
+  Γ£ô pm006 non admin gets 403 on images page                              0.11s  
+  Γ£ô pm006 admin can view images page                                     0.11s  
+  Γ£ô pm006 images page shows product images                               0.15s  
+  Γ£ô pm006 admin can reorder images                                       0.12s  
+  Γ£ô pm006 reorder preserves thumbnail                                    0.11s  
+  Γ£ô pm006 reorder ignores foreign paths                                  0.11s  
+  Γ£ô pm006 reorder requires image order                                   0.10s  
+  Γ£ô pm006 admin can set thumbnail                                        0.11s  
+  Γ£ô pm006 set thumbnail with invalid index returns error                 0.11s  
+  Γ£ô pm006 admin can delete image                                         0.11s  
+  Γ£ô pm006 deleting thumbnail updates thumbnail                           0.11s  
+  Γ£ô pm006 deleting last image nullifies all                              0.11s  
+
+   PASS  Tests\Feature\AdminProductImportCsvTest
+  Γ£ô pm005 guest is redirected from import endpoint                       0.14s  
+  Γ£ô pm005 non admin gets 403 on import endpoint                          0.09s  
+  Γ£ô pm005 admin sees csv import form on index                            0.08s  
+  Γ£ô pm005 csv file is required                                           0.08s  
+  Γ£ô pm005 invalid headers are rejected                                   0.10s  
+  Γ£ô pm005 valid csv is queued as background job                          0.09s  
+  Γ£ô pm005 job imports valid rows and category mapping                    0.08s  
+  Γ£ô pm005 job reports data type errors per row                           0.10s  
+  Γ£ô pm005 job reports unknown category error per row                     0.09s  
+  Γ£ô pm005 job marks failed when file missing                             0.09s  
+  Γ£ô pm005 index shows row errors from import history                     0.10s  
+  Γ£ô pm005 large csv is queued for background processing                  0.09s  
+
+   PASS  Tests\Feature\AdminProductRevenueTest
+  Γ£ô rm002 tc01 guest redirected to login                                 0.08s  
+  Γ£ô rm002 tc02 non admin gets 403                                        0.08s  
+  Γ£ô rm002 tc03 admin gets 200                                            0.08s  
+  Γ£ô rm002 tc04 guest redirected for export                               0.08s  
+  Γ£ô rm002 tc05 non admin gets 403 on export                              0.08s  
+  Γ£ô rm002 tc06 product revenue sums correctly                            0.08s  
+  Γ£ô rm002 tc07 only revenue status orders counted                        0.08s  
+  Γ£ô rm002 tc08 category name shown                                       0.08s  
+  Γ£ô rm002 tc09 filter by category                                        0.09s  
+  Γ£ô rm002 tc10 date from excludes old orders                             0.09s  
+  Γ£ô rm002 tc11 date to excludes new orders                               0.08s  
+  Γ£ô rm002 tc12 default sort is gross revenue desc                        0.08s  
+  Γ£ô rm002 tc13 sort by units sold desc                                   0.09s  
+  Γ£ô rm002 tc14 sort by product name asc                                  0.08s  
+  Γ£ô rm002 tc15 invalid sort falls back to gross revenue                  0.08s  
+  Γ£ô rm002 tc16 zero rows when no revenue orders                          0.08s  
+  Γ£ô rm002 tc17 csv export returns 200 with correct content type          0.07s  
+  Γ£ô rm002 tc18 csv export has correct header row                         0.07s  
+  Γ£ô rm002 tc19 csv export contains product data                          0.08s  
+  Γ£ô rm002 tc20 csv export content disposition is attachment              0.07s  
+  Γ£ô rm002 tc21 csv export respects category filter                       0.12s  
+
+   PASS  Tests\Feature\AdminRecentOrdersDashboardTest
+  Γ£ô ad004 guest is redirected to login                                   0.09s  
+  Γ£ô ad004 non admin is forbidden                                         0.09s  
+  Γ£ô ad004 admin sees recent orders section                               0.08s  
+  Γ£ô ad004 dashboard shows only last 10 orders                            0.10s  
+  Γ£ô ad004 orders are sorted newest first                                 0.09s  
+  Γ£ô ad004 status is displayed for each order                             0.08s  
+  Γ£ô ad004 quick action link points to order detail                       0.08s  
+  Γ£ô ad004 shows empty state when no orders                               0.07s  
+
+   PASS  Tests\Feature\AdminRevenueChartTest
+  Γ£ô ad002 guest is redirected from chart endpoint                        0.07s  
+  Γ£ô ad002 non admin is forbidden from chart endpoint                     0.08s  
+  Γ£ô ad002 admin gets json with correct structure                         0.07s  
+  Γ£ô ad002 daily range returns 7 data points                              0.08s  
+  Γ£ô ad002 weekly range returns 8 data points                             0.08s  
+  Γ£ô ad002 monthly range returns 12 data points                           0.08s  
+  Γ£ô ad002 missing range returns 422                                      0.09s  
+  Γ£ô ad002 invalid range value returns 422                                0.10s  
+  Γ£ô ad002 revenue sums only revenue status orders                        0.10s  
+  Γ£ô ad002 revenue excludes non revenue status orders                     0.08s  
+  Γ£ô ad002 order count includes all statuses                              0.10s  
+  Γ£ô ad002 dashboard contains chart canvas and chartjs                    0.10s  
+
+   PASS  Tests\Feature\AdminRevenueReportTest
+  Γ£ô rm001 tc01 guest redirected to login                                 0.10s  
+  Γ£ô rm001 tc02 non admin gets 403                                        0.09s  
+  Γ£ô rm001 tc03 admin gets 200                                            0.09s  
+  Γ£ô rm001 tc04 default period is monthly 12 rows                         0.09s  
+  Γ£ô rm001 tc05 daily period returns 7 rows                               0.09s  
+  Γ£ô rm001 tc06 weekly period returns 8 rows                              0.09s  
+  Γ£ô rm001 tc07 monthly period returns 12 rows                            0.11s  
+  Γ£ô rm001 tc08 custom range row count matches days                       0.08s  
+  Γ£ô rm001 tc09 custom range excludes orders outside range                0.08s  
+  Γ£ô rm001 tc10 gross revenue counts revenue status orders                0.09s  
+  Γ£ô rm001 tc11 gross excludes non revenue statuses                       0.09s  
+  Γ£ô rm001 tc12 refunds summed from refund transactions                   0.11s  
+  Γ£ô rm001 tc13 net revenue is gross minus refunds                        0.09s  
+  Γ£ô rm001 tc14 zero revenue when no orders                               0.10s  
+  Γ£ô rm001 tc15 invalid period falls back to monthly                      0.09s  
+  Γ£ô rm001 tc16 revenue page renders table                                0.09s  
+  Γ£ô rm001 tc17 summary totals match row sums                             0.09s  
+  Γ£ô rm001 tc18 multiple refund transactions summed                       0.13s  
+
+   PASS  Tests\Feature\AdminTopSellingProductsTest
+  Γ£ô ad003 guest is redirected to login                                   0.09s  
+  Γ£ô ad003 non admin is forbidden                                         0.07s  
+  Γ£ô ad003 admin sees top selling section                                 0.07s  
+  Γ£ô ad003 rows are sorted by units then revenue                          0.08s  
+  Γ£ô ad003 list is limited to top 10                                      0.11s  
+  Γ£ô ad003 excludes non revenue status orders                             0.09s  
+  Γ£ô ad003 start date filter excludes older sales                         0.09s  
+  Γ£ô ad003 end date filter excludes newer sales                           0.10s  
+  Γ£ô ad003 shows empty state when no sales                                0.09s  
+
+   PASS  Tests\Feature\AdminUserAssignRoleTest
+  Γ£ô um004 tc01 guest redirected to login                                 0.09s  
+  Γ£ô um004 tc02 non admin gets 403                                        0.07s  
+  Γ£ô um004 tc03 admin can assign admin role                               0.07s  
+  Γ£ô um004 tc04 admin can assign user role                                0.07s  
+  Γ£ô um004 tc05 invalid role is rejected                                  0.07s  
+  Γ£ô um004 tc06 missing role is rejected                                  0.08s  
+  Γ£ô um004 tc07 audit log created on role change                          0.08s  
+  Γ£ô um004 tc08 audit log stores old role                                 0.07s  
+  Γ£ô um004 tc09 audit log stores new role                                 0.08s  
+  Γ£ô um004 tc10 admin cannot change own role                              0.08s  
+  Γ£ô um004 tc11 self role change redirects with error flash               0.08s  
+  Γ£ô um004 tc12 successful role change has success flash                  0.09s  
+  Γ£ô um004 tc13 nonexistent user returns 404                              0.09s  
+  Γ£ô um004 tc14 show page has role dropdown                               0.08s  
+  Γ£ô um004 tc15 show page preselects current role                         0.08s  
+  Γ£ô um004 tc16 role form has csrf field                                  0.08s  
+  Γ£ô um004 tc17 assign role responds within 2 seconds                     0.07s  
+
+   PASS  Tests\Feature\AdminUserListTest
+  Γ£ô um001 tc01 guest is redirected to login                              0.08s  
+  Γ£ô um001 tc02 non admin gets 403                                        0.07s  
+  Γ£ô um001 tc03 admin gets 200                                            0.07s  
+  Γ£ô um001 tc04 table shows user name                                     0.08s  
+  Γ£ô um001 tc05 table shows user email                                    0.09s  
+  Γ£ô um001 tc06 table shows user role                                     0.08s  
+  Γ£ô um001 tc07 table shows registration date                             0.09s  
+  Γ£ô um001 tc08 table shows order count zero                              0.08s  
+  Γ£ô um001 tc09 order count reflects actual orders                        0.08s  
+  Γ£ô um001 tc10 search by name filters results                            0.08s  
+  Γ£ô um001 tc11 search by email filters results                           0.07s  
+  Γ£ô um001 tc12 empty search returns all users                            0.09s  
+  Γ£ô um001 tc13 no match shows empty state                                0.07s  
+  Γ£ô um001 tc14 list is paginated at 20 per page                          0.10s  
+  Γ£ô um001 tc15 second page is accessible                                 0.10s  
+  Γ£ô um001 tc16 pagination links present when more than 20                0.10s  
+  Γ£ô um001 tc17 search term preserved in input                            0.08s  
+  Γ£ô um001 tc18 page responds within two seconds                          0.14s  
+
+   PASS  Tests\Feature\AdminUserShowTest
+  Γ£ô um002 tc01 guest is redirected to login                              0.10s  
+  Γ£ô um002 tc02 non admin gets 403                                        0.07s  
+  Γ£ô um002 tc03 admin gets 200                                            0.07s  
+  Γ£ô um002 tc04 shows user name                                           0.08s  
+  Γ£ô um002 tc05 shows user email                                          0.08s  
+  Γ£ô um002 tc06 shows user role                                           0.08s  
+  Γ£ô um002 tc07 shows registration date                                   0.09s  
+  Γ£ô um002 tc08 shows order history section                               0.08s  
+  Γ£ô um002 tc09 shows at most 10 orders                                   0.09s  
+  Γ£ô um002 tc10 shows order status                                        0.09s  
+  Γ£ô um002 tc11 shows order total                                         0.08s  
+  Γ£ô um002 tc12 shows order date                                          0.08s  
+  Γ£ô um002 tc13 no orders shows empty state                               0.07s  
+  Γ£ô um002 tc14 nonexistent user returns 404                              0.07s  
+  Γ£ô um002 tc15 responds within 2 seconds                                 0.09s  
+
+   PASS  Tests\Feature\AdminUserToggleStatusTest
+  Γ£ô um003 tc01 guest redirected to login                                 0.08s  
+  Γ£ô um003 tc02 non admin gets 403                                        0.08s  
+  Γ£ô um003 tc03 admin can suspend active user                             0.08s  
+  Γ£ô um003 tc04 admin can activate suspended user                         0.07s  
+  Γ£ô um003 tc05 suspended user cannot log in                              0.08s  
+  Γ£ô um003 tc06 suspended login shows error message                       0.08s  
+  Γ£ô um003 tc07 admin cannot suspend own account                          0.07s  
+  Γ£ô um003 tc08 self suspension redirects with error flash                0.09s  
+  Γ£ô um003 tc09 toggle redirects with success flash                       0.08s  
+  Γ£ô um003 tc10 show page displays active status                          0.08s  
+  Γ£ô um003 tc11 show page displays suspended status                       0.08s  
+  Γ£ô um003 tc12 show page has suspend button for active user              0.08s  
+  Γ£ô um003 tc13 show page has activate button for suspended user          0.07s  
+  Γ£ô um003 tc14 active user can log in                                    0.07s  
+  Γ£ô um003 tc15 nonexistent user returns 404                              0.07s  
+  Γ£ô um003 tc16 toggle form has csrf field                                0.08s  
+  Γ£ô um003 tc17 toggle responds within 2 seconds                          0.08s  
+
+   PASS  Tests\Feature\AlpineCartMicroInteractionsTest
+  Γ£ô imp007 tc01 product show page includes alpinejs cdn                  0.09s  
+  Γ£ô imp007 tc02 cart page includes alpinejs cdn                          0.07s  
+  Γ£ô imp007 tc03 add to cart wrapper has imp007 x data                    0.07s  
+  Γ£ô imp007 tc04 cart rows have imp007 cart row x data                    0.08s  
+  Γ£ô imp007 tc05 qty update form has alpine submit handler                0.07s  
+  Γ£ô imp007 tc06 remove form has alpine submit handler                    0.09s  
+  Γ£ô imp007 tc07 cart page has toast notification area                    0.07s  
+  Γ£ô imp007 tc08 cart page includes imp007 spinner css                    0.07s  
+  Γ£ô imp007 tc09 show page includes atc spinner css                       0.09s  
+  Γ£ô imp007 tc10 add to cart ajax returns cart count                      0.08s  
+
+   PASS  Tests\Feature\ApplicationLoggingTest
+  Γ£ô nf009 tc01 telescope package is installed as dev dependency          0.04s  
+  Γ£ô nf009 tc02 telescope config file exists                              0.02s  
+  Γ£ô nf009 tc03 telescope is disabled in test environment                 0.02s  
+  Γ£ô nf009 tc04 telescope migration file exists                           0.02s  
+  Γ£ô nf009 tc05 telescope service provider exists                         0.02s  
+  Γ£ô nf009 tc06 telescope service provider registered in app config       0.02s  
+  Γ£ô nf009 tc07 telescope service provider extends application service pΓÇª 0.03s  
+  Γ£ô nf009 tc08 sentry package is installed as production dependency      0.02s  
+  Γ£ô nf009 tc09 sentry config file exists                                 0.02s  
+  Γ£ô nf009 tc10 sentry dsn is read from env                               0.02s  
+  Γ£ô nf009 tc11 sentry log channel is defined                             0.02s  
+  Γ£ô nf009 tc12 default log channel is configurable via env               0.02s  
+
+   PASS  Tests\Feature\Auth\GoogleOAuthTest
+  Γ£ô new google user is auto registered and logged in                     0.09s  
+  Γ£ô existing email user gets google id linked and is logged in           0.08s  
+  Γ£ô already linked google user logs in directly                          0.08s  
+  Γ£ô redirect route redirects to google                                   0.08s  
+  Γ£ô new google user has email verified at set                            0.07s  
+  Γ£ô new google user gets user role                                       0.08s  
+  Γ£ô new google user name is set from google profile                      0.09s  
+  Γ£ô intended url redirect works after google login                       0.09s  
+  Γ£ô session is regenerated after google login                            0.13s  
+  Γ£ô socialite exception redirects to login with error                    0.10s  
+  Γ£ô new google user has non empty hashed password                        0.10s  
+  Γ£ô google callback responds within two seconds                          0.08s  
+
+   PASS  Tests\Feature\Auth\LoginTest
+  Γ£ô a u002 valid credentials creates session and redirects to dashboard  0.08s  
+  Γ£ô a u002 wrong password redirects back with error                      0.28s  
+  Γ£ô a u002 non existent email redirects back with error                  0.28s  
+  Γ£ô a u002 empty form fails validation                                   0.07s  
+  Γ£ô a u002 missing password fails validation                             0.07s  
+  Γ£ô a u002 remember me sets remember cookie                              0.07s  
+  Γ£ô a u002 intended url redirects to intended after login                0.08s  
+  Γ£ô a u002 session is regenerated after login                            0.08s  
+  Γ£ô a u002 csrf middleware is active                                     0.07s  
+  Γ£ô a u002 authenticated user is redirected away from login              0.08s  
+  Γ£ô a u002 failure message is generic not revealing email existence      0.47s  
+  Γ£ô a u002 login completes within time threshold                         0.10s  
+
+   PASS  Tests\Feature\Auth\LogoutTest
+  Γ£ô au004 authenticated logout redirects to home                         0.08s  
+  Γ£ô au004 user is unauthenticated after logout                           0.06s  
+  Γ£ô au004 session is invalidated after logout                            0.07s  
+  Γ£ô au004 csrf token is regenerated after logout                         0.07s  
+  Γ£ô au004 logout without csrf returns 419                                0.06s  
+  Γ£ô au004 dashboard inaccessible after logout                            0.07s  
+  Γ£ô au004 get logout returns 405                                         0.35s  
+  Γ£ô au004 guest logout is redirected                                     0.09s  
+  Γ£ô au004 put logout returns 405                                         0.32s  
+  Γ£ô au004 auth data cleared from session                                 0.08s  
+  Γ£ô au004 multiple logouts do not crash                                  0.08s  
+  Γ£ô au004 logout completes within two seconds                            0.08s  
+
+   PASS  Tests\Feature\Auth\PasswordResetTest
+  Γ£ô a u005 forgot password page returns200                               0.09s  
+  Γ£ô a u005 valid email sends reset notification                          0.10s  
+  Γ£ô a u005 unknown email returns sent status without revealing existencΓÇª 0.08s  
+  Γ£ô a u005 valid token resets password and redirects to login            0.09s  
+  Γ£ô a u005 reset password password is hashed                             0.08s  
+  Γ£ô a u005 invalid token returns error not redirect to login             0.08s  
+  Γ£ô a u005 empty email fails validation                                  0.07s  
+  Γ£ô a u005 invalid email format fails validation                         0.07s  
+  Γ£ô a u005 weak password fails validation                                0.08s  
+  Γ£ô a u005 password mismatch fails validation                            0.08s  
+  Γ£ô a u005 csrf middleware is active                                     0.07s  
+  Γ£ô a u005 reset link request completes within two seconds               0.07s  
+
+   PASS  Tests\Feature\Auth\ProfileTest
+  Γ£ô up001 profile page returns 200 with user data                        0.08s  
+  Γ£ô up001 valid profile update saves to database                         0.08s  
+  Γ£ô up001 valid avatar upload stores file and updates db                 0.07s  
+  Γ£ô up001 same email does not trigger unique validation error            0.08s  
+  Γ£ô up001 guest cannot view profile                                      0.07s  
+  Γ£ô up001 guest cannot update profile                                    0.07s  
+  Γ£ô up001 profile update requires csrf token                             0.07s  
+  Γ£ô up001 avatar exceeding 2mb fails validation                          0.07s  
+  Γ£ô up001 non image avatar fails validation                              0.09s  
+  Γ£ô up001 empty name fails validation                                    0.07s  
+  Γ£ô up001 duplicate email of another user fails validation               0.07s  
+  Γ£ô up001 profile update completes within two seconds                    0.07s  
+
+   PASS  Tests\Feature\Auth\RegisterTest
+  Γ£ô a u001 valid data creates user and redirects to dashboard            0.09s  
+  Γ£ô a u001 duplicate email returns422 with error                         0.08s  
+  Γ£ô a u001 weak password fails validation                                0.07s  
+  Γ£ô a u001 empty form fails all validations                              0.07s  
+  Γ£ô a u001 password mismatch fails confirmation                          0.07s  
+  Γ£ô a u001 max length name passes validation                             0.07s  
+  Γ£ô a u001 name too long fails validation                                0.07s  
+  Γ£ô a u001 xss in name is stored raw but rendered safely                 0.08s  
+  Γ£ô a u001 missing csrf token returns419                                 0.16s  
+  Γ£ô a u001 authenticated user is redirected away from register           0.07s  
+  Γ£ô a u001 password is hashed never plain text in database               0.07s  
+  Γ£ô a u001 registration completes within time threshold                  0.07s  
+
+   PASS  Tests\Feature\Auth\RoleAccessControlTest
+  Γ£ô a u006 admin user can access admin dashboard                         0.09s  
+  Γ£ô a u006 regular user receives403 on admin route                       0.08s  
+  Γ£ô a u006 guest is redirected to login for admin route                  0.10s  
+  Γ£ô a u006 admin user has admin role                                     0.08s  
+  Γ£ô a u006 regular user does not have admin role                         0.07s  
+  Γ£ô a u006 regular user can still access user dashboard                  0.07s  
+  Γ£ô a u006 admin user can also access user dashboard                     0.08s  
+  Γ£ô a u006 user with no role is blocked from admin route                 0.07s  
+  Γ£ô a u006 roles exist in database                                       0.06s  
+  Γ£ô a u006 role middleware is registered                                 0.07s  
+  Γ£ô a u006 admin dashboard route name resolves                           0.06s  
+  Γ£ô a u006 admin dashboard responds within two seconds                   0.07s  
+
+   PASS  Tests\Feature\CartCouponTest
+  Γ£ô sc005 valid percent coupon applied to session                        0.08s  
+  Γ£ô sc005 valid fixed coupon applied to session                          0.06s  
+  Γ£ô sc005 expired coupon shows error                                     0.07s  
+  Γ£ô sc005 inactive coupon shows error                                    0.06s  
+  Γ£ô sc005 unknown code shows error                                       0.07s  
+  Γ£ô sc005 code field is required                                         0.07s  
+  Γ£ô sc005 discount shown on cart page                                    0.07s  
+  Γ£ô sc005 percent discount amount is correct                             0.08s  
+  Γ£ô sc005 fixed discount amount is correct                               0.07s  
+  Γ£ô sc005 fixed discount capped at subtotal                              0.06s  
+  Γ£ô sc005 removing coupon clears session                                 0.07s  
+  Γ£ô sc005 checkout review shows discount                                 0.06s  
+
+   PASS  Tests\Feature\CartRemoveTest
+  Γ£ô sc004 remove redirects to cart                                       0.07s  
+  Γ£ô sc004 removes item from session                                      0.07s  
+  Γ£ô sc004 order total recalculates after remove                          0.07s  
+  Γ£ô sc004 ajax returns json with cart count and order total              0.06s  
+  Γ£ô sc004 removing last item returns empty cart                          0.06s  
+  Γ£ô sc004 removing nonexistent item returns 404 json                     0.07s  
+  Γ£ô sc004 removing nonexistent item redirects with error                 0.07s  
+  Γ£ô sc004 guest can remove item from cart                                0.08s  
+  Γ£ô sc004 authenticated user can remove item from cart                   0.08s  
+  Γ£ô sc004 other items remain after remove                                0.06s  
+  Γ£ô sc004 successful remove flashes success message                      0.07s  
+  Γ£ô sc004 remove completes within one second                             0.07s  
+
+   PASS  Tests\Feature\CartTest
+  Γ£ô sc001 guest can add product to cart                                  0.08s  
+  Γ£ô sc001 authenticated user can add product to cart                     0.06s  
+  Γ£ô sc001 cart stores correct quantity                                   0.07s  
+  Γ£ô sc001 adding same product twice merges quantities                    0.07s  
+  Γ£ô sc001 out of stock product cannot be added                           0.06s  
+  Γ£ô sc001 nonexistent product id fails validation                        0.07s  
+  Γ£ô sc001 zero quantity fails validation                                 0.07s  
+  Γ£ô sc001 negative quantity fails validation                             0.07s  
+  Γ£ô sc001 quantity exceeding stock is capped                             0.07s  
+  Γ£ô sc001 ajax request returns json with cart count                      0.08s  
+  Γ£ô sc001 cart session item contains correct data                        0.07s  
+  Γ£ô sc001 add to cart completes within one second                        0.07s  
+
+   PASS  Tests\Feature\CartUpdateTest
+  Γ£ô sc003 update redirects to cart                                       0.08s  
+  Γ£ô sc003 update saves new quantity in session                           0.07s  
+  Γ£ô sc003 quantity exceeding stock is capped                             0.07s  
+  Γ£ô sc003 ajax returns json with subtotal and order total                0.07s  
+  Γ£ô sc003 ajax order total recalculates across items                     0.07s  
+  Γ£ô sc003 updating nonexistent cart item returns 404                     0.06s  
+  Γ£ô sc003 zero quantity fails validation                                 0.07s  
+  Γ£ô sc003 negative quantity fails validation                             0.07s  
+  Γ£ô sc003 missing quantity fails validation                              0.07s  
+  Γ£ô sc003 minimum quantity one is accepted                               0.07s  
+  Γ£ô sc003 successful update flashes success message                      0.07s  
+  Γ£ô sc003 update completes within one second                             0.07s  
+
+   PASS  Tests\Feature\CartViewTest
+  Γ£ô sc002 cart page returns 200 for guest                                0.09s  
+  Γ£ô sc002 cart page returns 200 for authenticated user                   0.08s  
+  Γ£ô sc002 empty cart shows empty message                                 0.08s  
+  Γ£ô sc002 cart shows product name                                        0.08s  
+  Γ£ô sc002 cart shows unit price                                          0.08s  
+  Γ£ô sc002 cart shows quantity                                            0.07s  
+  Γ£ô sc002 cart shows correct subtotal                                    0.07s  
+  Γ£ô sc002 cart shows correct order total                                 0.07s  
+  Γ£ô sc002 multiple products all appear in cart                           0.07s  
+  Γ£ô sc002 empty cart does not show order total                           0.06s  
+  Γ£ô sc002 cart page has continue shopping link                           0.07s  
+  Γ£ô sc002 cart page responds within one second                           0.07s  
+
+   PASS  Tests\Feature\CheckoutAddressTest
+  Γ£ô cp001 address page returns 200 for auth user                         0.08s  
+  Γ£ô cp001 guest is redirected to login                                   0.07s  
+  Γ£ô cp001 auth user sees saved addresses                                 0.07s  
+  Γ£ô cp001 user with no addresses sees new address form                   0.08s  
+  Γ£ô cp001 valid address stored in session                                0.07s  
+  Γ£ô cp001 new address saved to database                                  0.07s  
+  Γ£ô cp001 selecting saved address stores it in session                   0.08s  
+  Γ£ô cp001 name is required                                               0.07s  
+  Γ£ô cp001 address line1 is required                                      0.07s  
+  Γ£ô cp001 city is required                                               0.08s  
+  Γ£ô cp001 postal code is required                                        0.07s  
+  Γ£ô cp001 country is required                                            0.07s  
+
+   PASS  Tests\Feature\CheckoutReviewTest
+  Γ£ô cp003 review page returns 200 for auth user                          0.08s  
+  Γ£ô cp003 guest is redirected to login                                   0.07s  
+  Γ£ô cp003 get redirects to address if no address in session              0.07s  
+  Γ£ô cp003 get redirects to shipping if no shipping in session            0.07s  
+  Γ£ô cp003 review page shows cart items                                   0.07s  
+  Γ£ô cp003 review page shows shipping method and cost                     0.07s  
+  Γ£ô cp003 place order creates order in database                          0.07s  
+  Γ£ô cp003 place order creates order items in database                    0.07s  
+  Γ£ô cp003 place order returns client secret and order id                 0.07s  
+  Γ£ô cp003 order status is pending after place order                      0.08s  
+  Γ£ô cp003 order total equals subtotal plus shipping                      0.07s  
+  Γ£ô cp003 webhook marks order paid on payment intent succeeded           0.07s  
+
+   PASS  Tests\Feature\CheckoutShippingTest
+  Γ£ô cp002 shipping page returns 200 for auth user                        0.08s  
+  Γ£ô cp002 guest is redirected to login                                   0.07s  
+  Γ£ô cp002 both shipping options visible                                  0.08s  
+  Γ£ô cp002 standard selection stored in session                           0.08s  
+  Γ£ô cp002 express selection stored in session                            0.08s  
+  Γ£ô cp002 invalid method fails validation                                0.08s  
+  Γ£ô cp002 missing method fails validation                                0.07s  
+  Γ£ô cp002 session includes method label and cost                         0.07s  
+  Γ£ô cp002 redirects to checkout review on success                        0.09s  
+  Γ£ô cp002 get redirects to address if no address in session              0.07s  
+  Γ£ô cp002 standard cost is less than express cost                        0.07s  
+  Γ£ô cp002 shipping step responds within one second                       0.07s  
+
+   PASS  Tests\Feature\CheckoutSuccessTest
+  Γ£ô cp005 success page returns 200 when redirect status is succeeded     0.09s  
+  Γ£ô cp005 success page shows order id                                    0.08s  
+  Γ£ô cp005 success page shows order items                                 0.07s  
+  Γ£ô cp005 success page shows order total                                 0.09s  
+  Γ£ô cp005 success page clears checkout session                           0.09s  
+  Γ£ô cp005 failed page returns 200 when redirect status is requires paymΓÇª 0.08s  
+  Γ£ô cp005 failed page shows retry link                                   0.07s  
+  Γ£ô cp005 failed page shows reason                                       0.08s  
+  Γ£ô cp005 missing payment intent redirects to address                    0.07s  
+  Γ£ô cp005 payment intent for wrong user redirects to address             0.07s  
+  Γ£ô cp005 guest is redirected to login                                   0.07s  
+  Γ£ô cp005 unknown order intent redirects to address                      0.07s  
+
+   PASS  Tests\Feature\CloudImageStorageTest
+  Γ£ô nf007 tc01 s3 disk is configured                                     0.08s  
+  Γ£ô nf007 tc02 s3 disk driver is s3                                      0.07s  
+  Γ£ô nf007 tc03 s3 disk has required aws keys                             0.06s  
+  Γ£ô nf007 tc04 image disk defaults to s3 in source                       0.06s  
+  Γ£ô nf007 tc05 image disk config key exists                              0.06s  
+  Γ£ô nf007 tc06 product controller uses configurable image disk           0.06s  
+  Γ£ô nf007 tc07 profile controller uses configurable image disk           0.06s  
+  Γ£ô nf007 tc08 product store uploads image to image disk                 0.08s  
+  Γ£ô nf007 tc09 product update uploads image to image disk                0.11s  
+  Γ£ô nf007 tc10 avatar upload stores on image disk                        0.08s  
+  Γ£ô nf007 tc11 s3 disk has public visibility                             0.08s  
+  Γ£ô nf007 tc12 s3 disk use path style endpoint is configurable           0.06s  
+
+   PASS  Tests\Feature\CriticalFlowTestCoverageAuditTest
+  Γ£ô nf010 tc01 auth registration tests exist with sufficient coverage    0.03s  
+  Γ£ô nf010 tc02 auth login tests exist with sufficient coverage           0.02s  
+  Γ£ô nf010 tc03 auth logout tests exist                                   0.02s  
+  Γ£ô nf010 tc04 auth password reset tests exist                           0.02s  
+  Γ£ô nf010 tc05 auth rbac tests exist                                     0.02s  
+  Γ£ô nf010 tc06 checkout flow tests exist                                 0.02s  
+  Γ£ô nf010 tc07 checkout place order is covered                           0.02s  
+  Γ£ô nf010 tc08 webhook payment succeeded marks order paid                0.02s  
+  Γ£ô nf010 tc09 webhook payment failed path is covered                    0.03s  
+  Γ£ô nf010 tc10 webhook dispatches order confirmation email               0.02s  
+  Γ£ô nf010 tc11 critical tests use phpunit not pest                       0.02s  
+  Γ£ô nf010 tc12 critical tests use refresh database trait                 0.02s  
+
+   PASS  Tests\Feature\CsrfProtectionTest
+  Γ£ô nf001 verify csrf token middleware is in web group                   0.07s  
+  Γ£ô nf001 csrf except list is empty                                      0.06s  
+  Γ£ô nf001 webhook route excludes csrf middleware                         0.06s  
+  Γ£ô nf001 login form contains csrf field                                 0.07s  
+  Γ£ô nf001 register form contains csrf field                              0.06s  
+  Γ£ô nf001 forgot password form contains csrf field                       0.08s  
+  Γ£ô nf001 reset password form contains csrf field                        0.07s  
+  Γ£ô nf001 profile form contains csrf field                               0.07s  
+  Γ£ô nf001 checkout address form contains csrf field                      0.07s  
+  Γ£ô nf001 checkout shipping form contains csrf field                     0.07s  
+  Γ£ô nf001 cart forms contain csrf field                                  0.07s  
+  Γ£ô nf001 add to cart form contains csrf field                           0.08s  
+
+   PASS  Tests\Feature\DatabaseQueueDriverTest
+  Γ£ô imp008 tc01 queue config fallback default is database                0.07s  
+  Γ£ô imp008 tc02 queue config reads queue connection from env             0.06s  
+  Γ£ô imp008 tc03 env example specifies database queue connection          0.06s  
+  Γ£ô imp008 tc04 env example does not specify sync queue connection       0.06s  
+  Γ£ô imp008 tc05 database connection config specifies jobs table          0.06s  
+  Γ£ô imp008 tc06 database connection config has retry after               0.07s  
+  Γ£ô imp008 tc07 database connection driver is database                   0.06s  
+  Γ£ô imp008 tc08 jobs table migration file exists                         0.07s  
+  Γ£ô imp008 tc09 failed jobs table migration file exists                  0.07s  
+  Γ£ô imp008 tc10 jobs and failed jobs tables exist in schema              0.07s  
+
+   PASS  Tests\Feature\EagerLoadingTest
+  Γ£ô imp006 tc01 product index renders category name                      0.08s  
+  Γ£ô imp006 tc02 product index category is not n plus 1                   0.08s  
+  Γ£ô imp006 tc03 product without category renders safely                  0.07s  
+  Γ£ô imp006 tc04 product index relation is loaded on collection           0.07s  
+  Γ£ô imp006 tc05 product index multiple categories bounded                0.08s  
+  Γ£ô imp006 tc06 user order history renders within bounded queries        0.10s  
+  Γ£ô imp006 tc07 user order detail items are loaded                       0.09s  
+  Γ£ô imp006 tc08 admin order list user relation already loaded            0.09s  
+  Γ£ô imp006 tc09 admin order detail loads all relations                   0.08s  
+  Γ£ô imp006 tc10 admin order detail no extra queries per item             0.08s  
+
+   PASS  Tests\Feature\ExampleTest
+  Γ£ô the application returns a successful response                        0.03s  
+
+   PASS  Tests\Feature\GlobalToastNotificationTest
+  Γ£ô imp009 tc01 toast partial exists with core hooks                     0.02s  
+  Γ£ô imp009 tc02 forgot password page uses shared toast partial           0.02s  
+  Γ£ô imp009 tc03 login page uses shared toast partial for status messageΓÇª 0.03s  
+  Γ£ô imp009 tc04 checkout shipping uses toast partial instead of inlineΓÇª  0.02s  
+  Γ£ô imp009 tc05 checkout review uses toast partial instead of inline erΓÇª 0.02s  
+  Γ£ô imp009 tc06 checkout address uses toast partial for prerequisite flΓÇª 0.02s  
+  Γ£ô imp009 tc07 cart index uses toast partial and removes inline succesΓÇª 0.02s  
+  Γ£ô imp009 tc08 product show uses toast partial and removes inline succΓÇª 0.02s  
+  Γ£ô imp009 tc09 orders index uses toast partial for cancel success messΓÇª 0.02s  
+  Γ£ô imp009 tc10 admin flash pages use toast partial and no inline sessiΓÇª 0.02s  
+
+   PASS  Tests\Feature\GuestCheckoutTest
+  Γ£ô imp004 guest checkout page returns 200 for guest                     0.08s  
+  Γ£ô imp004 auth user redirected to auth checkout                         0.06s  
+  Γ£ô imp004 guest checkout shows cart items                               0.07s  
+  Γ£ô imp004 guest checkout shows email field                              0.07s  
+  Γ£ô imp004 guest checkout shows address fields                           0.07s  
+  Γ£ô imp004 guest checkout shows shipping options                         0.07s  
+  Γ£ô imp004 guest checkout has stripe js                                  0.07s  
+  Γ£ô imp004 store guest session returns ok and totals                     0.06s  
+  Γ£ô imp004 store guest session populates session                         0.07s  
+  Γ£ô imp004 store guest session standard shipping cost                    0.06s  
+  Γ£ô imp004 store guest session express shipping cost                     0.06s  
+  Γ£ô imp004 total equals subtotal plus shipping                           0.07s  
+  Γ£ô imp004 store guest session missing email returns 422                 0.08s  
+  Γ£ô imp004 store guest session invalid email returns 422                 0.07s  
+  Γ£ô imp004 store guest session missing address returns 422               0.07s  
+  Γ£ô imp004 store guest session invalid method returns 422                0.07s  
+  Γ£ô imp004 place guest order creates order with null user id             0.07s  
+  Γ£ô imp004 place guest order without session returns 422                 0.07s  
+
+   PASS  Tests\Feature\HttpsEnforcementTest
+  Γ£ô nf004 app environment is not production in test suite                0.04s  
+  Γ£ô nf004 https is n o t forced in testing environment                   0.02s  
+  Γ£ô nf004 https i s forced when app environment is production            0.03s  
+  Γ£ô nf004 https i s forced for root url in production                    0.02s  
+  Γ£ô nf004 https i s forced for asset urls in production                  0.02s  
+  Γ£ô nf004 url force scheme changes generated url scheme to https         0.02s  
+  Γ£ô nf004 url force scheme null reverts scheme to http                   0.02s  
+  Γ£ô nf004 url force scheme applies to named routes                       0.02s  
+  Γ£ô nf004 provider boot in staging env does not force https              0.02s  
+  Γ£ô nf004 provider boot in local env does not force https                0.02s  
+  Γ£ô nf004 multiple url calls in production all use https                 0.02s  
+  Γ£ô nf004 app service provider boot completes within one second          0.02s  
+
+   PASS  Tests\Feature\InputSanitizationTest
+  Γ£ô nf002 user model has fillable not open guarded                       0.07s  
+  Γ£ô nf002 product model has fillable not open guarded                    0.07s  
+  Γ£ô nf002 order model has fillable not open guarded                      0.06s  
+  Γ£ô nf002 sql injection in search query returns 200 not 500              0.08s  
+  Γ£ô nf002 sql injection in search does not return all products           0.07s  
+  Γ£ô nf002 sql injection in category filter returns 200                   0.07s  
+  Γ£ô nf002 sql injection in min price filter returns 200                  0.07s  
+  Γ£ô nf002 xss in product name is escaped on listing page                 0.08s  
+  Γ£ô nf002 xss in search query is escaped in response                     0.07s  
+  Γ£ô nf002 register rejects excessively long name                         0.07s  
+  Γ£ô nf002 cart add rejects non numeric product id                        0.08s  
+  Γ£ô nf002 product search uses pdo bindings not raw interpolation         0.07s  
+
+   PASS  Tests\Feature\LowStockNotificationTest
+  Γ£ô nt003 tc01 notify admin low stock job implements should queue        0.08s  
+  Γ£ô nt003 tc02 product has low stock threshold fillable                  0.07s  
+  Γ£ô nt003 tc03 product has low stock notified fillable                   0.07s  
+  Γ£ô nt003 tc04 admin can set low stock threshold                         0.07s  
+  Γ£ô nt003 tc05 stock below threshold dispatches job                      0.08s  
+  Γ£ô nt003 tc06 stock at threshold dispatches job                         0.08s  
+  Γ£ô nt003 tc07 stock above threshold does not dispatch job               0.08s  
+  Γ£ô nt003 tc08 already notified does not dispatch again                  0.07s  
+  Γ£ô nt003 tc09 stock above threshold resets notified flag                0.07s  
+  Γ£ô nt003 tc10 after reset next breach dispatches again                  0.07s  
+  Γ£ô nt003 tc11 null threshold never dispatches job                       0.08s  
+  Γ£ô nt003 tc12 job creates admin notification                            0.07s  
+  Γ£ô nt003 tc13 notification message contains product name                0.06s  
+  Γ£ô nt003 tc14 low stock notified is true after breach                   0.07s  
+  Γ£ô nt003 tc15 edit form shows low stock threshold field                 0.08s  
+
+   PASS  Tests\Feature\OnePageCheckoutTest
+  Γ£ô imp003 checkout page returns 200 for auth user                       0.11s  
+  Γ£ô imp003 guest redirected to login                                     0.07s  
+  Γ£ô imp003 checkout page shows cart items                                0.07s  
+  Γ£ô imp003 checkout page shows address fields                            0.07s  
+  Γ£ô imp003 checkout page shows shipping options                          0.07s  
+  Γ£ô imp003 checkout page shows saved addresses                           0.07s  
+  Γ£ô imp003 checkout page has stripe js                                   0.08s  
+  Γ£ô imp003 checkout page shows express delivery info                     0.07s  
+  Γ£ô imp003 store session with new address and method                     0.07s  
+  Γ£ô imp003 store session with saved address                              0.07s  
+  Γ£ô imp003 store session saves new address to database                   0.07s  
+  Γ£ô imp003 store session returns totals in response                      0.07s  
+  Γ£ô imp003 store session standard cost in response                       0.08s  
+  Γ£ô imp003 store session express cost in response                        0.07s  
+  Γ£ô imp003 store session invalid address returns 422                     0.07s  
+  Γ£ô imp003 store session invalid method returns 422                      0.08s  
+  Γ£ô imp003 guest cannot post session                                     0.07s  
+  Γ£ô imp003 store session total equals subtotal plus shipping             0.07s  
+
+   PASS  Tests\Feature\OrderCancellationTest
+  Γ£ô oh004 guest is redirected to login                                   0.09s  
+  Γ£ô oh004 owner can cancel pending order                                 0.07s  
+  Γ£ô oh004 non owner gets 403                                             0.07s  
+  Γ£ô oh004 cannot cancel paid order                                       0.07s  
+  Γ£ô oh004 cannot cancel processing order                                 0.08s  
+  Γ£ô oh004 cannot cancel already cancelled order                          0.08s  
+  Γ£ô oh004 stock is restored on cancellation                              0.09s  
+  Γ£ô oh004 stripe payment intent is cancelled                             0.07s  
+  Γ£ô oh004 payment intent not cancelled when null                         0.08s  
+  Γ£ô oh004 cancel button visible for pending orders                       0.09s  
+  Γ£ô oh004 cancel button not shown for non pending orders                 0.07s  
+  Γ£ô oh004 cancel endpoint responds within two seconds                    0.07s  
+
+   PASS  Tests\Feature\OrderConfirmationEmailTest
+  Γ£ô cp004 webhook payment succeeded dispatches confirmation job          0.08s  
+  Γ£ô cp004 webhook payment failed does not dispatch confirmation job      0.08s  
+  Γ£ô cp004 webhook unknown intent does not dispatch job                   0.09s  
+  Γ£ô cp004 mailable has correct subject                                   0.08s  
+  Γ£ô cp004 mailable is addressed to order user                            0.08s  
+  Γ£ô cp004 email contains order id                                        0.08s  
+  Γ£ô cp004 email contains item product name                               0.09s  
+  Γ£ô cp004 email contains order total                                     0.09s  
+  Γ£ô cp004 email shows standard estimated delivery                        0.09s  
+  Γ£ô cp004 email shows express estimated delivery                         0.07s  
+  Γ£ô cp004 job implements should queue                                    0.07s  
+  Γ£ô cp004 job handle sends order confirmation mail                       0.07s  
+
+   PASS  Tests\Feature\OrderDetailTest
+  Γ£ô oh002 guest is redirected to login                                   0.09s  
+  Γ£ô oh002 owner can view order detail                                    0.07s  
+  Γ£ô oh002 other user gets 403                                            0.08s  
+  Γ£ô oh002 order id shown on detail page                                  0.08s  
+  Γ£ô oh002 item product names shown                                       0.08s  
+  Γ£ô oh002 item quantity shown                                            0.08s  
+  Γ£ô oh002 item unit price shown                                          0.08s  
+  Γ£ô oh002 order total shown                                              0.08s  
+  Γ£ô oh002 shipping address shown                                         0.08s  
+  Γ£ô oh002 payment method section shown                                   0.08s  
+  Γ£ô oh002 order status shown on detail page                              0.07s  
+  Γ£ô oh002 order detail page responds within two seconds                  0.08s  
+
+   PASS  Tests\Feature\OrderHistoryTest
+  Γ£ô oh001 guest is redirected to login                                   0.07s  
+  Γ£ô oh001 auth user sees order history page                              0.08s  
+  Γ£ô oh001 empty state shown when no orders                               0.08s  
+  Γ£ô oh001 user orders appear in listing                                  0.09s  
+  Γ£ô oh001 order status visible in listing                                0.09s  
+  Γ£ô oh001 order total visible in listing                                 0.09s  
+  Γ£ô oh001 orders listed newest first                                     0.12s  
+  Γ£ô oh001 user cannot see another users orders                           0.13s  
+  Γ£ô oh001 pagination limits to 10 orders per page                        0.18s  
+  Γ£ô oh001 pagination links present when more than 10 orders              0.12s  
+  Γ£ô oh001 second page is accessible and shows overflow orders            0.10s  
+  Γ£ô oh001 order history page responds within two seconds                 0.10s  
+
+   PASS  Tests\Feature\OrderNotificationTest
+  Γ£ô nt001 tc01 status changed job implements should queue                0.11s  
+  Γ£ô nt001 tc02 processing status dispatches job                          0.10s  
+  Γ£ô nt001 tc03 shipped status dispatches job                             0.10s  
+  Γ£ô nt001 tc04 delivered status dispatches job                           0.10s  
+  Γ£ô nt001 tc05 cancelled status dispatches job                           0.09s  
+  Γ£ô nt001 tc06 job sends status changed mail to order owner              0.07s  
+  Γ£ô nt001 tc07 status changed mailable subject contains order id         0.07s  
+  Γ£ô nt001 tc08 status changed mailable addressed to owner                0.07s  
+  Γ£ô nt001 tc09 mail contains processing status label                     0.08s  
+  Γ£ô nt001 tc10 delivery trigger mail is sent                             0.09s  
+  Γ£ô nt001 tc11 delivery mail references delivered status                 0.09s  
+  Γ£ô nt001 tc12 cancelled mail has correct label                          0.08s  
+  Γ£ô nt001 tc13 order confirmation job implements should queue            0.07s  
+  Γ£ô nt001 tc14 order placed webhook dispatches confirmation job          0.07s  
+  Γ£ô nt001 tc15 confirmation job sends mail to order owner                0.07s  
+
+   PASS  Tests\Feature\OrderStatusTest
+  Γ£ô oh003 status timeline section visible on detail page                 0.09s  
+  Γ£ô oh003 placed step shows created at timestamp                         0.09s  
+  Γ£ô oh003 processing timestamp shown when status is processing           0.10s  
+  Γ£ô oh003 shipped timestamp shown when status is shipped                 0.07s  
+  Γ£ô oh003 delivered timestamp shown when status is delivered             0.07s  
+  Γ£ô oh003 admin can advance order to processing                          0.08s  
+  Γ£ô oh003 admin can advance order to shipped                             0.08s  
+  Γ£ô oh003 admin can advance order to delivered                           0.08s  
+  Γ£ô oh003 non admin cannot update order status                           0.10s  
+  Γ£ô oh003 invalid status value is rejected                               0.10s  
+  Γ£ô oh003 status change dispatches notification email                    0.08s  
+  Γ£ô oh003 status update responds within two seconds                      0.08s  
+
+   PASS  Tests\Feature\PaymentTokenizationTest
+  Γ£ô nf003 orders table has no card pan cvv expiry columns                0.08s  
+  Γ£ô nf003 order fillable contains no card data fields                    0.07s  
+  Γ£ô nf003 payment service interface has no card data parameters          0.08s  
+  Γ£ô nf003 stripe payment service uses official stripe client             0.06s  
+  Γ£ô nf003 stripe payment service source has no raw card http             0.07s  
+  Γ£ô nf003 checkout controller source never reads card data from request  0.07s  
+  Γ£ô nf003 review blade loads stripe js sdk                               0.06s  
+  Γ£ô nf003 review blade uses stripe elements not plain card inputs        0.07s  
+  Γ£ô nf003 review blade calls stripe confirm payment client side          0.06s  
+  Γ£ô nf003 place order endpoint stores no card data in order record       0.08s  
+  Γ£ô nf003 place order ignores card number sent in request body           0.07s  
+  Γ£ô nf003 order fillable includes stripe intent id but not card fields   0.07s  
+
+   PASS  Tests\Feature\ProductBrowseTest
+  Γ£ô pc001 product listing accessible without login                       0.08s  
+  Γ£ô pc001 product listing shows name price and stock status              0.07s  
+  Γ£ô pc001 out of stock product shows correct status                      0.07s  
+  Γ£ô pc001 listing paginates at 12 per page                               0.09s  
+  Γ£ô pc001 second page shows remaining products                           0.08s  
+  Γ£ô pc001 empty catalog shows no products message                        0.07s  
+  Γ£ô pc001 products ordered newest first                                  0.07s  
+  Γ£ô pc001 pagination links present with more than 12 products            0.08s  
+  Γ£ô pc001 xss in product name is escaped                                 0.08s  
+  Γ£ô pc001 product with no image renders without error                    0.08s  
+  Γ£ô pc001 out of range page returns 200                                  0.08s  
+  Γ£ô pc001 product listing responds within two seconds                    0.08s  
+
+   PASS  Tests\Feature\ProductDetailTest
+  Γ£ô pc005 detail page returns 200 for valid slug                         0.08s  
+  Γ£ô pc005 product name shown on detail page                              0.07s  
+  Γ£ô pc005 product description shown on detail page                       0.09s  
+  Γ£ô pc005 product price shown on detail page                             0.09s  
+  Γ£ô pc005 in stock status shown when stock positive                      0.08s  
+  Γ£ô pc005 out of stock status shown when stock zero                      0.08s  
+  Γ£ô pc005 sku shown on detail page                                       0.08s  
+  Γ£ô pc005 category shown on detail page                                  0.09s  
+  Γ£ô pc005 rating shown on detail page                                    0.09s  
+  Γ£ô pc005 related products section shown                                 0.07s  
+  Γ£ô pc005 nonexistent slug returns 404                                   0.08s  
+  Γ£ô pc005 detail page accessible without login and fast                  0.07s  
+
+   PASS  Tests\Feature\ProductFilterTest
+  Γ£ô pc003 filter by category returns matching products                   0.10s  
+  Γ£ô pc003 filter by min price excludes cheaper products                  0.07s  
+  Γ£ô pc003 filter by max price excludes expensive products                0.08s  
+  Γ£ô pc003 filter by min rating excludes lower rated                      0.07s  
+  Γ£ô pc003 combined category and price filter                             0.07s  
+  Γ£ô pc003 all three filters combined                                     0.07s  
+  Γ£ô pc003 no filters returns all products                                0.07s  
+  Γ£ô pc003 filter state persists in pagination links                      0.08s  
+  Γ£ô pc003 category dropdown rendered in filter form                      0.08s  
+  Γ£ô pc003 filter by nonexistent category returns empty                   0.07s  
+  Γ£ô pc003 filter accessible without login                                0.07s  
+  Γ£ô pc003 filtered listing responds within two seconds                   0.11s  
+
+   PASS  Tests\Feature\ProductReviewListTest
+  Γ£ô rv002 reviews section shown on product page                          0.08s  
+  Γ£ô rv002 product with no reviews shows no reviews message               0.09s  
+  Γ£ô rv002 average rating shown prominently when reviews exist            0.09s  
+  Γ£ô rv002 average rating calculated correctly                            0.10s  
+  Γ£ô rv002 review shows reviewer name                                     0.08s  
+  Γ£ô rv002 review shows star rating                                       0.08s  
+  Γ£ô rv002 review shows comment text                                      0.07s  
+  Γ£ô rv002 reviews paginated five per page                                0.09s  
+  Γ£ô rv002 page two shows remaining review                                0.08s  
+  Γ£ô rv002 guest can see reviews                                          0.07s  
+  Γ£ô rv002 single review average equals review rating                     0.07s  
+  Γ£ô rv002 product rating updated after review submission                 0.07s  
+
+   PASS  Tests\Feature\ProductReviewTest
+  Γ£ô rv001 guest is redirected to login when submitting review            0.08s  
+  Γ£ô rv001 unpurchased user cannot submit review                          0.08s  
+  Γ£ô rv001 purchased user can submit review                               0.07s  
+  Γ£ô rv001 user cannot submit second review for same product              0.08s  
+  Γ£ô rv001 review form shown for eligible purchaser                       0.07s  
+  Γ£ô rv001 review form hidden for non purchaser                           0.08s  
+  Γ£ô rv001 rating below minimum fails validation                          0.08s  
+  Γ£ô rv001 rating above maximum fails validation                          0.08s  
+  Γ£ô rv001 comment is required                                            0.09s  
+  Γ£ô rv001 successful review redirects with success flash                 0.07s  
+  Γ£ô rv001 different users can each review same product                   0.08s  
+  Γ£ô rv001 reviewer name and rating shown on product detail page          0.08s  
+
+   PASS  Tests\Feature\ProductSearchTest
+  Γ£ô pc002 search by name returns matching product                        0.10s  
+  Γ£ô pc002 search by description returns matching product                 0.07s  
+  Γ£ô pc002 search results paginated at 12                                 0.09s  
+  Γ£ô pc002 search is case insensitive                                     0.07s  
+  Γ£ô pc002 no matching results shows no results message                   0.07s  
+  Γ£ô pc002 empty query redirects to product listing                       0.07s  
+  Γ£ô pc002 search accessible without login                                0.07s  
+  Γ£ô pc002 xss in search query is escaped                                 0.08s  
+  Γ£ô pc002 search term preserved in input field                           0.07s  
+  Γ£ô pc002 search does not return non matching products                   0.07s  
+  Γ£ô pc002 partial keyword match returns results                          0.07s  
+  Γ£ô pc002 search completes within one second                             0.11s  
+
+   PASS  Tests\Feature\ProductSortTest
+  Γ£ô pc004 default sort is newest first                                   0.09s  
+  Γ£ô pc004 sort newest returns newest first                               0.08s  
+  Γ£ô pc004 sort oldest returns oldest first                               0.07s  
+  Γ£ô pc004 sort price asc returns cheapest first                          0.11s  
+  Γ£ô pc004 sort price desc returns most expensive first                   0.15s  
+  Γ£ô pc004 sort rating returns highest rated first                        0.15s  
+  Γ£ô pc004 sort dropdown has at least four options                        0.15s  
+  Γ£ô pc004 sort selection persisted in dropdown                           0.12s  
+  Γ£ô pc004 sort combined with category filter                             0.10s  
+  Γ£ô pc004 unknown sort value falls back to newest                        0.12s  
+  Γ£ô pc004 sort param persists in pagination links                        0.10s  
+  Γ£ô pc004 sorted listing responds within two seconds                     0.19s  
+
+   PASS  Tests\Feature\QueuedHeavyOperationsTest
+  Γ£ô nf008 tc01 send order status changed email implements should queue   0.11s  
+  Γ£ô nf008 tc02 send order confirmation email implements should queue     0.09s  
+  Γ£ô nf008 tc03 notify admin of new order implements should queue         0.08s  
+  Γ£ô nf008 tc04 notify admin low stock implements should queue            0.08s  
+  Γ£ô nf008 tc05 import products csv job implements should queue           0.08s  
+  Γ£ô nf008 tc06 all jobs use required queue traits                        0.08s  
+  Γ£ô nf008 tc07 order status update dispatches status changed email       0.11s  
+  Γ£ô nf008 tc08 webhook dispatches order confirmation email               0.20s  
+  Γ£ô nf008 tc09 webhook dispatches notify admin of new order              0.10s  
+  Γ£ô nf008 tc10 csv import dispatches import products csv job             0.11s  
+  Γ£ô nf008 tc11 controllers do not send mail directly                     0.12s  
+  Γ£ô nf008 tc12 queue connection is configurable via env                  0.09s  
+
+   PASS  Tests\Feature\RateLimitingTest
+  Γ£ô nf006 login post route has throttle middleware                       0.09s  
+  Γ£ô nf006 register post route has throttle middleware                    0.09s  
+  Γ£ô nf006 forgot password post route has throttle middleware             0.08s  
+  Γ£ô nf006 throttle middleware alias is registered in kernel              0.08s  
+  Γ£ô nf006 login post returns non 429 within rate limit                   0.29s  
+  Γ£ô nf006 register post returns non 429 within rate limit                0.38s  
+  Γ£ô nf006 forgot password post returns non 429 within rate limit         0.09s  
+  Γ£ô nf006 login throttle limit is at most 10 per minute                  0.09s  
+  Γ£ô nf006 register throttle limit is at most 10 per minute               0.10s  
+  Γ£ô nf006 login get route does not have throttle middleware              0.10s  
+  Γ£ô nf006 register get route does not have throttle middleware           0.08s  
+  Γ£ô nf006 login post with throttle responds within two seconds           0.29s  
+
+   PASS  Tests\Feature\UserAddressTest
+  Γ£ô up002 guest redirected to login                                      0.10s  
+  Γ£ô up002 auth user sees addresses page                                  0.09s  
+  Γ£ô up002 user with no addresses sees empty state                        0.09s  
+  Γ£ô up002 user can add new address                                       0.07s  
+  Γ£ô up002 name is required on store                                      0.07s  
+  Γ£ô up002 user can update own address                                    0.08s  
+  Γ£ô up002 user cannot update another users address                       0.08s  
+  Γ£ô up002 user can delete own address                                    0.08s  
+  Γ£ô up002 user cannot delete another users address                       0.10s  
+  Γ£ô up002 user can set address as default                                0.09s  
+  Γ£ô up002 setting default unsets other defaults                          0.08s  
+  Γ£ô up002 default address is returned first                              0.07s  
+
+  Tests:    897 passed (2114 assertions)
+  Duration: 76.66s
+

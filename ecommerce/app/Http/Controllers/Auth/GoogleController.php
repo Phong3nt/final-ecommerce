@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,6 +67,16 @@ class GoogleController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // IMP-016: log Google OAuth login
+        AuditLog::create([
+            'user_id'      => $user->id,
+            'action'       => 'auth.google_login',
+            'subject_type' => 'User',
+            'subject_id'   => $user->id,
+            'new_values'   => ['email' => $user->email],
+            'ip_address'   => $request->ip(),
+        ]);
 
         return redirect()->intended(route('dashboard'));
     }

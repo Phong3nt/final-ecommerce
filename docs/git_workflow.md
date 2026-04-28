@@ -113,9 +113,10 @@ git branch -a | Select-String "[TaskID]"        # Feature branch already exists?
 
 ## Branching Summary Table
 
-| Pattern          | Purpose                   | Example            |
-| ---------------- | ------------------------- | ------------------ |
-| `main`           | Production-ready only     | Stable baseline    |
-| `feature/[ID]`   | New task implementation   | `feature/AU-002`   |
-| `fix/[ID]`       | Bug fix from evaluation   | `fix/AU-001`       |
-| `upgrade/[ID].1` | Approved proposal upgrade | `upgrade/AU-001.1` |
+| Pattern            | Purpose                          | Example            |
+| ------------------ | -------------------------------- | ------------------ |
+| `main`             | Production-ready only            | Stable baseline    |
+| `feature/[ID]`     | New task implementation          | `feature/AU-002`   |
+| `fix/[ID]`         | Bug fix from evaluation          | `fix/AU-001`       |
+| `upgrade/[ID].1`   | Approved proposal upgrade        | `upgrade/AU-001.1` |
+| `improve/[IMP-ID]` | Deliberate improvement (IMP-NNN) | `improve/IMP-006`  |
