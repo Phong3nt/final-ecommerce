@@ -21,6 +21,7 @@ class ProductController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $categoryId = $request->integer('category_id') ?: null;
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
         $products = Product::with('category')
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()->paginate(20);

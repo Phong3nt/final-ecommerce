@@ -250,7 +250,7 @@ class StripeRefundWebhookTest extends TestCase
         $this->mock(
             PaymentServiceInterface::class,
             fn ($m) => $m->shouldReceive('constructWebhookEvent')
-                ->andThrow(new \Stripe\Exception\SignatureVerificationException('bad', null))
+                ->andThrow(new \Stripe\Exception\SignatureVerificationException('bad', 0))
         );
 
         $this->postJson(route('webhook.stripe'), [], ['Stripe-Signature' => 'bad_sig'])

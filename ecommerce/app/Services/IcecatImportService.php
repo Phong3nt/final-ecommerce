@@ -111,9 +111,12 @@ class IcecatImportService
             ? array_keys(self::CATEGORY_MAP)
             : [$category];
 
-        $totalAttempted = 0;
-        $totalSucceeded = 0;
-        $totalSkipped   = 0;
+        $totalAttempted          = 0;
+        $totalSucceeded          = 0;
+        $totalSkipped            = 0;
+        $totalNewCount           = 0;
+        $totalUpdatedDraftCount  = 0;
+        $totalSkippedPublished   = 0;
 
         foreach ($categories as $cat) {
             $eans = $this->fetchEans($cat, $limit);
@@ -129,7 +132,10 @@ class IcecatImportService
                 $totalAttempted += count($demoProducts);
                 $totalSucceeded += count($demoProducts);
                 $groups          = $this->groupByFamily($demoProducts);
-                $this->upsertGroups($groups, $cat);
+                $demoUpsertCounts         = $this->upsertGroups($groups, $cat);
+                $totalNewCount           += $demoUpsertCounts['new'];
+                $totalUpdatedDraftCount  += $demoUpsertCounts['updated_draft'];
+                $totalSkippedPublished   += $demoUpsertCounts['skipped_published'];
                 continue;
             }
 
@@ -149,18 +155,25 @@ class IcecatImportService
             }
 
             $groups = $this->groupByFamily($rawProducts);
-            $this->upsertGroups($groups, $cat);
+            $upsertCounts             = $this->upsertGroups($groups, $cat);
+            $totalNewCount           += $upsertCounts['new'];
+            $totalUpdatedDraftCount  += $upsertCounts['updated_draft'];
+            $totalSkippedPublished   += $upsertCounts['skipped_published'];
         }
 
         $summary = [
-            'attempted' => $totalAttempted,
-            'succeeded' => $totalSucceeded,
-            'skipped'   => $totalSkipped,
+            'attempted'               => $totalAttempted,
+            'succeeded'               => $totalSucceeded,
+            'skipped'                 => $totalSkipped,
+            'new_count'               => $totalNewCount,
+            'updated_draft_count'     => $totalUpdatedDraftCount,
+            'skipped_published_count' => $totalSkippedPublished,
         ];
 
         AdminNotification::create([
             'order_id' => null,
-            'message'  => "Icecat import complete: {$totalSucceeded}/{$totalAttempted} products imported, {$totalSkipped} skipped.",
+            'message'  => "Icecat import complete: {$totalSucceeded}/{$totalAttempted} products imported, {$totalSkipped} skipped. "
+                . "New: {$totalNewCount}, updated drafts: {$totalUpdatedDraftCount}, skipped published: {$totalSkippedPublished}.",
         ]);
 
         return $summary;
@@ -456,9 +469,20 @@ class IcecatImportService
         return $groups;
     }
 
-    /** Step 3 — Upsert product groups into the DB. */
-    private function upsertGroups(array $groups, string $fallbackCategoryName): void
+    /**
+     * Step 3 — Upsert product groups into the DB.
+     *
+     * IMP-043: checks EAN (sku) before create/update.
+     * - Published product → skip entirely.
+     * - Draft product     → update fields, preserve existing stock.
+     * - No match          → create new row with random initial stock.
+     *
+     * @return array{new: int, updated_draft: int, skipped_published: int}
+     */
+    private function upsertGroups(array $groups, string $fallbackCategoryName): array
     {
+        $counts = ['new' => 0, 'updated_draft' => 0, 'skipped_published' => 0];
+
         foreach ($groups as $familyProducts) {
             $first        = $familyProducts[0];
             $categoryName = ! empty($first['category_name']) ? $first['category_name'] : $fallbackCategoryName;
@@ -469,13 +493,26 @@ class IcecatImportService
             );
 
             $parentName = $this->stripVariantSuffix($first['name']);
+            $ean        = $first['ean'] ?? '';
 
-            // Step 3: duplicate check
-            $existing = Product::where('name', $parentName)
-                ->where('category_id', $category->id)
-                ->first();
+            // IMP-043: EAN-based duplicate check (sku column stores EAN)
+            $existing = ! empty($ean)
+                ? Product::where('sku', $ean)->first()
+                : null;
 
-            // Step 4: operation presets applied in productData
+            // Fall back to name+category lookup for legacy rows without EAN
+            if ($existing === null) {
+                $existing = Product::where('name', $parentName)
+                    ->where('category_id', $category->id)
+                    ->first();
+            }
+
+            // IMP-043: skip published products entirely
+            if ($existing && $existing->status === 'published') {
+                $counts['skipped_published']++;
+                continue;
+            }
+
             $productData = [
                 'name'                => $parentName,
                 'slug'                => $this->uniqueSlug($parentName, $existing?->id),
@@ -483,24 +520,29 @@ class IcecatImportService
                 'image'               => $first['image'],
                 'category_id'         => $category->id,
                 'price'               => $first['price'],
-                'stock'               => rand(50, 100),
                 'status'              => 'draft',
                 'spec_processor'      => $first['spec_processor'],
                 'spec_display'        => $first['spec_display'],
                 'spec_weight'         => $first['spec_weight'],
                 'is_icecat_locked'    => true,
                 'import_source'       => 'icecat',
-                'sku'                 => $first['ean'],
+                'sku'                 => $ean,
                 'low_stock_threshold' => 10,
                 'low_stock_notified'  => false,
             ];
 
             if ($existing) {
+                // IMP-043: draft update — preserve existing stock
                 $existing->update($productData);
+                $counts['updated_draft']++;
             } else {
-                Product::create($productData);
+                // New product — assign random initial stock
+                Product::create(array_merge($productData, ['stock' => rand(50, 100)]));
+                $counts['new']++;
             }
         }
+
+        return $counts;
     }
 
     /** Strip common color/storage variant suffixes from product names. */

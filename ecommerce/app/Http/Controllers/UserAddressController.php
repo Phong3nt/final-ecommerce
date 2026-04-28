@@ -12,7 +12,9 @@ class UserAddressController extends Controller
 {
     public function index(): View
     {
-        $addresses = auth()->user()->addresses;
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $addresses = $user->addresses;
         $countries = $this->countries();
 
         // IMP-042: normalize legacy free-text values (e.g. vietnam/VN/Vietnam)
@@ -44,6 +46,7 @@ class UserAddressController extends Controller
 
         $data['country'] = $this->normalizeCountryCode($data['country'], $countries) ?? $data['country'];
 
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         if (!empty($data['is_default'])) {
@@ -75,7 +78,9 @@ class UserAddressController extends Controller
         $data['country'] = $this->normalizeCountryCode($data['country'], $countries) ?? $data['country'];
 
         if (!empty($data['is_default'])) {
-            auth()->user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+            /** @var \App\Models\User $authUser */
+            $authUser = auth()->user();
+            $authUser->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
         }
 
         $address->update($data);
@@ -96,7 +101,9 @@ class UserAddressController extends Controller
     {
         abort_unless($address->user_id === auth()->id(), 403);
 
-        auth()->user()->addresses()->update(['is_default' => false]);
+        /** @var \App\Models\User $authUser */
+        $authUser = auth()->user();
+        $authUser->addresses()->update(['is_default' => false]);
         $address->update(['is_default' => true]);
 
         return redirect()->route('addresses.index')->with('success', 'Default address updated.');

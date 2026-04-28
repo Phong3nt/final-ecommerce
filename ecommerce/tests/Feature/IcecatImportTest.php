@@ -416,4 +416,152 @@ class IcecatImportTest extends TestCase
             return $job->category === 'Laptops' && $job->limit === 5;
         });
     }
+
+    // ── TC-19 (IMP-043) ──────────────────────────────────────────────────────
+
+    /** TC-19: Re-import skips a published product entirely — status and stock unchanged. */
+    public function test_imp043_tc19_skips_published_product_on_reimport(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+        Product::factory()->create([
+            'name'          => 'Test Laptop Pro',
+            'sku'           => '5901234123457',
+            'status'        => 'published',
+            'stock'         => 42,
+            'category_id'   => $category->id,
+            'import_source' => 'icecat',
+        ]);
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(), 200),
+        ]);
+
+        $result = (new IcecatImportService())->run('Laptops', 1);
+
+        // Product must not be overwritten
+        $product = Product::where('sku', '5901234123457')->first();
+        $this->assertNotNull($product);
+        $this->assertSame('published', $product->status);
+        $this->assertSame(42, $product->stock);
+
+        // Report must reflect the skip
+        $this->assertSame(1, $result['skipped_published_count']);
+    }
+
+    // ── TC-20 (IMP-043) ──────────────────────────────────────────────────────
+
+    /** TC-20: Re-import updates draft product fields but preserves existing stock. */
+    public function test_imp043_tc20_updates_draft_but_preserves_stock(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+        Product::factory()->create([
+            'name'          => 'Test Laptop Pro',
+            'sku'           => '5901234123457',
+            'status'        => 'draft',
+            'stock'         => 77,
+            'category_id'   => $category->id,
+            'import_source' => 'icecat',
+        ]);
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(), 200),
+        ]);
+
+        $result = (new IcecatImportService())->run('Laptops', 1);
+
+        // Fields should be updated
+        $product = Product::where('sku', '5901234123457')->first();
+        $this->assertNotNull($product);
+        $this->assertSame('icecat', $product->import_source);
+
+        // Stock must be preserved
+        $this->assertSame(77, $product->stock);
+
+        // Only one product — no duplicate created
+        $this->assertSame(1, Product::where('sku', '5901234123457')->count());
+
+        // Report must reflect the update
+        $this->assertSame(1, $result['updated_draft_count']);
+    }
+
+    // ── TC-21 (IMP-043) ──────────────────────────────────────────────────────
+
+    /** TC-21: Import creates a new product for an EAN not present in the DB. */
+    public function test_imp043_tc21_creates_new_product_for_unknown_ean(): void
+    {
+        // Confirm no product with this EAN exists yet
+        $this->assertDatabaseMissing('products', ['sku' => '5901234123457']);
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(), 200),
+        ]);
+
+        $result = (new IcecatImportService())->run('Laptops', 1);
+
+        $this->assertDatabaseHas('products', ['sku' => '5901234123457', 'status' => 'draft']);
+
+        // Report must reflect the creation
+        $this->assertSame(1, $result['new_count']);
+    }
+
+    // ── TC-22 (IMP-043) ──────────────────────────────────────────────────────
+
+    /**
+     * TC-22: run() summary reports correct new / updated_draft / skipped_published counts.
+     *
+     * Setup: one published + one draft product already in DB, one completely new EAN in import.
+     */
+    public function test_imp043_tc22_summary_reports_correct_counts(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+
+        // Published — should be skipped
+        Product::factory()->create([
+            'name'        => 'Pub Laptop',
+            'sku'         => 'EAN-PUBLISHED',
+            'status'      => 'published',
+            'stock'       => 10,
+            'category_id' => $category->id,
+        ]);
+
+        // Draft — should be updated, stock preserved
+        Product::factory()->create([
+            'name'        => 'Draft Laptop',
+            'sku'         => 'EAN-DRAFT',
+            'status'      => 'draft',
+            'stock'       => 55,
+            'category_id' => $category->id,
+        ]);
+
+        // Fake API: three EAN search results, three detail responses
+        $searchItems = [
+            ['EAN' => 'EAN-PUBLISHED', 'Prod_id' => 'p1', 'Title' => 'Pub Laptop'],
+            ['EAN' => 'EAN-DRAFT',     'Prod_id' => 'p2', 'Title' => 'Draft Laptop'],
+            ['EAN' => 'EAN-NEW',       'Prod_id' => 'p3', 'Title' => 'New Laptop'],
+        ];
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push(['data' => $searchItems], 200)
+                ->push($this->fakeDetailResponse('Pub Laptop',   'HP',  'PubLine',   'https://images.icecat.us/img/p1.jpg'), 200)
+                ->push($this->fakeDetailResponse('Draft Laptop', 'HP',  'DraftLine', 'https://images.icecat.us/img/p2.jpg'), 200)
+                ->push($this->fakeDetailResponse('New Laptop',   'HP',  'NewLine',   'https://images.icecat.us/img/p3.jpg'), 200),
+        ]);
+
+        $result = (new IcecatImportService())->run('Laptops', 3);
+
+        $this->assertSame(1, $result['new_count'],               'new_count mismatch');
+        $this->assertSame(1, $result['updated_draft_count'],     'updated_draft_count mismatch');
+        $this->assertSame(1, $result['skipped_published_count'], 'skipped_published_count mismatch');
+
+        // Draft product stock must still be 55
+        $draft = Product::where('sku', 'EAN-DRAFT')->first();
+        $this->assertSame(55, $draft->stock);
+    }
 }
