@@ -762,6 +762,170 @@ class IcecatImportService
             && (str_contains($url, 'icecat.us') || str_contains($url, 'icecat.biz'));
     }
 
+    // -------------------------------------------------------------------------
+    // IMP-045 — Import by Icecat Product ID or EAN/Product Code
+    // -------------------------------------------------------------------------
+
+    /**
+     * Fetch product details from Icecat by numeric Icecat Product ID.
+     * Uses the ICECAT-ADD-ID query parameter instead of GTIN.
+     *
+     * @return array|null  Same structure as fetchProductDetail().
+     */
+    public function fetchProductDetailByIcecatId(int $icecatId, string $categoryName = 'Electronics'): ?array
+    {
+        $response = $this->apiGet([
+            'Language'      => 'EN',
+            'ICECAT-ADD-ID' => $icecatId,
+        ]);
+
+        if ($response->status() === 404) {
+            Log::channel('icecat')->info("[SKIP] ICECAT-ADD-ID={$icecatId} reason=404_not_found");
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::channel('icecat')->warning(
+                "[SKIP] ICECAT-ADD-ID={$icecatId} reason=api_error status={$response->status()}"
+            );
+            return null;
+        }
+
+        $body    = $response->json();
+        $product = $body['data'] ?? $body;
+
+        $title = $product['GeneralInfo']['Title'] ?? ($product['Title'] ?? null);
+        if (empty($title)) {
+            Log::channel('icecat')->info("[SKIP] ICECAT-ADD-ID={$icecatId} reason=missing_title");
+            return null;
+        }
+
+        // Extract EAN from the response; fall back to string ID
+        $ean = $product['GeneralInfo']['GTIN'][0]
+            ?? ($product['EANs'][0]
+                ?? ($product['GTIN']
+                    ?? ($product['EAN']
+                        ?? (string) $icecatId)));
+
+        $description = $product['GeneralInfo']['SummaryDescription']['LongSummaryDescription']
+            ?? ($product['GeneralInfo']['SummaryDescription']['ShortSummaryDescription']
+                ?? ($product['LongDesc']
+                    ?? ($product['ShortDesc'] ?? '')));
+
+        $image = $product['Gallery'][0]['Pic']
+            ?? ($product['HighImg'] ?? ($product['LowImg'] ?? null));
+
+        if ($image !== null && ! $this->isValidIcecatImageUrl($image)) {
+            $image = null;
+        }
+
+        $specs           = $this->extractSpecs($product);
+        $family          = $product['GeneralInfo']['ProductFamily']['Value'] ?? ($product['Series'] ?? '');
+        $categoryFromApi = $product['GeneralInfo']['Category']['Name']['Value'] ?? $categoryName;
+
+        return [
+            'ean'            => $ean,
+            'name'           => $title,
+            'description'    => $description,
+            'image'          => $image,
+            'brand'          => $product['GeneralInfo']['Brand'] ?? ($product['Brand']['Name'] ?? ''),
+            'family'         => $family,
+            'category_name'  => $categoryFromApi,
+            'color'          => $specs['color'],
+            'storage'        => $specs['storage'],
+            'spec_processor' => $specs['processor'],
+            'spec_display'   => $specs['display'],
+            'spec_weight'    => $specs['weight'],
+            'price'          => $this->resolvePrice($product, $categoryName),
+        ];
+    }
+
+    /**
+     * IMP-045: Import a list of products by Icecat Product ID (numeric) or
+     * EAN / product code (alphanumeric). Each entry is imported synchronously
+     * and a per-item result is returned.
+     *
+     * @param  array<string>  $idsOrCodes
+     * @return array<int, array{input: string, name: ?string, status: string, error: ?string}>
+     */
+    public function importByIds(array $idsOrCodes): array
+    {
+        $results = [];
+
+        foreach ($idsOrCodes as $raw) {
+            $idOrCode = trim((string) $raw);
+            if ($idOrCode === '') {
+                continue;
+            }
+
+            // Fetch detail: numeric → Icecat Product ID, otherwise → EAN/GTIN
+            $detail = is_numeric($idOrCode)
+                ? $this->fetchProductDetailByIcecatId((int) $idOrCode)
+                : $this->fetchProductDetail($idOrCode);
+
+            if ($detail === null) {
+                $results[] = [
+                    'input'  => $idOrCode,
+                    'name'   => null,
+                    'status' => 'failed',
+                    'error'  => 'Product not found in Icecat.',
+                ];
+                continue;
+            }
+
+            // Duplicate check by EAN (sku column)
+            $ean = (string) ($detail['ean'] ?? '');
+            if ($ean !== '') {
+                $existing = Product::where('sku', $ean)->first();
+                if ($existing) {
+                    $results[] = [
+                        'input'  => $idOrCode,
+                        'name'   => $existing->name,
+                        'status' => 'already_exists',
+                        'error'  => null,
+                    ];
+                    continue;
+                }
+            }
+
+            // Create new draft product
+            $parentName = $this->stripVariantSuffix($detail['name']);
+            $catName    = ! empty($detail['category_name']) ? $detail['category_name'] : 'Electronics';
+            $category   = Category::firstOrCreate(
+                ['name' => $catName],
+                ['slug' => Str::slug($catName)]
+            );
+
+            $product = Product::create([
+                'name'                => $parentName,
+                'slug'                => $this->uniqueSlug($parentName),
+                'description'         => $detail['description'],
+                'image'               => $detail['image'],
+                'category_id'         => $category->id,
+                'price'               => $detail['price'],
+                'stock'               => rand(50, 100),
+                'status'              => 'draft',
+                'spec_processor'      => $detail['spec_processor'],
+                'spec_display'        => $detail['spec_display'],
+                'spec_weight'         => $detail['spec_weight'],
+                'is_icecat_locked'    => true,
+                'import_source'       => 'icecat',
+                'sku'                 => $ean ?: null,
+                'low_stock_threshold' => 10,
+                'low_stock_notified'  => false,
+            ]);
+
+            $results[] = [
+                'input'  => $idOrCode,
+                'name'   => $product->name,
+                'status' => 'imported',
+                'error'  => null,
+            ];
+        }
+
+        return $results;
+    }
+
     private function apiGet(array $params): \Illuminate\Http\Client\Response
     {
         $params['UserName'] = config('services.icecat.username');

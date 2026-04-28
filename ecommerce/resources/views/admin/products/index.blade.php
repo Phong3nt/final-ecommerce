@@ -17,6 +17,10 @@
                     data-bs-toggle="modal" data-bs-target="#icecatSyncModal">
                 <i class="bi bi-arrow-repeat me-1"></i> Sync from Icecat
             </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#icecatImportByIdModal">
+                <i class="bi bi-hash me-1"></i> Import by ID
+            </button>
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> New Product
             </a>
@@ -336,6 +340,82 @@
         </div>
     </div>
 </div>
+{{-- IMP-045: Import by Icecat Product ID / EAN Modal --}}
+<div class="modal fade" id="icecatImportByIdModal" tabindex="-1"
+     aria-labelledby="icecatImportByIdModalLabel" aria-hidden="true"
+     x-data="icecatImportByIdModal()">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="icecatImportByIdModalLabel">
+                    <i class="bi bi-hash me-2"></i>Import by Icecat ID / EAN
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">
+                    Enter one or more <strong>Icecat Product IDs</strong> (integers) or
+                    <strong>EAN / product codes</strong> (alphanumeric), comma-separated.
+                    Each is imported as a <strong>Draft</strong> product. Max&nbsp;20 per request.
+                </p>
+
+                <div class="mb-3">
+                    <label for="icecatByIdInput" class="form-label fw-semibold">IDs or EANs</label>
+                    <input type="text" id="icecatByIdInput" class="form-control form-control-sm"
+                           x-model="ids"
+                           placeholder="e.g. 42322695, 5901234123457, ABC-123">
+                    <div class="form-text">Comma-separated · numeric = Icecat Product ID · alphanumeric = EAN / product code</div>
+                </div>
+
+                {{-- Error alert --}}
+                <div x-show="errorMsg" class="alert alert-danger py-2 small" x-text="errorMsg"></div>
+
+                {{-- Results table --}}
+                <div x-show="results.length > 0" class="mt-3">
+                    <label class="form-label fw-semibold">Results</label>
+                    <table class="table table-sm table-bordered mb-0" style="font-size:.82rem">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Input</th>
+                                <th>Product Name</th>
+                                <th>Status</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(row, i) in results" :key="i">
+                                <tr>
+                                    <td x-text="row.input" class="font-monospace"></td>
+                                    <td x-text="row.name ?? '—'"></td>
+                                    <td>
+                                        <span class="badge"
+                                            :class="{
+                                                'bg-success': row.status === 'imported',
+                                                'bg-warning text-dark': row.status === 'already_exists',
+                                                'bg-danger': row.status === 'failed'
+                                            }"
+                                            x-text="row.status"></span>
+                                    </td>
+                                    <td x-text="row.error ?? ''"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        @click="startImport"
+                        :disabled="loading">
+                    <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span x-text="loading ? 'Importing…' : 'Import'">Import</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('styles')
@@ -526,6 +606,48 @@
                 })
                 .catch(() => {
                     this.log.push('Request failed. Check server logs.');
+                    this.loading = false;
+                });
+            },
+        };
+    }
+
+    // IMP-045: Import by ID Modal Alpine component
+    function icecatImportByIdModal() {
+        return {
+            ids: '',
+            loading: false,
+            results: [],
+            errorMsg: '',
+            startImport() {
+                this.errorMsg = '';
+                this.results = [];
+                const trimmed = this.ids.trim();
+                if (!trimmed) {
+                    this.errorMsg = 'Please enter at least one ID or EAN.';
+                    return;
+                }
+                this.loading = true;
+                fetch('{{ route('admin.icecat.import-by-id') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: trimmed }),
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        this.errorMsg = data.error;
+                    } else {
+                        this.results = data.results ?? [];
+                    }
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.errorMsg = 'Request failed. Check server logs.';
                     this.loading = false;
                 });
             },

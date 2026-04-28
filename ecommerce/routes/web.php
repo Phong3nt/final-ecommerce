@@ -214,6 +214,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // IMP-044: Icecat sync — update existing products with fresh Icecat data
     Route::post('/icecat/sync', [\App\Http\Controllers\Admin\IcecatController::class, 'sync'])->name('icecat.sync');
 
+    // IMP-045: Import by Icecat Product ID or EAN/product code (synchronous, per-item results)
+    Route::post('/icecat/import-by-id', [\App\Http\Controllers\Admin\IcecatController::class, 'importById'])->name('icecat.import-by-id');
+
     // PM-006: Admin product image management
     Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
     Route::post('/products/{product}/images', [AdminProductController::class, 'storeImages'])->name('products.images.store');
