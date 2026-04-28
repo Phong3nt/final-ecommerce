@@ -240,4 +240,75 @@ class AdminProductImageManagementTest extends TestCase
         $this->assertNull($product->images);
         $this->assertNull($product->image);
     }
+
+    // TC-14: Admin can upload additional images via the images page
+    public function test_pm006_admin_can_upload_additional_images(): void
+    {
+        $product = $this->makeProductWithImages(2);
+        $originalCount = count($product->images);
+
+        $response = $this->actingAs($this->makeAdmin())
+            ->post(route('admin.products.images.store', $product), [
+                'images' => [UploadedFile::fake()->image('extra.jpg')],
+            ]);
+
+        $response->assertRedirect(route('admin.products.images', $product));
+        $product->refresh();
+        $this->assertCount($originalCount + 1, $product->images);
+    }
+
+    // TC-15: storeImages preserves the existing thumbnail
+    public function test_pm006_store_images_preserves_existing_thumbnail(): void
+    {
+        $product = $this->makeProductWithImages(2);
+        $originalThumbnail = $product->image;
+
+        $this->actingAs($this->makeAdmin())
+            ->post(route('admin.products.images.store', $product), [
+                'images' => [UploadedFile::fake()->image('new.jpg')],
+            ]);
+
+        $product->refresh();
+        $this->assertEquals($originalThumbnail, $product->image);
+    }
+
+    // TC-16: storeImages on a product with no images sets first upload as thumbnail
+    public function test_pm006_store_images_on_empty_product_sets_thumbnail(): void
+    {
+        $product = Product::factory()->create(['images' => null, 'image' => null]);
+
+        $this->actingAs($this->makeAdmin())
+            ->post(route('admin.products.images.store', $product), [
+                'images' => [UploadedFile::fake()->image('first.jpg')],
+            ]);
+
+        $product->refresh();
+        $this->assertCount(1, $product->images);
+        $this->assertNotNull($product->image);
+        $this->assertEquals($product->images[0], $product->image);
+    }
+
+    // TC-17: storeImages requires at least one file
+    public function test_pm006_store_images_requires_files(): void
+    {
+        $product = $this->makeProductWithImages(1);
+
+        $response = $this->actingAs($this->makeAdmin())
+            ->post(route('admin.products.images.store', $product), []);
+
+        $response->assertSessionHasErrors('images');
+    }
+
+    // TC-18: Manage images page shows Add More Images upload form
+    public function test_pm006_images_page_shows_upload_form(): void
+    {
+        $product = $this->makeProductWithImages(1);
+
+        $response = $this->actingAs($this->makeAdmin())
+            ->get(route('admin.products.images', $product));
+
+        $response->assertOk();
+        $response->assertSee('Add More Images');
+        $response->assertSee(route('admin.products.images.store', $product));
+    }
 }

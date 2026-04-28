@@ -216,6 +216,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // PM-006: Admin product image management
     Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
+    Route::post('/products/{product}/images', [AdminProductController::class, 'storeImages'])->name('products.images.store');
     Route::post('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');
     Route::post('/products/{product}/images/thumbnail', [AdminProductController::class, 'setThumbnail'])->name('products.images.thumbnail');
     Route::delete('/products/{product}/images/{index}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy')->where('index', '[0-9]+');

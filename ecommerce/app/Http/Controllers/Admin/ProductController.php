@@ -284,6 +284,27 @@ class ProductController extends Controller
         return view('admin.products.images', compact('product'));
     }
 
+    public function storeImages(Request $request, Product $product): RedirectResponse
+    {
+        $request->validate([
+            'images'   => ['required', 'array', 'min:1'],
+            'images.*' => ['image', 'max:2048'],
+        ]);
+
+        $paths = $product->images ?? [];
+        foreach ($request->file('images') as $file) {
+            $paths[] = $file->store('products', config('filesystems.image_disk', 's3'));
+        }
+
+        $product->update([
+            'images' => $paths,
+            'image'  => $product->image ?? $paths[0],
+        ]);
+
+        return redirect()->route('admin.products.images', $product)
+            ->with('success', 'Images uploaded successfully.');
+    }
+
     public function reorderImages(Request $request, Product $product): RedirectResponse
     {
         $validated = $request->validate([
