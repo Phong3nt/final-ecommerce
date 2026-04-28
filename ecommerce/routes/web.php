@@ -274,6 +274,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // IMP-016: Consolidated audit log
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+    // IMP-048: Shipping Simulator [DEMO] sandbox
+    Route::get('/demo', [\App\Http\Controllers\Admin\DemoController::class, 'index'])->name('demo.index');
+    Route::post('/demo/simulate', [\App\Http\Controllers\Admin\DemoController::class, 'simulate'])->name('demo.simulate');
+    Route::get('/demo/status/{order}', [\App\Http\Controllers\Admin\DemoController::class, 'status'])->name('demo.status');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)

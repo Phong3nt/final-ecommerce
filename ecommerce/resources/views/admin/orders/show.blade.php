@@ -6,6 +6,65 @@
 
 @section('content')
     <div x-data x-init="$el.classList.add('fade-in')">
+
+        {{-- IMP-048: Demo banner + shipping sim progress --}}
+        @if ($order->is_demo)
+            <div class="alert alert-warning border-warning mb-3 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-cone-striped fs-5"></i>
+                <div><strong>[DEMO]</strong> This is a demo/sandbox order — excluded from revenue and analytics.</div>
+            </div>
+            <div class="card shadow-sm border-warning border-2 mb-3"
+                x-data="shipSimPoller('', '{{ route('admin.demo.status', $order->id) }}', '{{ $order->ship_sim_status }}')">
+                <div class="card-header bg-warning-subtle d-flex align-items-center justify-content-between border-0">
+                    <span class="fw-semibold"><i class="bi bi-truck me-1"></i> Shipping Simulation <span
+                            class="badge bg-warning text-dark ms-1">[DEMO]</span></span>
+                    <span class="text-muted small" x-text="isTerminal ? 'Completed' : 'Live'"></span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-0 overflow-auto pb-2">
+                        @php
+                            $simSteps = [
+                                ['payment_confirmed', 'Payment Confirmed', 'bi-check-circle'],
+                                ['preparing', 'Preparing Goods', 'bi-box-seam'],
+                                ['picked_up', 'Handed to Courier', 'bi-truck'],
+                                ['in_transit', 'On the Way', 'bi-geo-alt'],
+                                ['arrived', 'Arrived', 'bi-house-check'],
+                            ];
+                        @endphp
+                        @foreach ($simSteps as [$sKey, $sLabel, $sIcon])
+                            <div class="text-center flex-fill" style="min-width:80px">
+                                <div :class="{
+                                                'bg-success text-white border-success': stepDone('{{ $sKey }}') || (currentStatus === '{{ $sKey }}' && isTerminal && currentStatus !== 'incident'),
+                                                'bg-primary text-white border-primary': currentStatus === '{{ $sKey }}' && !isTerminal,
+                                                'bg-danger text-white border-danger': currentStatus === 'incident' && '{{ $sKey }}' === 'arrived',
+                                                'bg-white text-secondary border-secondary': !stepDone('{{ $sKey }}') && currentStatus !== '{{ $sKey }}'
+                                             }"
+                                    class="rounded-circle border d-inline-flex align-items-center justify-content-center"
+                                    style="width:36px;height:36px">
+                                    <i class="bi {{ $sIcon }}"></i>
+                                </div>
+                                <div class="mt-1" style="font-size:.7rem;font-weight:600">{{ $sLabel }}</div>
+                            </div>
+                            @if (!$loop->last)
+                                <div class="flex-shrink-0 align-self-start mt-3 px-1 text-muted"><i class="bi bi-arrow-right"></i></div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <template x-if="currentStatus === 'incident'">
+                        <div class="alert alert-danger mt-3 mb-0 py-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>[DEMO] Incident</strong> — refund triggered.
+                        </div>
+                    </template>
+                    <template x-if="currentStatus === 'delivered'">
+                        <div class="alert alert-success mt-3 mb-0 py-2">
+                            <i class="bi bi-bag-check me-1"></i> <strong>[DEMO] Delivered!</strong>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        @endif
+
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h5 class="mb-0">Order #{{ $order->id }}</h5>
@@ -187,12 +246,14 @@
                 <div class="d-flex justify-content-end mt-3">
                     <div style="min-width:240px;">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span>Subtotal</span><span>${{ number_format($order->subtotal, 2) }}</span></div>
+                            <span>Subtotal</span><span>${{ number_format($order->subtotal, 2) }}</span>
+                        </div>
                         <div class="d-flex justify-content-between small mb-1"><span>Shipping
                                 ({{ $order->shipping_label }})</span><span>${{ number_format($order->shipping_cost, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold border-top pt-2">
-                            <span>Total</span><span>${{ number_format($order->total, 2) }}</span></div>
+                            <span>Total</span><span>${{ number_format($order->total, 2) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -228,6 +289,40 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function shipSimPoller(_unused, statusUrl, initialStatus) {
+            const STEP_ORDER = ['payment_confirmed', 'preparing', 'picked_up', 'in_transit', 'arrived'];
+            const TERMINAL = ['delivered', 'incident'];
+            return {
+                currentStatus: initialStatus,
+                timer: null,
+                get isTerminal() { return TERMINAL.includes(this.currentStatus); },
+                init() {
+                    if (!this.isTerminal) {
+                        this.timer = setInterval(() => this.poll(), 3000);
+                    }
+                },
+                async poll() {
+                    try {
+                        const res = await fetch(statusUrl);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        this.currentStatus = data.ship_sim_status ?? this.currentStatus;
+                        if (this.isTerminal) clearInterval(this.timer);
+                    } catch (_) { }
+                },
+                stepDone(key) {
+                    const curIdx = STEP_ORDER.indexOf(this.currentStatus);
+                    const keyIdx = STEP_ORDER.indexOf(key);
+                    if (keyIdx === -1 || curIdx === -1) return false;
+                    return keyIdx < curIdx || (this.currentStatus === 'delivered' && keyIdx <= curIdx);
+                },
+            };
+        }
+    </script>
+@endpush
 
 @push('styles')
     <style>

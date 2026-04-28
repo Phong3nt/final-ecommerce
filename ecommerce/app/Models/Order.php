@@ -29,6 +29,10 @@ class Order extends Model
         'delivered_at',
         'cancelled_at',
         'refunded_at',
+        'is_demo',
+        'ship_sim_status',
+        'ship_sim_started_at',
+        'ship_sim_updated_at',
     ];
 
     protected $casts = [
@@ -42,7 +46,15 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'refunded_at' => 'datetime',
+        'is_demo' => 'boolean',
+        'ship_sim_started_at' => 'datetime',
+        'ship_sim_updated_at' => 'datetime',
     ];
+
+    public function scopeReal(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_demo', false);
+    }
 
     public function user(): BelongsTo
     {

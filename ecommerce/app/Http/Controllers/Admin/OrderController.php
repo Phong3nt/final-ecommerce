@@ -12,7 +12,7 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Order::with('user')->latest();
+        $query = Order::with('user')->where('is_demo', false)->latest();
 
         // Filter: status
         if ($request->filled('status')) {
@@ -62,7 +62,7 @@ class OrderController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $query = Order::with(['user', 'items'])->latest();
+        $query = Order::with(['user', 'items'])->where('is_demo', false)->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

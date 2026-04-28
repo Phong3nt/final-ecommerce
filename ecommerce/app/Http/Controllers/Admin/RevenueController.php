@@ -40,6 +40,7 @@ class RevenueController extends Controller
         // Gross revenue per period (revenue-status orders)
         $rangeEnd = $periods->last()->copy()->endOfDay();
         $grossRows = Order::whereIn('status', self::REVENUE_STATUSES)
+            ->where('is_demo', false)
             ->where('created_at', '>=', $periods->first())
             ->where('created_at', '<=', $rangeEnd)
             ->get(['total', 'created_at']);
@@ -52,6 +53,7 @@ class RevenueController extends Controller
 
         // Refunds per period — from refund_transactions joined via orders
         $refundRows = RefundTransaction::join('orders', 'refund_transactions.order_id', '=', 'orders.id')
+            ->where('orders.is_demo', false)
             ->where('orders.created_at', '>=', $periods->first())
             ->where('orders.created_at', '<=', $rangeEnd)
             ->get(['refund_transactions.amount', 'orders.created_at']);
@@ -213,6 +215,7 @@ class RevenueController extends Controller
             ->leftJoin('products', 'order_items.product_id', '=', 'products.id')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->whereIn('orders.status', self::REVENUE_STATUSES)
+            ->where('orders.is_demo', false)
             ->select([
                 'order_items.product_id',
                 DB::raw('MAX(order_items.product_name) as product_name'),
