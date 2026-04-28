@@ -6309,6 +6309,7 @@ returned `"0/0 products imported, 0 skipped"` despite valid credentials.
 <!-- EVAL-IMP-038 END -->
 
 <!-- EVAL-IMP-039 START -->
+
 ## EVAL-IMP-039 — Admin Products Bulk Status Change `[UIUX_MODE]`
 
 **Version:** A
@@ -6318,38 +6319,38 @@ returned `"0/0 products imported, 0 skipped"` despite valid credentials.
 
 ### Test Results
 
-| Test Case ID     | Scenario                                                        | Type     | Result  | Notes                              |
-| ---------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------------------- |
-| TC-IMP039-01     | Admin bulk-publishes selected products by ID                    | Happy    | PASS ✅ |                                    |
-| TC-IMP039-02     | Admin bulk-sets draft                                           | Happy    | PASS ✅ |                                    |
-| TC-IMP039-03     | Admin bulk-archives (soft-deletes) selected products            | Happy    | PASS ✅ |                                    |
-| TC-IMP039-04     | Admin selects all in category → publishes entire category       | Happy    | PASS ✅ |                                    |
-| TC-IMP039-05     | Admin selects all in category → archives entire category        | Happy    | PASS ✅ |                                    |
-| TC-IMP039-06     | Guest → redirect to login                                       | Security | PASS ✅ |                                    |
-| TC-IMP039-07     | Regular user → 403                                              | Security | PASS ✅ |                                    |
-| TC-IMP039-08     | Empty selection → validation error on `product_ids`             | Negative | PASS ✅ |                                    |
-| TC-IMP039-09     | Invalid bulk_action → validation error                          | Negative | PASS ✅ |                                    |
-| TC-IMP039-10     | Only selected products changed; others untouched                | Edge     | PASS ✅ |                                    |
-| TC-IMP039-11     | Category bulk does not affect other categories                  | Edge     | PASS ✅ |                                    |
-| TC-IMP039-12     | Success flash message contains the product count                | Edge     | PASS ✅ |                                    |
+| Test Case ID | Scenario                                                  | Type     | Result  | Notes |
+| ------------ | --------------------------------------------------------- | -------- | ------- | ----- |
+| TC-IMP039-01 | Admin bulk-publishes selected products by ID              | Happy    | PASS ✅ |       |
+| TC-IMP039-02 | Admin bulk-sets draft                                     | Happy    | PASS ✅ |       |
+| TC-IMP039-03 | Admin bulk-archives (soft-deletes) selected products      | Happy    | PASS ✅ |       |
+| TC-IMP039-04 | Admin selects all in category → publishes entire category | Happy    | PASS ✅ |       |
+| TC-IMP039-05 | Admin selects all in category → archives entire category  | Happy    | PASS ✅ |       |
+| TC-IMP039-06 | Guest → redirect to login                                 | Security | PASS ✅ |       |
+| TC-IMP039-07 | Regular user → 403                                        | Security | PASS ✅ |       |
+| TC-IMP039-08 | Empty selection → validation error on `product_ids`       | Negative | PASS ✅ |       |
+| TC-IMP039-09 | Invalid bulk_action → validation error                    | Negative | PASS ✅ |       |
+| TC-IMP039-10 | Only selected products changed; others untouched          | Edge     | PASS ✅ |       |
+| TC-IMP039-11 | Category bulk does not affect other categories            | Edge     | PASS ✅ |       |
+| TC-IMP039-12 | Success flash message contains the product count          | Edge     | PASS ✅ |       |
 
 **Summary:** 12 Passed · 0 Failed · 0 Skipped
 **Regression:** All 60 product management tests PASS ✅ · No regression.
 
 ### Quality Scores
 
-| Dimension     | Score | Comment                                                                            |
-| ------------- | ----- | ---------------------------------------------------------------------------------- |
+| Dimension     | Score | Comment                                                                              |
+| ------------- | ----- | ------------------------------------------------------------------------------------ |
 | Simplicity    | 5/5   | Single route, single controller method, Alpine state component — no new dependencies |
-| Security      | 5/5   | Auth+role guard, `Rule::in` whitelist, `intval` cast on IDs, CSRF form             |
-| Performance   | 5/5   | Bulk `update()` for status change (1 query); `each()->delete()` for soft-delete    |
-| Test Coverage | 5/5   | 12 cases: 3× happy, 2× security, 2× negative, 3× edge                              |
+| Security      | 5/5   | Auth+role guard, `Rule::in` whitelist, `intval` cast on IDs, CSRF form               |
+| Performance   | 5/5   | Bulk `update()` for status change (1 query); `each()->delete()` for soft-delete      |
+| Test Coverage | 5/5   | 12 cases: 3× happy, 2× security, 2× negative, 3× edge                                |
 
 ### Bugs / Side Effects Found
 
-| Bug ID | Description | Severity | Status |
-| ------ | ----------- | -------- | ------ |
-| —      | No bugs — all 12 tests passed on first run | — | — |
+| Bug ID | Description                                | Severity | Status |
+| ------ | ------------------------------------------ | -------- | ------ |
+| —      | No bugs — all 12 tests passed on first run | —        | —      |
 
 ### Technical Notes
 
@@ -6362,10 +6363,97 @@ returned `"0/0 products imported, 0 skipped"` despite valid credentials.
 
 ### Improvement Proposals
 
-| Proposal ID | Description                                                 | Benefit                              | Complexity |
-| ----------- | ----------------------------------------------------------- | ------------------------------------ | ---------- |
-| IMP-039.1   | Cross-page selection: persist selected IDs in `localStorage` so pagination doesn't reset the selection | Better bulk UX for large catalogs | Medium |
-| IMP-039.2   | Inline status dropdown per row (PATCH AJAX, no reload)      | Faster single-item status editing    | Low        |
+| Proposal ID | Description                                                                                            | Benefit                           | Complexity |
+| ----------- | ------------------------------------------------------------------------------------------------------ | --------------------------------- | ---------- |
+| IMP-039.1   | Cross-page selection: persist selected IDs in `localStorage` so pagination doesn't reset the selection | Better bulk UX for large catalogs | Medium     |
+| IMP-039.2   | Inline status dropdown per row (PATCH AJAX, no reload)                                                 | Faster single-item status editing | Low        |
 
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
 <!-- EVAL-IMP-039 END -->
+
+---
+
+<!-- EVAL-IMP-040 START -->
+
+## EVAL-IMP-040 — Admin Products AJAX Category Filter `[UIUX_MODE]`
+
+**Date:** 2026-04-28
+**Linked Task:** [IMP-040](backlog.md)
+**Git Tag:** v1.0-IMP-040-stable
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                                   | Result  |
+| ----- | --------------------------------------------------------------------------------------------- | ------- |
+| TC-01 | Admin gets JSON with required keys (rows_html, pagination_html, total, page_ids, category_id) | ✅ PASS |
+| TC-02 | No category filter returns all products in rows_html                                          | ✅ PASS |
+| TC-03 | Category filter narrows rows_html to matching products only                                   | ✅ PASS |
+| TC-04 | `total` reflects category filter count                                                        | ✅ PASS |
+| TC-05 | `page_ids` contains IDs of products on current page                                           | ✅ PASS |
+| TC-06 | rows_html is a partial (no `<html>` or `<!DOCTYPE`)                                           | ✅ PASS |
+| TC-07 | Empty category returns total=0 and no-products message                                        | ✅ PASS |
+| TC-08 | `pagination_html` is present and non-null                                                     | ✅ PASS |
+| TC-09 | Guest is redirected to login                                                                  | ✅ PASS |
+| TC-10 | Regular user gets 403                                                                         | ✅ PASS |
+| TC-11 | Pagination links do NOT include `_ajax` parameter                                             | ✅ PASS |
+| TC-12 | Response `category_id` matches filter sent                                                    | ✅ PASS |
+
+**Total: 12/12 PASS**
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                                              |
+| ----------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | No new dependencies; pure Alpine.js + PHP. Single controller method handles both modes.                                            |
+| Security    | 5/5   | Endpoint behind `auth + role:admin` middleware. No new attack surface. No XSS risk (server-rendered HTML, not client-eval).        |
+| Performance | 4/5   | Renders Blade partial per request — acceptable for admin UI. Pagination links stripped of `_ajax` to avoid accidental double-AJAX. |
+| Coverage    | 5/5   | 12 tests covering happy path, filter narrowing, partial structure, auth, edge cases (empty category, pagination).                  |
+
+---
+
+### C. Impact Check
+
+| Feature Tested      | Test Class                              | Result           |
+| ------------------- | --------------------------------------- | ---------------- |
+| IMP-039 Bulk Status | AdminProductBulkStatusTest (12)         | ✅ No regression |
+| IMP-040 AJAX Filter | AdminProductAjaxCategoryFilterTest (12) | ✅ 12/12 PASS    |
+
+---
+
+### D. Bugs / Side Effects
+
+| #   | Description                                                                       | Severity | Resolution                                                                                  |
+| --- | --------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| 1   | `data-confirm` archive forms in dynamically injected rows lose JS confirm handler | Low      | Re-bound in `filterByCategory` callback using `_confirmBound` flag guard                    |
+| 2   | Pagination links would include `_ajax=1` if not stripped                          | Medium   | Fixed: controller calls `$products->appends($appends)` with only `category_id`, not `_ajax` |
+
+---
+
+### E. Technical Notes
+
+- **Architecture:** `index()` now returns `View|JsonResponse`. The `_ajax=1` param switches between full view and JSON partial. No new route needed.
+- **Partial view:** `admin/products/_rows.blade.php` extracted from index — contains only `@forelse` tbody rows. Used by both initial render (`@include`) and AJAX response (`view()->render()`).
+- **Alpine state:** `productListAdmin()` signature extended to 4 params (`initTotal, initHasCategoryFilter, initPageIds, initCategoryId`). Computed getters updated to use `this.totalInFilter` etc. instead of closed-over params, enabling reactivity after AJAX updates.
+- **Pagination URL safety:** `$products->appends(['category_id' => $categoryId])` ensures pagination page links use only `?category_id=X&page=N`, never `?_ajax=1&...`.
+- **IMP-039 compatibility:** Bulk action bar, "Select all in category" banner, and bulk form all remain functional. `currentCategoryId` and `totalInFilter` in Alpine state update after each AJAX filter, so the banner count stays accurate.
+- **No new npm packages, no Livewire, no Vue** — purely Alpine.js 3 + PHP partial view.
+- **Regression:** IMP-039 bulk status tests (12/12) and full product admin test suite unchanged.
+
+---
+
+### F. Improvement Proposals
+
+| Proposal ID | Description                                                                                        | Benefit                  | Priority |
+| ----------- | -------------------------------------------------------------------------------------------------- | ------------------------ | -------- |
+| IMP-040.1   | Push category filter state to URL via History API `pushState` so the URL is shareable/bookmarkable | Better deep-linking UX   | Low      |
+| IMP-040.2   | Debounce the category filter change by ~150ms to prevent rapid fire if user selects quickly        | Avoid redundant requests | Low      |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-040 END -->

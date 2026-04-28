@@ -78,36 +78,41 @@
         </div>
     </div>
 
-    {{-- Category filter --}}
-    <form method="GET" action="{{ route('admin.products.index') }}" class="d-flex align-items-center gap-2 mb-3">
-        <label for="category_id" class="fw-semibold small mb-0">Filter by category:</label>
-        <select name="category_id" id="category_id" class="form-select form-select-sm" style="max-width:200px;">
-            <option value="">All categories</option>
-            @foreach($categories as $cat)
-                <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                    {{ $cat->name }}
-                </option>
-            @endforeach
-        </select>
-        <button type="submit" class="btn btn-outline-secondary btn-sm">Filter</button>
-        @if(request('category_id'))
-            <a href="{{ route('admin.products.index') }}" class="btn btn-link btn-sm p-0">Clear</a>
-        @endif
-    </form>
-
-    {{-- IMP-039: Bulk select + IMP-013 sort unified wrapper --}}
+    {{-- IMP-040 + IMP-039 + IMP-013: Unified Alpine wrapper (AJAX category filter + bulk actions + table sort) --}}
     <div x-data="productListAdmin(
             {{ $products->total() }},
             {{ request('category_id') ? 'true' : 'false' }},
-            {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }}
+            {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }},
+            {{ request('category_id') ?? 'null' }}
         )">
+
+        {{-- IMP-040: Category filter (AJAX — no page reload, no URL change, table only) --}}
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <label for="category_id" class="fw-semibold small mb-0">Filter by category:</label>
+            <select id="category_id" class="form-select form-select-sm" style="max-width:200px;"
+                    :disabled="loading"
+                    @change="filterByCategory($event.target.value)">
+                <option value="">All categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                        {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
+            <span x-show="loading" x-cloak
+                  class="spinner-border spinner-border-sm text-secondary" role="status"
+                  aria-label="Loading products…"></span>
+            <button type="button" class="btn btn-link btn-sm p-0"
+                    x-show="currentCategoryId" x-cloak
+                    @click="filterByCategory('')">Clear</button>
+        </div>
 
         {{-- Hidden bulk-submit form (populated dynamically by Alpine) --}}
         <form method="POST" action="{{ route('admin.products.bulkStatus') }}" x-ref="bulkForm">
             @csrf
             <input type="hidden" name="bulk_action" x-ref="bulkActionInput" value="">
             <input type="hidden" name="select_all_in_category" x-ref="bulkAllInCat" value="0">
-            <input type="hidden" name="bulk_category_id" value="{{ request('category_id', '') }}">
+            <input type="hidden" name="bulk_category_id" :value="currentCategoryId || ''">
             <template x-for="id in (allInCategory ? [] : selected)" :key="id">
                 <input type="hidden" name="product_ids[]" :value="id">
             </template>
@@ -122,7 +127,7 @@
                     <span> &mdash;
                         <button type="button" class="btn btn-link btn-sm p-0"
                                 @click="selectAllInCategory()">
-                            Select all {{ $products->total() }} in this category
+                            Select all <span x-text="totalInFilter"></span> in this category
                         </button>
                     </span>
                 </template>
@@ -181,49 +186,15 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($products as $product)
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" class="form-check-input"
-                                               data-product-id="{{ $product->id }}"
-                                               :checked="selected.includes('{{ $product->id }}')"
-                                               @change="toggleRow('{{ $product->id }}')">
-                                    </td>
-                                    <td>{{ $product->id }}</td>
-                                    <td>{{ $product->name }}</td>
-                                    <td>${{ number_format($product->price, 2) }}</td>
-                                    <td>{{ $product->stock }}</td>
-                                    <td>{{ $product->category?->name ?? '—' }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $product->status === 'published' ? 'success' : 'secondary' }}">
-                                            {{ ucfirst($product->status) }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $product->created_at->format('Y-m-d') }}</td>
-                                    <td>
-                                        <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
-                                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
-                                            style="display:inline"
-                                            data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm ms-1">Archive</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">No products yet.</td>
-                                </tr>
-                            @endforelse
+                        <tbody id="products-tbody">
+                            @include('admin.products._rows')
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="mt-3">{{ $products->links() }}</div>
+        <div class="mt-3" id="products-pagination">{{ $products->links() }}</div>
     </div>
 </div>
 
@@ -307,27 +278,69 @@
 
 @push('scripts')
 <script>
-    // IMP-039 + IMP-013: unified Alpine component for product list admin
-    function productListAdmin(totalInFilter, hasCategoryFilter, pageIds) {
+    // IMP-040 + IMP-039 + IMP-013: unified Alpine component for admin product list
+    function productListAdmin(initTotal, initHasCategoryFilter, initPageIds, initCategoryId) {
         return {
-            // ─── selection state ─────────────────────────────────────
+            // ─── AJAX filter state (IMP-040) ──────────────────────
+            totalInFilter:     initTotal,
+            hasCategoryFilter: initHasCategoryFilter,
+            pageIds:           initPageIds,
+            currentCategoryId: initCategoryId,
+            loading:           false,
+
+            // ─── selection state (IMP-039) ────────────────────────
             selected: [],             // array of string IDs checked on current page
             allInCategory: false,     // true when user chose "select all in category"
 
-            // ─── sort state (IMP-013) ──────────────────────────────
+            // ─── sort state (IMP-013) ─────────────────────────────
             sortCol: null, sortDir: 'asc',
 
             // ─── computed ─────────────────────────────────────────
             get hasSelection()        { return this.allInCategory || this.selected.length > 0; },
-            get selectionCount()      { return this.allInCategory ? totalInFilter : this.selected.length; },
-            get isAllPageChecked()    { return pageIds.length > 0 && pageIds.every(id => this.selected.includes(id)); },
-            // Show "select all N in category" banner only when: a category filter is active,
-            // all items on this page are checked, and not already in all-category mode.
+            get selectionCount()      { return this.allInCategory ? this.totalInFilter : this.selected.length; },
+            get isAllPageChecked()    { return this.pageIds.length > 0 && this.pageIds.every(id => this.selected.includes(id)); },
+            // Show "select all N in category" banner: category active, all page checked, not already in bulk-all mode
             get showSelectAllBanner() {
-                return hasCategoryFilter && !this.allInCategory && this.isAllPageChecked;
+                return this.hasCategoryFilter && !this.allInCategory && this.isAllPageChecked;
             },
 
-            // ─── selection actions ────────────────────────────────
+            // ─── IMP-040: AJAX category filter ────────────────────
+            filterByCategory(catId) {
+                this.loading = true;
+                this.selected = [];
+                this.allInCategory = false;
+                const url = '/admin/products?_ajax=1' + (catId ? '&category_id=' + encodeURIComponent(catId) : '');
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || '',
+                    },
+                })
+                .then(r => { if (!r.ok) { this.loading = false; return null; } return r.json(); })
+                .then(data => {
+                    if (!data) return;
+                    document.getElementById('products-tbody').innerHTML      = data.rows_html;
+                    document.getElementById('products-pagination').innerHTML = data.pagination_html;
+                    this.totalInFilter     = data.total;
+                    this.pageIds           = data.page_ids;
+                    this.currentCategoryId = catId || null;
+                    this.hasCategoryFilter = !!catId;
+                    this.loading           = false;
+                    // Re-bind archive confirm dialogs on newly injected rows
+                    document.querySelectorAll('#products-tbody form[data-confirm]').forEach(function (form) {
+                        if (!form._confirmBound) {
+                            form._confirmBound = true;
+                            form.addEventListener('submit', function (e) {
+                                if (!confirm(form.dataset.confirm)) { e.preventDefault(); }
+                            });
+                        }
+                    });
+                })
+                .catch(() => { this.loading = false; });
+            },
+
+            // ─── selection actions (IMP-039) ──────────────────────
             toggleRow(id) {
                 this.allInCategory = false;
                 const idx = this.selected.indexOf(id);
@@ -336,19 +349,19 @@
             },
             toggleAll(checked) {
                 this.allInCategory = false;
-                this.selected = checked ? [...pageIds] : [];
+                this.selected = checked ? [...this.pageIds] : [];
             },
             selectAllInCategory() { this.allInCategory = true; },
             clearSelection()      { this.selected = []; this.allInCategory = false; },
 
-            // ─── bulk submit ───────────────────────────────────────
+            // ─── bulk submit (IMP-039) ─────────────────────────────
             submitBulk(action) {
                 this.$refs.bulkActionInput.value = action;
                 this.$refs.bulkAllInCat.value = this.allInCategory ? '1' : '0';
                 this.$refs.bulkForm.submit();
             },
 
-            // ─── sort (IMP-013) ─────────────────────────────────────
+            // ─── sort (IMP-013) ───────────────────────────────────
             sort(colIndex, type) {
                 if (this.sortCol === colIndex) { this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'; }
                 else { this.sortCol = colIndex; this.sortDir = 'asc'; }

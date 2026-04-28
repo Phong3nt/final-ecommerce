@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImport;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,14 +18,28 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
-        $categoryId = request('category_id');
+        $categoryId = $request->integer('category_id') ?: null;
         $products = Product::with('category')
-            ->when($categoryId, fn($q) => $q->where('category_id', (int) $categoryId))
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()->paginate(20);
         $categories = Category::orderBy('name')->get();
         $imports = ProductImport::with('user')->latest()->limit(10)->get();
+
+        // IMP-040: AJAX category filter — return JSON with rendered rows + pagination only
+        if ($request->boolean('_ajax')) {
+            $appends = $categoryId ? ['category_id' => $categoryId] : [];
+            $products->appends($appends);
+
+            return response()->json([
+                'rows_html'       => view('admin.products._rows', compact('products'))->render(),
+                'pagination_html' => $products->links()->toHtml(),
+                'total'           => $products->total(),
+                'page_ids'        => $products->pluck('id')->map(fn($id) => (string) $id)->values()->toArray(),
+                'category_id'     => $categoryId,
+            ]);
+        }
 
         return view('admin.products.index', compact('products', 'categories', 'imports'));
     }
