@@ -192,4 +192,31 @@ class ProfileTest extends TestCase
 
         $this->assertLessThan(2.0, $elapsed, 'Profile update exceeded 2 seconds.');
     }
+
+    // TC-13 (IMP-041): Profile page shows the Card Vault section heading and Add Card button
+    public function test_imp041_profile_page_shows_card_vault_section(): void
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertStatus(200)
+            ->assertSee('Saved Cards')
+            ->assertSee('Add Card');
+    }
+
+    // TC-14 (IMP-041): Add New Card modal markup is present in server-rendered response
+    // (x-teleport wraps the modal in a <template> tag; Alpine moves it to <body> at runtime,
+    //  but the text content is still present in the raw HTML for assertSee)
+    public function test_imp041_add_card_modal_markup_present_in_response(): void
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertStatus(200)
+            ->assertSee('Add New Card')
+            ->assertSee('Save Card')
+            ->assertSee('setup-element');
+    }
 }
