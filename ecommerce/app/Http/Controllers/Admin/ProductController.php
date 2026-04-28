@@ -24,16 +24,29 @@ class ProductController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $categoryId = $request->integer('category_id') ?: null;
+        $brandId    = $request->integer('brand_id') ?: null;
+        $search     = trim($request->input('search', ''));
+
         /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
         $products = Product::with(['category', 'brand'])
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($brandId,    fn($q) => $q->where('brand_id', $brandId))
+            ->when($search !== '', fn($q) => $q->where(fn($q2) => $q2
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%")))
             ->latest()->paginate(20);
         $categories = Category::orderBy('name')->get();
+        $brands     = Brand::orderBy('name')->get();
         $imports = ProductImport::with('user')->latest()->limit(10)->get();
 
         // IMP-040: AJAX category filter — return JSON with rendered rows + pagination only
         if ($request->boolean('_ajax')) {
-            $appends = $categoryId ? ['category_id' => $categoryId] : [];
+            $appends = array_filter([
+                'category_id' => $categoryId,
+                'brand_id'    => $brandId,
+                'search'      => $search ?: null,
+            ]);
             $products->appends($appends);
 
             return response()->json([
@@ -42,10 +55,12 @@ class ProductController extends Controller
                 'total'           => $products->total(),
                 'page_ids'        => $products->pluck('id')->map(fn($id) => (string) $id)->values()->toArray(),
                 'category_id'     => $categoryId,
+                'brand_id'        => $brandId,
+                'search'          => $search,
             ]);
         }
 
-        return view('admin.products.index', compact('products', 'categories', 'imports'));
+        return view('admin.products.index', compact('products', 'categories', 'brands', 'imports'));
     }
 
     public function import(Request $request): RedirectResponse

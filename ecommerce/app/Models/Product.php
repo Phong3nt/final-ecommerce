@@ -125,6 +125,10 @@ class Product extends Model
             $query->where('category_id', (int) $filters['category']);
         }
 
+        if (!empty($filters['brand'])) {
+            $query->where('brand_id', (int) $filters['brand']);
+        }
+
         if (isset($filters['min_price']) && $filters['min_price'] !== '') {
             $query->where('price', '>=', (float) $filters['min_price']);
         }
@@ -135,6 +139,14 @@ class Product extends Model
 
         if (isset($filters['min_rating']) && $filters['min_rating'] !== '') {
             $query->where('rating', '>=', (float) $filters['min_rating']);
+        }
+
+        if (!empty($filters['search'])) {
+            $term = $filters['search'];
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                  ->orWhere('description', 'like', "%{$term}%");
+            });
         }
 
         return $query;

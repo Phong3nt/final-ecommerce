@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -22,7 +23,7 @@ class ProductController extends Controller
 
     public function index(Request $request): View
     {
-        $filters = $request->only(['category', 'min_price', 'max_price', 'min_rating', 'sort']);
+        $filters = $request->only(['category', 'brand', 'min_price', 'max_price', 'min_rating', 'sort', 'search']);
         $sort    = $filters['sort'] ?? 'newest';
         $page    = (int) $request->input('page', 1);
         $version = self::catalogVersion();
@@ -32,6 +33,13 @@ class ProductController extends Controller
             'catalog.cats.' . $version,
             now()->addMinutes(30),
             fn () => Category::orderBy('name')->get()
+        );
+
+        // IMP-047: brand list for filter sidebar
+        $brands = Cache::remember(
+            'catalog.brands.' . $version,
+            now()->addMinutes(30),
+            fn () => Brand::orderBy('name')->get()
         );
 
         // IMP-014: cache paginated product list keyed by version + page + filters
@@ -47,7 +55,7 @@ class ProductController extends Controller
                 ->withQueryString()
         );
 
-        return view('products.index', compact('products', 'filters', 'categories'));
+        return view('products.index', compact('products', 'filters', 'categories', 'brands'));
     }
 
     public function show(Product $product): View
