@@ -415,14 +415,14 @@
         <article class="product-detail">
             {{-- IMP-010: Lightbox + zoom gallery --}}
             <div class="product-images" x-data="imp010Lightbox({
-                         mainImage: @json($product->image ? asset('storage/' . $product->image) : null),
-                         images: @json(collect($product->images ?? [])->map(fn($p) => asset('storage/' . $p))->values()->all()),
-                         alt: @json($product->name)
-                     })">
+                             mainImage: @json($product->imageUrl),
+                             images: @json($product->imagesUrls),
+                             alt: @json($product->name)
+                         })">
                 @if ($product->image)
                     <div class="imp010-main-wrapper">
-                        <img src="{{ asset('storage/' . $product->image) }}" :src="currentImage" alt="{{ $product->name }}"
-                            :alt="alt" class="product-main-image imp010-main-img" @click="openLightbox(currentImage)"
+                        <img src="{{ $product->imageUrl }}" :src="currentImage" alt="{{ $product->name }}" :alt="alt"
+                            class="product-main-image imp010-main-img" @click="openLightbox(currentImage)"
                             data-imp010="main-image">
                     </div>
                     <template x-if="allImages.length > 1">
@@ -496,12 +496,12 @@
 
                 @if ($product->stock > 0)
                     <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
-                                                         productId: {{ $product->id }},
-                                                         productName: @json($product->name),
-                                                         productPrice: {{ (float) $product->price }},
-                                                         productSlug: @json($product->slug),
-                                                         cartStoreUrl: '{{ route('cart.store') }}'
-                                                     })">
+                                                                 productId: {{ $product->id }},
+                                                                 productName: @json($product->name),
+                                                                 productPrice: {{ (float) $product->price }},
+                                                                 productSlug: @json($product->slug),
+                                                                 cartStoreUrl: '{{ route('cart.store') }}'
+                                                             })">
                         <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
                             x-on:submit.prevent="submit">
                             @csrf
@@ -533,7 +533,7 @@
                     @foreach ($related as $item)
                         <div class="product-card">
                             @if ($item->image)
-                                <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->name }}">
+                                <img src="{{ $item->imageUrl }}" alt="{{ $item->name }}">
                             @endif
                             <h3>
                                 @if ($item->slug)

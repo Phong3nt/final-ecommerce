@@ -55,6 +55,35 @@ class Product extends Model
         return 'slug';
     }
 
+    /**
+     * Resolve a product image path or external URL to a display-ready URL.
+     * Icecat-imported products store full HTTPS URLs; manually uploaded products
+     * store a local storage path (e.g. "products/abc.jpg").
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image);
+    }
+
+    /**
+     * Resolve all product images (array) to display-ready URLs.
+     */
+    public function getImagesUrlsAttribute(): array
+    {
+        return collect($this->images ?? [])->map(function (string $path) {
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path;
+            }
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        })->values()->all();
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

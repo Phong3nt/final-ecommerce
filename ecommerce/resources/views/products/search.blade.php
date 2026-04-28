@@ -41,11 +41,11 @@
                             class="card card-hover shadow-sm border-0 h-100 text-decoration-none text-reset">
                             <div class="overflow-hidden rounded-top-3" style="height:220px;">
                                 @if ($product->image)
-                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-100 h-100"
+                                    <img src="{{ $product->imageUrl }}" alt="{{ $product->name }}" class="w-100 h-100"
                                         style="object-fit:cover;">
                                 @else
                                     <div class="w-100 h-100 bg-light d-flex align-items-center
-                                                                            justify-content-center">
+                                                                                            justify-content-center">
                                         <i class="bi bi-box-seam fs-1 text-muted"></i>
                                     </div>
                                 @endif
