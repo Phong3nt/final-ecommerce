@@ -13,6 +13,10 @@
                     data-bs-toggle="modal" data-bs-target="#icecatImportModal">
                 <i class="bi bi-cloud-download me-1"></i> Import from Icecat
             </button>
+            <button type="button" class="btn btn-outline-info btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#icecatSyncModal">
+                <i class="bi bi-arrow-repeat me-1"></i> Sync from Icecat
+            </button>
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> New Product
             </a>
@@ -264,6 +268,74 @@
         </div>
     </div>
 </div>
+
+{{-- IMP-044: Icecat Sync Modal --}}
+<div class="modal fade" id="icecatSyncModal" tabindex="-1"
+     aria-labelledby="icecatSyncModalLabel" aria-hidden="true"
+     x-data="icecatSyncModal()">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="icecatSyncModalLabel">
+                    <i class="bi bi-arrow-repeat me-2"></i>Sync from Icecat
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">
+                    Fetches fresh data from Icecat and updates <strong>name, description, specs,
+                    and images</strong> for existing products where Icecat data is newer.<br>
+                    <strong>Stock, price, and status are never changed.</strong>
+                    Published products are always skipped.
+                </p>
+
+                {{-- Category multi-select --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Categories</label>
+                    <div class="row g-2">
+                        @foreach(['Laptops','Smartphones','Smartwatches','Tablets','Headphones & Headsets','Battery Chargers','Electronics'] as $cat)
+                        <div class="col-6 col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input icecat-sync-cat-check" type="checkbox"
+                                       name="categories[]" value="{{ $cat }}"
+                                       id="sync_cat_{{ Str::slug($cat) }}" checked>
+                                <label class="form-check-label" for="sync_cat_{{ Str::slug($cat) }}">{{ $cat }}</label>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- EAN count --}}
+                <div class="mb-3" style="max-width:200px">
+                    <label for="icecatSyncLimitInput" class="form-label fw-semibold">EANs per category</label>
+                    <input type="number" id="icecatSyncLimitInput" class="form-control form-control-sm"
+                           x-model="limit" min="1" max="50" value="20">
+                    <div class="form-text">Max 50</div>
+                </div>
+
+                {{-- Progress log --}}
+                <div x-show="log.length > 0" class="mt-3">
+                    <label class="form-label fw-semibold">Progress</label>
+                    <div class="border rounded bg-light p-2" style="max-height:160px;overflow-y:auto;font-size:.8rem;font-family:monospace">
+                        <template x-for="(line, i) in log" :key="i">
+                            <div x-text="line"></div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-info btn-sm text-white"
+                        @click="startSync"
+                        :disabled="loading">
+                    <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span x-text="loading ? 'Queuing…' : 'Start Sync'">Start Sync</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -439,6 +511,42 @@
                 this.loading = true;
                 this.log = ['Sending request…'];
                 fetch('{{ route('admin.icecat.import') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ categories: checked, limit: this.limit }),
+                })
+                .then(r => r.json())
+                .then(data => {
+                    this.log.push(data.message ?? 'Done.');
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.log.push('Request failed. Check server logs.');
+                    this.loading = false;
+                });
+            },
+        };
+    }
+
+    // IMP-044: Icecat Sync Modal Alpine component
+    function icecatSyncModal() {
+        return {
+            limit: 20,
+            loading: false,
+            log: [],
+            startSync() {
+                const checked = [...document.querySelectorAll('.icecat-sync-cat-check:checked')].map(c => c.value);
+                if (checked.length === 0) {
+                    alert('Please select at least one category.');
+                    return;
+                }
+                this.loading = true;
+                this.log = ['Sending request…'];
+                fetch('{{ route('admin.icecat.sync') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

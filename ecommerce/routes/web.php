@@ -211,6 +211,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // IMP-038: Icecat API auto-import trigger
     Route::post('/icecat/import', [\App\Http\Controllers\Admin\IcecatController::class, 'import'])->name('icecat.import');
 
+    // IMP-044: Icecat sync — update existing products with fresh Icecat data
+    Route::post('/icecat/sync', [\App\Http\Controllers\Admin\IcecatController::class, 'sync'])->name('icecat.sync');
+
     // PM-006: Admin product image management
     Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
     Route::post('/products/{product}/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');

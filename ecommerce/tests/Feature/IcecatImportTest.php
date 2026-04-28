@@ -74,33 +74,38 @@ class IcecatImportTest extends TestCase
         string $title = 'Test Laptop Pro',
         string $brand = 'TestBrand',
         string $family = 'ProLine',
-        string $image = 'https://images.icecat.us/img/test.jpg'
+        string $image = 'https://images.icecat.us/img/test.jpg',
+        string $updatedAt = ''
     ): array {
-        return [
-            'data' => [
-                'GeneralInfo' => [
-                    'Title'  => $title,
-                    'Brand'  => $brand,
-                    'SummaryDescription' => [
-                        'LongSummaryDescription' => 'Long description text.',
-                    ],
-                    'Category' => ['Name' => ['Value' => 'Laptops']],
-                    'ProductFamily' => ['Value' => $family],
+        $data = [
+            'GeneralInfo' => [
+                'Title'  => $title,
+                'Brand'  => $brand,
+                'SummaryDescription' => [
+                    'LongSummaryDescription' => 'Long description text.',
                 ],
-                'HighImg'       => $image,
-                'FeaturesGroups' => [
-                    [
-                        'Features' => [
-                            ['Feature' => ['Name' => ['Value' => 'Processor']], 'LocalValue' => ['Value' => 'Intel Core i7']],
-                            ['Feature' => ['Name' => ['Value' => 'Display size']], 'LocalValue' => ['Value' => '15.6"']],
-                            ['Feature' => ['Name' => ['Value' => 'Weight']], 'LocalValue' => ['Value' => '1.8 kg']],
-                            ['Feature' => ['Name' => ['Value' => 'Storage']], 'LocalValue' => ['Value' => '512 GB SSD']],
-                            ['Feature' => ['Name' => ['Value' => 'Color']], 'LocalValue' => ['Value' => 'Silver']],
-                        ],
+                'Category' => ['Name' => ['Value' => 'Laptops']],
+                'ProductFamily' => ['Value' => $family],
+            ],
+            'HighImg'       => $image,
+            'FeaturesGroups' => [
+                [
+                    'Features' => [
+                        ['Feature' => ['Name' => ['Value' => 'Processor']], 'LocalValue' => ['Value' => 'Intel Core i7']],
+                        ['Feature' => ['Name' => ['Value' => 'Display size']], 'LocalValue' => ['Value' => '15.6"']],
+                        ['Feature' => ['Name' => ['Value' => 'Weight']], 'LocalValue' => ['Value' => '1.8 kg']],
+                        ['Feature' => ['Name' => ['Value' => 'Storage']], 'LocalValue' => ['Value' => '512 GB SSD']],
+                        ['Feature' => ['Name' => ['Value' => 'Color']], 'LocalValue' => ['Value' => 'Silver']],
                     ],
                 ],
             ],
         ];
+
+        if ($updatedAt !== '') {
+            $data['Updated'] = $updatedAt;
+        }
+
+        return ['data' => $data];
     }
 
     // ── TC-01 ────────────────────────────────────────────────────────────────
@@ -563,5 +568,161 @@ class IcecatImportTest extends TestCase
         // Draft product stock must still be 55
         $draft = Product::where('sku', 'EAN-DRAFT')->first();
         $this->assertSame(55, $draft->stock);
+    }
+
+    // ── TC-23 (IMP-044) ──────────────────────────────────────────────────────
+
+    /** TC-23: SyncProductsIcecatJob implements ShouldQueue. */
+    public function test_imp044_tc23_sync_job_implements_should_queue(): void
+    {
+        $this->assertInstanceOf(
+            \Illuminate\Contracts\Queue\ShouldQueue::class,
+            new \App\Jobs\SyncProductsIcecatJob()
+        );
+    }
+
+    // ── TC-24 (IMP-044) ──────────────────────────────────────────────────────
+
+    /**
+     * TC-24: sync() updates safe fields when Icecat data is newer.
+     * Stock, price, and status must never change.
+     */
+    public function test_imp044_tc24_sync_updates_draft_when_icecat_is_newer(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+        $product  = Product::factory()->create([
+            'name'          => 'Test Laptop Pro',
+            'sku'           => '5901234123457',
+            'status'        => 'draft',
+            'stock'         => 88,
+            'price'         => 999.00,
+            'category_id'   => $category->id,
+            'import_source' => 'icecat',
+            'updated_at'    => now()->subYear(),   // DB row is old
+        ]);
+
+        // Icecat reports a very recent update
+        $futureDate = now()->addDay()->toIso8601String();
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(
+                    title: 'Test Laptop Pro',
+                    updatedAt: $futureDate
+                ), 200),
+        ]);
+
+        $result = (new IcecatImportService())->sync('Laptops', 1);
+
+        // Fields must be refreshed
+        $product->refresh();
+        $this->assertSame('icecat', $product->import_source);
+
+        // Stock and price must be untouched
+        $this->assertSame(88, $product->stock);
+        $this->assertEquals(999.00, $product->price);
+
+        // Status must be untouched
+        $this->assertSame('draft', $product->status);
+
+        // Report
+        $this->assertSame(1, $result['updated']);
+    }
+
+    // ── TC-25 (IMP-044) ──────────────────────────────────────────────────────
+
+    /**
+     * TC-25: sync() skips a product when Icecat data is NOT newer (up-to-date).
+     */
+    public function test_imp044_tc25_sync_skips_when_icecat_is_not_newer(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+        Product::factory()->create([
+            'name'        => 'Test Laptop Pro',
+            'sku'         => '5901234123457',
+            'status'      => 'draft',
+            'stock'       => 30,
+            'category_id' => $category->id,
+            'updated_at'  => now(),   // DB row is fresh
+        ]);
+
+        // Icecat reports an old update date (older than DB row)
+        $oldDate = now()->subYear()->toIso8601String();
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(updatedAt: $oldDate), 200),
+        ]);
+
+        $result = (new IcecatImportService())->sync('Laptops', 1);
+
+        $this->assertSame(1, $result['skipped_up_to_date']);
+        $this->assertSame(0, $result['updated']);
+    }
+
+    // ── TC-26 (IMP-044) ──────────────────────────────────────────────────────
+
+    /** TC-26: sync() skips published products (skipped_published). */
+    public function test_imp044_tc26_sync_skips_published_products(): void
+    {
+        $category = Category::firstOrCreate(['name' => 'Laptops'], ['slug' => 'laptops']);
+        Product::factory()->create([
+            'name'        => 'Test Laptop Pro',
+            'sku'         => '5901234123457',
+            'status'      => 'published',
+            'stock'       => 5,
+            'category_id' => $category->id,
+        ]);
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(), 200),
+        ]);
+
+        $result = (new IcecatImportService())->sync('Laptops', 1);
+
+        $this->assertSame(1, $result['skipped_published']);
+        $this->assertSame(0, $result['updated']);
+    }
+
+    // ── TC-27 (IMP-044) ──────────────────────────────────────────────────────
+
+    /** TC-27: sync() creates a new draft product for EANs not in DB (new_added). */
+    public function test_imp044_tc27_sync_creates_new_product_for_unknown_ean(): void
+    {
+        $this->assertDatabaseMissing('products', ['sku' => '5901234123457']);
+
+        Http::fake([
+            'live.icecat.biz/*' => Http::sequence()
+                ->push($this->fakeSearchResponse(), 200)
+                ->push($this->fakeDetailResponse(), 200),
+        ]);
+
+        $result = (new IcecatImportService())->sync('Laptops', 1);
+
+        $this->assertDatabaseHas('products', ['sku' => '5901234123457', 'status' => 'draft']);
+        $this->assertSame(1, $result['new_added']);
+    }
+
+    // ── TC-28 (IMP-044) ──────────────────────────────────────────────────────
+
+    /** TC-28: POST /admin/icecat/sync dispatches SyncProductsIcecatJob for each category. */
+    public function test_imp044_tc28_admin_post_sync_dispatches_job(): void
+    {
+        Queue::fake();
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.icecat.sync'), [
+                'categories' => ['Laptops', 'Tablets'],
+                'limit'      => 15,
+            ])
+            ->assertStatus(200)
+            ->assertJsonFragment(['message' => 'Sync queued. Check Notifications for results.']);
+
+        Queue::assertPushed(\App\Jobs\SyncProductsIcecatJob::class, 2);
     }
 }

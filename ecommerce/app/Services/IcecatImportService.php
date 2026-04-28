@@ -337,20 +337,26 @@ class IcecatImportService
         $categoryFromApi = $product['GeneralInfo']['Category']['Name']['Value']
             ?? $categoryName;
 
+        // IMP-044: extract last-updated timestamp for sync date-comparison
+        $icecatUpdatedAt = $product['GeneralInfo']['Updated']
+            ?? ($product['Updated']
+                ?? ($product['UpdatedAt'] ?? null));
+
         return [
-            'ean'            => $ean,
-            'name'           => $title,
-            'description'    => $description,
-            'image'          => $image,
-            'brand'          => $product['GeneralInfo']['Brand'] ?? ($product['Brand']['Name'] ?? ''),
-            'family'         => $family,
-            'category_name'  => $categoryFromApi,
-            'color'          => $specs['color'],
-            'storage'        => $specs['storage'],
-            'spec_processor' => $specs['processor'],
-            'spec_display'   => $specs['display'],
-            'spec_weight'    => $specs['weight'],
-            'price'          => $this->resolvePrice($product, $categoryName),
+            'ean'               => $ean,
+            'name'              => $title,
+            'description'       => $description,
+            'image'             => $image,
+            'brand'             => $product['GeneralInfo']['Brand'] ?? ($product['Brand']['Name'] ?? ''),
+            'family'            => $family,
+            'category_name'     => $categoryFromApi,
+            'color'             => $specs['color'],
+            'storage'           => $specs['storage'],
+            'spec_processor'    => $specs['processor'],
+            'spec_display'      => $specs['display'],
+            'spec_weight'       => $specs['weight'],
+            'price'             => $this->resolvePrice($product, $categoryName),
+            'icecat_updated_at' => $icecatUpdatedAt,
         ];
     }
 
@@ -455,6 +461,178 @@ class IcecatImportService
         $range = self::CATEGORY_PRICE_RANGE[$categoryName] ?? [49, 499];
         return (float) rand($range[0] * 100, $range[1] * 100) / 100;
     }
+
+    // -------------------------------------------------------------------------
+    // IMP-044 — Sync existing products from Icecat
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sync the given category (or all categories) against the Icecat catalogue.
+     *
+     * For each EAN returned by the API:
+     *  - Not in DB          → create new draft product   (new_added)
+     *  - In DB, published   → skip entirely              (skipped_published)
+     *  - In DB, draft/other → update only safe fields    (updated)
+     *    … unless Icecat UpdatedAt ≤ DB updated_at       (skipped_up_to_date)
+     *
+     * Price, stock, and status are NEVER modified by sync.
+     *
+     * @return array{new_added: int, updated: int, skipped_up_to_date: int, skipped_published: int}
+     */
+    public function sync(string $category = 'all', int $limit = 20): array
+    {
+        if (empty(config('services.icecat.username'))) {
+            $msg = 'Icecat sync aborted: ICECAT_USERNAME is not configured in .env';
+            Log::channel('icecat')->error('[ABORT] ' . $msg);
+            AdminNotification::create(['order_id' => null, 'message' => $msg]);
+            return ['new_added' => 0, 'updated' => 0, 'skipped_up_to_date' => 0, 'skipped_published' => 0];
+        }
+
+        $categories = $category === 'all'
+            ? array_keys(self::CATEGORY_MAP)
+            : [$category];
+
+        $totals = ['new_added' => 0, 'updated' => 0, 'skipped_up_to_date' => 0, 'skipped_published' => 0];
+
+        foreach ($categories as $cat) {
+            $eans = $this->fetchEans($cat, $limit);
+
+            if (empty($eans)) {
+                Log::channel('icecat')->info("[SYNC_SKIP] category={$cat} — API returned 0 EANs");
+                continue;
+            }
+
+            $rawProducts = [];
+
+            foreach ($eans as $eanData) {
+                $detail = $this->fetchProductDetail($eanData['ean'] ?? '', $cat);
+                if ($detail === null) {
+                    continue;
+                }
+                $rawProducts[] = $detail;
+            }
+
+            $groups = $this->groupByFamily($rawProducts);
+            $counts = $this->syncUpsertGroups($groups, $cat);
+
+            foreach ($counts as $k => $v) {
+                $totals[$k] += $v;
+            }
+        }
+
+        AdminNotification::create([
+            'order_id' => null,
+            'message'  => "Icecat sync complete: {$totals['new_added']} new, {$totals['updated']} updated, "
+                . "{$totals['skipped_up_to_date']} up-to-date, {$totals['skipped_published']} skipped published.",
+        ]);
+
+        return $totals;
+    }
+
+    /**
+     * Sync-specific upsert — updates only safe fields when Icecat data is newer.
+     *
+     * @return array{new_added: int, updated: int, skipped_up_to_date: int, skipped_published: int}
+     */
+    private function syncUpsertGroups(array $groups, string $fallbackCategoryName): array
+    {
+        $counts = ['new_added' => 0, 'updated' => 0, 'skipped_up_to_date' => 0, 'skipped_published' => 0];
+
+        foreach ($groups as $familyProducts) {
+            $first        = $familyProducts[0];
+            $categoryName = ! empty($first['category_name']) ? $first['category_name'] : $fallbackCategoryName;
+
+            $category = Category::firstOrCreate(
+                ['name' => $categoryName],
+                ['slug' => Str::slug($categoryName)]
+            );
+
+            $parentName = $this->stripVariantSuffix($first['name']);
+            $ean        = $first['ean'] ?? '';
+
+            // EAN-based lookup first, then name+category fallback for legacy rows
+            $existing = ! empty($ean)
+                ? Product::where('sku', $ean)->first()
+                : null;
+
+            if ($existing === null) {
+                $existing = Product::where('name', $parentName)
+                    ->where('category_id', $category->id)
+                    ->first();
+            }
+
+            // Skip published products — never overwrite admin-published content
+            if ($existing && $existing->status === 'published') {
+                $counts['skipped_published']++;
+                continue;
+            }
+
+            if ($existing) {
+                // IMP-044: only update if Icecat data is newer than DB row
+                $icecatUpdatedAt = $first['icecat_updated_at'] ?? null;
+                $isNewer         = true;
+
+                if ($icecatUpdatedAt !== null) {
+                    try {
+                        $icecatDate = \Carbon\Carbon::parse((string) $icecatUpdatedAt);
+                        $isNewer    = $icecatDate->greaterThan($existing->updated_at);
+                    } catch (\Exception $e) {
+                        // Unparseable date → treat as newer to be safe
+                        $isNewer = true;
+                    }
+                }
+
+                if (! $isNewer) {
+                    $counts['skipped_up_to_date']++;
+                    continue;
+                }
+
+                // Update only safe fields — never status, stock, or price
+                $existing->update([
+                    'name'             => $parentName,
+                    'slug'             => $this->uniqueSlug($parentName, $existing->id),
+                    'description'      => $first['description'],
+                    'image'            => $first['image'],
+                    'spec_processor'   => $first['spec_processor'],
+                    'spec_display'     => $first['spec_display'],
+                    'spec_weight'      => $first['spec_weight'],
+                    'is_icecat_locked' => true,
+                    'import_source'    => 'icecat',
+                    'sku'              => $ean ?: $existing->sku,
+                ]);
+
+                $counts['updated']++;
+            } else {
+                // Net-new product — create as draft with random initial stock
+                Product::create([
+                    'name'                => $parentName,
+                    'slug'                => $this->uniqueSlug($parentName),
+                    'description'         => $first['description'],
+                    'image'               => $first['image'],
+                    'category_id'         => $category->id,
+                    'price'               => $first['price'],
+                    'stock'               => rand(50, 100),
+                    'status'              => 'draft',
+                    'spec_processor'      => $first['spec_processor'],
+                    'spec_display'        => $first['spec_display'],
+                    'spec_weight'         => $first['spec_weight'],
+                    'is_icecat_locked'    => true,
+                    'import_source'       => 'icecat',
+                    'sku'                 => $ean,
+                    'low_stock_threshold' => 10,
+                    'low_stock_notified'  => false,
+                ]);
+
+                $counts['new_added']++;
+            }
+        }
+
+        return $counts;
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared private helpers
+    // -------------------------------------------------------------------------
 
     /** Step 2 — Group records by ProductFamily into parent-child sets. */
     private function groupByFamily(array $rawProducts): array
