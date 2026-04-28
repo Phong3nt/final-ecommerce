@@ -84,7 +84,8 @@
             {{ request('category_id') ? 'true' : 'false' }},
             {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }},
             {{ request('category_id') ?? 'null' }}
-        )">
+        )"
+        x-init="bindPaginationLinks()">
 
         {{-- IMP-040: Category filter (AJAX — no page reload, no URL change, table only) --}}
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -304,13 +305,33 @@
                 return this.hasCategoryFilter && !this.allInCategory && this.isAllPageChecked;
             },
 
-            // ─── IMP-040: AJAX category filter ────────────────────
-            filterByCategory(catId) {
+            // ─── IMP-040: AJAX category filter + pagination ───────
+            bindPaginationLinks() {
+                const pagination = document.getElementById('products-pagination');
+                if (!pagination || pagination._ajaxBound) return;
+                pagination._ajaxBound = true;
+                pagination.addEventListener('click', (event) => {
+                    const link = event.target.closest('a');
+                    if (!link) return;
+                    event.preventDefault();
+                    this.loadProducts(link.href, this.currentCategoryId);
+                });
+            },
+
+            loadProducts(urlOrPath, catId) {
                 this.loading = true;
                 this.selected = [];
                 this.allInCategory = false;
-                const url = '/admin/products?_ajax=1' + (catId ? '&category_id=' + encodeURIComponent(catId) : '');
-                fetch(url, {
+                const base = urlOrPath && urlOrPath.startsWith('http')
+                    ? new URL(urlOrPath, window.location.origin)
+                    : new URL('/admin/products', window.location.origin);
+                base.searchParams.set('_ajax', '1');
+                if (catId) {
+                    base.searchParams.set('category_id', catId);
+                } else {
+                    base.searchParams.delete('category_id');
+                }
+                fetch(base.toString(), {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
@@ -324,8 +345,8 @@
                     document.getElementById('products-pagination').innerHTML = data.pagination_html;
                     this.totalInFilter     = data.total;
                     this.pageIds           = data.page_ids;
-                    this.currentCategoryId = catId || null;
-                    this.hasCategoryFilter = !!catId;
+                    this.currentCategoryId = data.category_id || null;
+                    this.hasCategoryFilter = !!data.category_id;
                     this.loading           = false;
                     // Re-bind archive confirm dialogs on newly injected rows
                     document.querySelectorAll('#products-tbody form[data-confirm]').forEach(function (form) {
@@ -338,6 +359,10 @@
                     });
                 })
                 .catch(() => { this.loading = false; });
+            },
+
+            filterByCategory(catId) {
+                this.loadProducts('/admin/products', catId || null);
             },
 
             // ─── selection actions (IMP-039) ──────────────────────
