@@ -217,6 +217,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // IMP-045: Import by Icecat Product ID or EAN/product code (synchronous, per-item results)
     Route::post('/icecat/import-by-id', [\App\Http\Controllers\Admin\IcecatController::class, 'importById'])->name('icecat.import-by-id');
 
+    // IMP-046: Brand management — import route MUST precede {brand} wildcard
+    Route::post('/brands/import-from-icecat', [\App\Http\Controllers\Admin\BrandController::class, 'importFromIcecat'])->name('brands.import-from-icecat');
+    Route::get('/brands', [\App\Http\Controllers\Admin\BrandController::class, 'index'])->name('brands.index');
+    Route::post('/brands', [\App\Http\Controllers\Admin\BrandController::class, 'store'])->name('brands.store');
+    Route::patch('/brands/{brand}', [\App\Http\Controllers\Admin\BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [\App\Http\Controllers\Admin\BrandController::class, 'destroy'])->name('brands.destroy');
+
     // PM-006: Admin product image management
     Route::get('/products/{product}/images', [AdminProductController::class, 'images'])->name('products.images');
     Route::post('/products/{product}/images', [AdminProductController::class, 'storeImages'])->name('products.images.store');

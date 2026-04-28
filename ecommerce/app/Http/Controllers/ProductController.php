@@ -40,7 +40,7 @@ class ProductController extends Controller
             'catalog.idx.' . $version . '.' . $page . '.' . md5(json_encode($filters)),
             now()->addMinutes(5),
             fn () => Product::published()
-                ->with('category')
+                ->with(['category', 'brand'])
                 ->filter($filters)
                 ->sort($sort)
                 ->paginate(12)

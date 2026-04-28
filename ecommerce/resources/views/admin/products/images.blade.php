@@ -31,12 +31,11 @@
                     image is used as the primary product image.
                 </p>
 
-                        @if($product->images && count($product->images) > 0)
+                @if($product->images && count($product->images) > 0)
                     {{-- Image list: standalone div to avoid nested-form HTML issue --}}
                     <div id="image-list">
                         @foreach($product->images as $i => $path)
-                            <div class="d-flex align-items-center gap-3 p-2 bg-light border rounded mb-2"
-                                data-path="{{ $path }}">
+                            <div class="d-flex align-items-center gap-3 p-2 bg-light border rounded mb-2" data-path="{{ $path }}">
                                 <span class="text-muted fs-5" title="Drag to reorder" style="cursor:grab;">&#8597;</span>
                                 <img src="{{ str_starts_with($path, 'http') ? $path : (Storage::disk('public')->exists($path) ? Storage::url($path) : 'https://placehold.co/72x72?text=No+Image') }}"
                                     alt="Product image {{ $i + 1 }}"
@@ -86,13 +85,15 @@
         <div class="card shadow-sm border-0 rounded-3 mt-3">
             <div class="card-body">
                 <h6 class="card-title mb-3">Add More Images</h6>
-                <form method="POST" action="{{ route('admin.products.images.store', $product) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('admin.products.images.store', $product) }}"
+                    enctype="multipart/form-data">
                     @csrf
                     <div class="mb-2">
                         <input type="file" name="images[]" multiple accept="image/*"
                             class="form-control @error('images') is-invalid @enderror @error('images.*') is-invalid @enderror">
-                        @error('images')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        @error('images.*')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="form-text">Up to 10 MB per file. Images are automatically resized to max 1920 px and converted to JPEG.</div>
+                        @error('images')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        @error('images.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <button type="submit" class="btn btn-outline-primary btn-sm">Upload Images</button>
                 </form>
@@ -103,29 +104,29 @@
 
 @push('scripts')
     <script>
-        const list = document.getElementById('image-list');
-        if (list) {
-            let dragged = null;
-            list.addEventListener('dragstart', function (e) { dragged = e.target.closest('[data-path]'); if (dragged) dragged.classList.add('opacity-50'); });
-            list.addEventListener('dragend', function () { if (dragged) dragged.classList.remove('opacity-50'); dragged = null; syncHiddenInputs(); });
-            list.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                const target = e.target.closest('[data-path]');
-                if (target && dragged && target !== dragged) {
-                    const rect = target.getBoundingClientRect();
-                    list.insertBefore(dragged, (e.clientY - rect.top) > (rect.height / 2) ? target.nextSibling : target);
-                }
-            });
-            function syncHiddenInputs() {
-                const form = document.getElementById('reorder-form');
-                form.querySelectorAll('input[name="image_order[]"]').forEach(el => el.remove());
-                list.querySelectorAll('[data-path]').forEach(function (el) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden'; input.name = 'image_order[]'; input.value = el.dataset.path;
-                    form.appendChild(input);
+            const list = document.getElementById('image-list');
+            if (list) {
+                let dragged = null;
+                list.addEventListener('dragstart', function (e) { dragged = e.target.closest('[data-path]'); if (dragged) dragged.classList.add('opacity-50'); });
+                list.addEventListener('dragend', function () { if (dragged) dragged.classList.remove('opacity-50'); dragged = null; syncHiddenInputs(); });
+                list.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    const target = e.target.closest('[data-path]');
+                    if (target && dragged && target !== dragged) {
+                        const rect = target.getBoundingClientRect();
+                        list.insertBefore(dragged, (e.clientY - rect.top) > (rect.height / 2) ? target.nextSibling : target);
+                    }
                 });
-            }
-            list.querySelectorAll('[data-path]').forEach(function (el) { el.setAttribute('draggable', 'true'); });
+                function syncHiddenInputs() {
+                    const form = document.getElementById('reorder-form');
+                    form.querySelectorAll('input[name="image_order[]"]').forEach(el => el.remove());
+                    list.querySelectorAll('[data-path]').forEach(function (el) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden'; input.name = 'image_order[]'; input.value = el.dataset.path;
+                        form.appendChild(input);
+                    });
         }
+                list.querySelectorAll('[data-path]').forEach(function (el) { el.setAttribute('draggable', 'true'); });
+            }
     </script>
 @endpush

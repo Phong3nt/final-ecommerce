@@ -415,10 +415,10 @@
         <article class="product-detail">
             {{-- IMP-010: Lightbox + zoom gallery --}}
             <div class="product-images" x-data="imp010Lightbox({
-                             mainImage: @json($product->imageUrl),
-                             images: @json($product->imagesUrls),
-                             alt: @json($product->name)
-                         })">
+                                 mainImage: @json($product->imageUrl),
+                                 images: @json($product->imagesUrls),
+                                 alt: @json($product->name)
+                             })">
                 @if ($product->image)
                     <div class="imp010-main-wrapper">
                         <img src="{{ $product->imageUrl }}" :src="currentImage" alt="{{ $product->name }}" :alt="alt"
@@ -472,6 +472,10 @@
                     <p class="category">Category: {{ $product->category->name }}</p>
                 @endif
 
+                @if ($product->brand)
+                    <p class="category">Brand: {{ $product->brand->name }}</p>
+                @endif
+
                 @if ($product->rating !== null)
                     <p class="rating">Rating: {{ number_format($product->rating, 1) }} / 5</p>
                 @endif
@@ -496,12 +500,12 @@
 
                 @if ($product->stock > 0)
                     <div id="add-to-cart-wrapper" x-data="imp007AddToCart({
-                                                                 productId: {{ $product->id }},
-                                                                 productName: @json($product->name),
-                                                                 productPrice: {{ (float) $product->price }},
-                                                                 productSlug: @json($product->slug),
-                                                                 cartStoreUrl: '{{ route('cart.store') }}'
-                                                             })">
+                                                                         productId: {{ $product->id }},
+                                                                         productName: @json($product->name),
+                                                                         productPrice: {{ (float) $product->price }},
+                                                                         productSlug: @json($product->slug),
+                                                                         cartStoreUrl: '{{ route('cart.store') }}'
+                                                                     })">
                         <form id="add-to-cart-form" action="{{ route('cart.store') }}" method="POST"
                             x-on:submit.prevent="submit">
                             @csrf

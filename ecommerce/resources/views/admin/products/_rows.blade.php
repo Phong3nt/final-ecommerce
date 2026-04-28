@@ -9,6 +9,7 @@
         <td>${{ number_format($product->price, 2) }}</td>
         <td>{{ $product->stock }}</td>
         <td>{{ $product->category?->name ?? '—' }}</td>
+        <td>{{ $product->brand?->name ?? '—' }}</td>
         <td>
             <span class="badge bg-{{ $product->status === 'published' ? 'success' : 'secondary' }}">
                 {{ ucfirst($product->status) }}
@@ -27,6 +28,6 @@
     </tr>
 @empty
     <tr>
-        <td colspan="9" class="text-center text-muted py-4">No products yet.</td>
+        <td colspan="10" class="text-center text-muted py-4">No products yet.</td>
     </tr>
 @endforelse

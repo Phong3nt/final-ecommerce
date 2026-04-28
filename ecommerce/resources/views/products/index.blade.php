@@ -208,7 +208,7 @@
                                             loading="lazy" onload="this.classList.remove('skel-img')">
                                     @else
                                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center
-                                                                                                                {{ $loop->first ? '' : '' }}"
+                                                                                                                                {{ $loop->first ? '' : '' }}"
                                             style="height: {{ $loop->first ? '340px' : '180px' }};">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ced4da"
                                                 viewBox="0 0 16 16">
@@ -225,6 +225,11 @@
                                             <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2 align-self-start">
                                                 {{ $product->category->name }}
                                             </span>
+                                        @endif
+
+                                        @if ($product->brand)
+                                            <small class="text-muted d-block mb-1"
+                                                style="font-size:.78rem;">{{ $product->brand->name }}</small>
                                         @endif
 
                                         <h2 class="card-title {{ $loop->first ? 'h5' : 'h6' }} mb-1">

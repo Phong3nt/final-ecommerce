@@ -17,7 +17,7 @@ The Icecat Import Pipeline fetches product data from the [Icecat Open Catalogue 
 
 **Entry points:**
 
-- CLI: `php artisan icecat:import {--category=all} {--limit=20}`
+- CLI: `php artisan icecat:import --category=all --limit=20php artisan icecat:import --category=all --limit=20`
 - Admin UI: `admin/products` page → "Import from Icecat" button (opens category picker + EAN count selector)
 
 ---

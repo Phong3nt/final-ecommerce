@@ -27,7 +27,7 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'low_stock_threshold', 'low_stock_notified', 'image', 'images', 'category_id', 'rating', 'status', 'spec_processor', 'spec_display', 'spec_weight', 'is_icecat_locked', 'import_source'];
+    protected $fillable = ['name', 'slug', 'sku', 'description', 'price', 'stock', 'low_stock_threshold', 'low_stock_notified', 'image', 'images', 'category_id', 'brand_id', 'rating', 'status', 'spec_processor', 'spec_display', 'spec_weight', 'is_icecat_locked', 'import_source'];
 
     // IMP-014: bump catalog_version in cache whenever a product changes, so all
     // version-keyed cache entries are automatically considered stale.
@@ -47,6 +47,7 @@ class Product extends Model
         'is_icecat_locked' => 'boolean',
         'rating' => 'float',
         'category_id' => 'integer',
+        'brand_id' => 'integer',
         'images' => 'array',
     ];
 
@@ -91,6 +92,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function relatedProducts(int $limit = 4)

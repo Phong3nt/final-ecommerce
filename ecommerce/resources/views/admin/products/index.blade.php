@@ -186,10 +186,11 @@
                                     Stock <span class="imp013-sort-icon" aria-hidden="true">↕</span>
                                 </th>
                                 <th>Category</th>
-                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="6" aria-sort="none" x-on:click="sort(6, 'str')">
+                                <th>Brand</th>
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="7" aria-sort="none" x-on:click="sort(7, 'str')">
                                     Status <span class="imp013-sort-icon" aria-hidden="true">↕</span>
                                 </th>
-                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="7" aria-sort="none" x-on:click="sort(7, 'date')">
+                                <th class="imp013-th--sort" data-imp013="sortable-th" data-col-index="8" aria-sort="none" x-on:click="sort(8, 'date')">
                                     Created <span class="imp013-sort-icon" aria-hidden="true">↕</span>
                                 </th>
                                 <th>Actions</th>

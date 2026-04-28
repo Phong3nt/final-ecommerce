@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AdminNotification;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use GuzzleHttp\Psr7\Response as PsrResponse;
@@ -924,6 +925,161 @@ class IcecatImportService
         }
 
         return $results;
+    }
+
+    // -------------------------------------------------------------------------
+    // IMP-046 — Import brands from Icecat Supplier list
+    // -------------------------------------------------------------------------
+
+    /**
+     * Fetch and upsert brands from the Icecat Supplier list API.
+     * Falls back to a curated brand list when the API returns nothing.
+     *
+     * @return array{imported: int, updated: int, skipped: int, names: list<string>}
+     */
+    public function importBrands(): array
+    {
+        $apiBrands = $this->fetchBrandsFromApi();
+        $source    = empty($apiBrands) ? $this->demoBrands() : $apiBrands;
+
+        $imported = 0;
+        $updated  = 0;
+        $skipped  = 0;
+        $names    = [];
+
+        foreach ($source as $item) {
+            $name       = trim($item['name'] ?? '');
+            $logoUrl    = $item['logo_url'] ?? null;
+            $supplierId = isset($item['icecat_supplier_id']) ? (int) $item['icecat_supplier_id'] : null;
+
+            if ($name === '') {
+                continue;
+            }
+
+            // Match by supplier ID first, then name
+            $existing = null;
+            if ($supplierId !== null) {
+                $existing = Brand::where('icecat_supplier_id', $supplierId)->first();
+            }
+            if ($existing === null) {
+                $existing = Brand::where('name', $name)->first();
+            }
+
+            if ($existing) {
+                $changed = false;
+                if ($existing->name !== $name) {
+                    $existing->name = $name;
+                    $existing->slug = $this->uniqueBrandSlug($name, $existing->id);
+                    $changed        = true;
+                }
+                if ($logoUrl !== null && $existing->logo_url !== $logoUrl) {
+                    $existing->logo_url = $logoUrl;
+                    $changed            = true;
+                }
+                if ($supplierId !== null && $existing->icecat_supplier_id !== $supplierId) {
+                    $existing->icecat_supplier_id = $supplierId;
+                    $changed                      = true;
+                }
+                $changed ? ($existing->save() && $updated++) : $skipped++;
+            } else {
+                Brand::create([
+                    'name'               => $name,
+                    'slug'               => $this->uniqueBrandSlug($name),
+                    'logo_url'           => $logoUrl,
+                    'icecat_supplier_id' => $supplierId,
+                ]);
+                $imported++;
+            }
+
+            $names[] = $name;
+        }
+
+        return compact('imported', 'updated', 'skipped', 'names');
+    }
+
+    /**
+     * Call the Icecat Supplier list endpoint.
+     *
+     * @return array<int, array{name: string, logo_url: ?string, icecat_supplier_id: ?int}>
+     */
+    private function fetchBrandsFromApi(): array
+    {
+        $response = $this->apiGet([
+            'Language' => 'EN',
+            'Content'  => 'Supplier',
+            'Limit'    => 200,
+        ]);
+
+        if (! $response->successful()) {
+            Log::channel('icecat')->warning('[BRANDS] supplier_api_failed status=' . $response->status());
+            return [];
+        }
+
+        $body  = $response->json() ?? [];
+        $items = $body['data'] ?? $body['suppliers'] ?? $body['Suppliers'] ?? [];
+
+        if (! is_array($items) || empty($items)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($items as $item) {
+            $name = $item['Name'] ?? $item['name'] ?? $item['SupplierName'] ?? null;
+            if (empty($name)) {
+                continue;
+            }
+
+            $logo = $item['Logo'] ?? $item['logo'] ?? $item['LogoURL'] ?? null;
+            if ($logo !== null && ! $this->isValidIcecatImageUrl($logo)) {
+                $logo = null;
+            }
+
+            $result[] = [
+                'name'               => $name,
+                'logo_url'           => $logo,
+                'icecat_supplier_id' => $item['SupplierID'] ?? $item['supplier_id'] ?? $item['ID'] ?? null,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Curated demo brand list used when the Icecat Supplier API returns nothing.
+     *
+     * @return array<int, array{name: string, logo_url: null, icecat_supplier_id: null}>
+     */
+    private function demoBrands(): array
+    {
+        $names = [
+            'HP', 'Lenovo', 'Samsung', 'Apple', 'Google', 'Sony', 'Microsoft',
+            'Asus', 'Acer', 'Dell', 'Motorola', 'Xiaomi', 'Huawei', 'Bose',
+            'Amazon', 'Anker', 'Garmin', 'Amazfit', 'Jabra', 'Sennheiser',
+            'Baseus', 'PortaPow', 'Beelink', 'Govee',
+        ];
+
+        return array_map(fn ($n) => [
+            'name'               => $n,
+            'logo_url'           => null,
+            'icecat_supplier_id' => null,
+        ], $names);
+    }
+
+    private function uniqueBrandSlug(string $name, ?int $existingId = null): string
+    {
+        $base = Str::slug($name);
+        $slug = $base;
+        $i    = 1;
+
+        while (
+            Brand::where('slug', $slug)
+                ->when($existingId, fn ($q) => $q->where('id', '!=', $existingId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 
     private function apiGet(array $params): \Illuminate\Http\Client\Response
