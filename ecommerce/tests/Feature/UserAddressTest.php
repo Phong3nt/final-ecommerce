@@ -187,4 +187,34 @@ class UserAddressTest extends TestCase
 
         $this->assertEquals('Home Default', $addresses->first()->name);
     }
+
+    // TC-13 (IMP-042): Country must be a supported ISO alpha-2 code
+    public function test_imp042_country_must_be_supported_iso_code(): void
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)
+            ->post(route('addresses.store'), $this->validAddress(['country' => 'Neverland']))
+            ->assertSessionHasErrors('country');
+    }
+
+    // TC-14 (IMP-042): Legacy country value is normalized to ISO code on page load
+    public function test_imp042_legacy_country_value_is_normalized_in_index(): void
+    {
+        $user = $this->makeUser();
+        $address = UserAddress::factory()->create([
+            'user_id' => $user->id,
+            'country' => 'vietnam',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('addresses.index'))
+            ->assertStatus(200)
+            ->assertSee('Vietnam');
+
+        $this->assertDatabaseHas('user_addresses', [
+            'id' => $address->id,
+            'country' => 'VN',
+        ]);
+    }
 }

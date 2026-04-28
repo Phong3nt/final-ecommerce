@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Cache;
  * @property string|null $description
  * @property float $price
  * @property int $stock
+ * @property int|null $low_stock_threshold
+ * @property bool $low_stock_notified
+ * @property string|null $image
+ * @property array<int, string>|null $images
  * @property int $category_id
  * @property string $status
  */

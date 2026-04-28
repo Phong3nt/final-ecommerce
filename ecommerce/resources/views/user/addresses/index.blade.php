@@ -4,6 +4,10 @@
 @section('content')
 @include('partials.toast')
 
+@php
+    $countryOptions = $countries ?? [];
+@endphp
+
 <div class="d-flex align-items-center justify-content-between mb-4">
     <h2 class="h4 fw-semibold mb-0">
         <i class="bi bi-geo-alt me-2 text-primary"></i>My Addresses
@@ -67,9 +71,16 @@
 
                 {{-- Address display --}}
                 <address class="text-muted small mb-0" x-show="!editing">
+                    @php
+                        $countryCode = strtoupper((string) $address->country);
+                        $countryMeta = $countryOptions[$countryCode] ?? null;
+                        $countryDisplay = $countryMeta
+                            ? ($countryMeta['flag'] . ' ' . $countryMeta['name'])
+                            : $address->country;
+                    @endphp
                     {{ $address->address_line1 }}@if($address->address_line2), {{ $address->address_line2 }}@endif<br>
                     {{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}<br>
-                    {{ $address->country }}
+                    {{ $countryDisplay }}
                 </address>
 
                 {{-- Inline edit form --}}
@@ -110,8 +121,16 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-medium">Country</label>
-                                <input type="text" name="country" class="form-control form-control-sm"
-                                       value="{{ old('country', $address->country) }}" required>
+                                @php
+                                    $selectedCountry = strtoupper((string) old('country', $address->country));
+                                @endphp
+                                <select name="country" class="form-select form-select-sm" required>
+                                    @foreach($countryOptions as $code => $meta)
+                                        <option value="{{ $code }}" {{ $selectedCountry === $code ? 'selected' : '' }}>
+                                            {{ $meta['flag'] }} {{ $meta['name'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
@@ -200,8 +219,16 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label small fw-medium">Country</label>
-                    <input type="text" name="country" class="form-control @error('country') is-invalid @enderror"
-                           value="{{ old('country') }}" required>
+                    @php
+                        $selectedCountry = strtoupper((string) old('country', 'VN'));
+                    @endphp
+                    <select name="country" class="form-select @error('country') is-invalid @enderror" required>
+                        @foreach($countryOptions as $code => $meta)
+                            <option value="{{ $code }}" {{ $selectedCountry === $code ? 'selected' : '' }}>
+                                {{ $meta['flag'] }} {{ $meta['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
                     @error('country')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12">

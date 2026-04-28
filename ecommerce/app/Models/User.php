@@ -18,6 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $google_id
  * @property bool $is_active
  * @property string|null $avatar
+ * @property string|null $stripe_customer_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
