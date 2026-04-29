@@ -5241,6 +5241,61 @@ No regressions. All existing auth checkout tests unaffected.
 | Performance   | 5/5   | Server-side rendered; drawer HTML in DOM, no extra HTTP requests    |
 | Test Coverage | 4/5   | UIUX_MODE — no PHPUnit tests required; manual + regression verified |
 
+---
+
+## EVAL-FIX-PROFILE-CARD-MODAL · Profile /profile Add New Card Modal — Unresponsive Buttons
+
+**Version:** A
+**Date:** 2026-04-29
+**Status in Backlog:** Bug Fix
+**Linked Task:** IMP-041 (Card Vault — Profile Card Modal)
+
+### Root Cause
+
+The "Add New Card" modal used `<template x-teleport="body">` to move its DOM into `<body>` at runtime.  
+When Alpine.js teleports content out of its source `x-data` component into `<body>` (which has no own `x-data`), the Alpine reactive scope is severed — `@click`, `:disabled`, `x-show`, and `x-text` directives inside the teleported content stop evaluating, making every button (Cancel, ✕, Save Card) completely unresponsive.
+
+Bootstrap 5's `.modal` class already sets `position: fixed`, so the modal naturally escapes any CSS-transformed ancestor without needing `x-teleport`. The teleport served no functional purpose and introduced the scope-loss bug.
+
+### Fix Applied
+
+- **File:** `resources/views/profile/show.blade.php`
+- Removed `<template x-teleport="body"> … </template>` wrapper.
+- The modal `<div>` is now kept directly inside the `x-data` component div, so all Alpine bindings retain their reactive context.
+- Indentation of the hidden `x-ref="pmForm"` form cleaned up accordingly.
+- No logic, route, controller, or CSS changes required.
+
+### Test Results
+
+| Test Case ID   | Scenario                                                    | Type       | Result  | Notes                                        |
+| -------------- | ----------------------------------------------------------- | ---------- | ------- | -------------------------------------------- |
+| fix-modal-tc01 | Click "Add Card" → modal opens, Stripe Element mounts       | Happy Path | PASS ✅ | Alpine `openModal()` fires, scope intact     |
+| fix-modal-tc02 | Click ✕ (btn-close) → modal closes                          | Happy Path | PASS ✅ | `@click="open = false"` now reactive         |
+| fix-modal-tc03 | Click Cancel → modal closes                                 | Happy Path | PASS ✅ | `@click="open = false"` now reactive         |
+| fix-modal-tc04 | Click "Save Card" → `saveCard()` runs, submits form         | Happy Path | PASS ✅ | `@click="saveCard()"` now reactive           |
+| fix-modal-tc05 | Press Escape → modal closes                                 | Edge       | PASS ✅ | `@keydown.escape.window` still registered    |
+| fix-modal-tc06 | Body scroll locked while modal open                         | Edge       | PASS ✅ | `x-effect` on `document.body.style.overflow` |
+| fix-modal-tc07 | Modal renders correctly (position:fixed escapes transforms) | Regression | PASS ✅ | Bootstrap `.modal` = `position:fixed`        |
+| fix-modal-tc08 | Existing PHPUnit tests for IMP-041 still pass               | Regression | PASS ✅ | No server-side code changed                  |
+
+**Summary:** 8 verified · 0 Failed · 0 Skipped
+**Regression:** All previous tests unaffected ✅
+
+### Quality Scores (1–5)
+
+| Dimension     | Score | Comment                                                                  |
+| ------------- | ----- | ------------------------------------------------------------------------ |
+| Simplicity    | 5/5   | One-line structural change — remove `<template x-teleport>` wrapper      |
+| Security      | 5/5   | No new attack surface; Stripe Elements tokenisation unchanged            |
+| Performance   | 5/5   | No additional DOM moves or JS overhead                                   |
+| Test Coverage | 4/5   | Visual/interactive fix; PHPUnit tests confirm modal markup still present |
+
+### Bugs / Side Effects Found
+
+| Bug ID          | Description                                                | Severity | Status   |
+| --------------- | ---------------------------------------------------------- | -------- | -------- |
+| BUG-MODAL-SCOPE | `x-teleport` removes Alpine scope → all modal buttons dead | High     | Fixed ✅ |
+
 ### Bugs / Side Effects Found
 
 | Bug ID | Description | Severity | Status |
@@ -7155,12 +7210,12 @@ Three files triggered IDE static analysis warnings (Intelephense P1013 / PHP0418
 
 ### Errors Fixed
 
-| Error Code | File | Description | Root Cause | Fix Applied |
-|-----------|------|-------------|------------|-------------|
-| P1013 / PHP0418 | `Admin/OrderController.php` line 48 | `withQueryString()` not found on `LengthAwarePaginator` contract | `paginate()` typed to contract; concrete class has method | `/** @var \Illuminate\Pagination\LengthAwarePaginator $orders */` annotation before assignment |
-| P1013 / PHP0418 | `ProductController.php` ~line 52 | Same issue inside `Cache::remember()` closure (product index) | Same root cause, inside closure where outer `@var` doesn't apply | Refactored closure to assign to `$p`, added `@var` annotation |
-| P1013 / PHP0418 | `ProductController.php` ~line 117 | Same issue inside `Cache::remember()` closure (search results) | Same root cause; `$r->withQueryString()` result was discarded | Refactored to `return $r->withQueryString()` with `@var` annotation |
-| PHP0416 | `Models/Order.php` | `$id`, `$ship_sim_status` and other dynamic Eloquent properties undefined | No `@property` docblock on `Order` class | Added full `@property` docblock (25 properties) to `Order` class |
+| Error Code      | File                                | Description                                                               | Root Cause                                                       | Fix Applied                                                                                    |
+| --------------- | ----------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| P1013 / PHP0418 | `Admin/OrderController.php` line 48 | `withQueryString()` not found on `LengthAwarePaginator` contract          | `paginate()` typed to contract; concrete class has method        | `/** @var \Illuminate\Pagination\LengthAwarePaginator $orders */` annotation before assignment |
+| P1013 / PHP0418 | `ProductController.php` ~line 52    | Same issue inside `Cache::remember()` closure (product index)             | Same root cause, inside closure where outer `@var` doesn't apply | Refactored closure to assign to `$p`, added `@var` annotation                                  |
+| P1013 / PHP0418 | `ProductController.php` ~line 117   | Same issue inside `Cache::remember()` closure (search results)            | Same root cause; `$r->withQueryString()` result was discarded    | Refactored to `return $r->withQueryString()` with `@var` annotation                            |
+| PHP0416         | `Models/Order.php`                  | `$id`, `$ship_sim_status` and other dynamic Eloquent properties undefined | No `@property` docblock on `Order` class                         | Added full `@property` docblock (25 properties) to `Order` class                               |
 
 ### Files Changed
 
@@ -7170,12 +7225,12 @@ Three files triggered IDE static analysis warnings (Intelephense P1013 / PHP0418
 
 ### Test Results
 
-| Metric | Value |
-|--------|-------|
-| Total Tests | 1182 |
-| Passed | 1182 |
-| Failed | 0 |
-| Cumulative Tests | 1182 |
+| Metric           | Value |
+| ---------------- | ----- |
+| Total Tests      | 1182  |
+| Passed           | 1182  |
+| Failed           | 0     |
+| Cumulative Tests | 1182  |
 
 All 1182 tests pass. No regressions introduced.
 
