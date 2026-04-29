@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\CouponTemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +64,7 @@ class GoogleController extends Controller
             ]);
 
             $user->assignRole($role);
+            app(CouponTemplateService::class)->assignNewUserTemplates($user);
         }
 
         Auth::login($user);

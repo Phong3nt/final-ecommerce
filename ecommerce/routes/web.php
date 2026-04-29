@@ -266,6 +266,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
     Route::patch('/coupons/{coupon}/toggle', [AdminCouponController::class, 'toggle'])->name('coupons.toggle');
+    Route::post('/coupons/bulk', [AdminCouponController::class, 'bulkCoupons'])->name('coupons.bulk');
+    Route::post('/coupons/templates/generate', [AdminCouponController::class, 'storeTemplates'])->name('coupons.templates.generate');
+    Route::post('/coupons/templates/presets/{preset}', [AdminCouponController::class, 'generatePreset'])->name('coupons.templates.presets.generate');
+    Route::post('/coupons/templates/bulk', [AdminCouponController::class, 'bulkTemplates'])->name('coupons.templates.bulk');
+    Route::patch('/coupons/templates/{template}/toggle', [AdminCouponController::class, 'toggleTemplate'])->name('coupons.templates.toggle');
+    Route::post('/coupons/templates/{template}/assign', [AdminCouponController::class, 'assignTemplate'])->name('coupons.templates.assign');
 
     // NT-002: Admin in-app notifications for new orders
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');

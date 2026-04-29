@@ -67,4 +67,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(SavedPaymentMethod::class)->orderByDesc('is_default');
     }
+
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class)->orderByDesc('created_at');
+    }
 }

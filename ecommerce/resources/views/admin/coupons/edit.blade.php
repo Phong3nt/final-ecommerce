@@ -27,6 +27,20 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="name" class="form-label fw-semibold">Name <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" id="name" name="name" value="{{ old('name', $coupon->name) }}"
+                        class="form-control @error('name') is-invalid @enderror" maxlength="120">
+                    @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label fw-semibold">Description/Story <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea id="description" name="description" rows="3"
+                        class="form-control @error('description') is-invalid @enderror">{{ old('description', $coupon->description) }}</textarea>
+                    @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="mb-3">
                     <label for="type" class="form-label fw-semibold">Discount Type <span class="text-danger">*</span></label>
                     <select id="type" name="type" class="form-select @error('type') is-invalid @enderror" required>
                         <option value="percent" {{ old('type', $coupon->type) === 'percent' ? 'selected' : '' }}>Percentage (%)</option>
@@ -48,7 +62,7 @@
                     <input type="number" id="min_order_amount" name="min_order_amount"
                         value="{{ old('min_order_amount', $coupon->min_order_amount) }}"
                         class="form-control @error('min_order_amount') is-invalid @enderror"
-                        step="0.01" min="0">
+                        step="0.01" min="1" placeholder="1.00">
                     @error('min_order_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
