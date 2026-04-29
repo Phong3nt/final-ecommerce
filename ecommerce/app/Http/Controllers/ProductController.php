@@ -73,7 +73,7 @@ class ProductController extends Controller
             $userId = auth()->id();
 
             $hasPurchased = Order::where('user_id', $userId)
-                ->whereIn('status', ['paid', 'processing', 'shipped', 'delivered'])
+                ->where('status', 'delivered')
                 ->whereHas('items', fn($q) => $q->where('product_id', $product->id))
                 ->exists();
 

@@ -4466,6 +4466,67 @@ None at this time.
 
 <!-- EVAL-IMP-028 END -->
 
+<!-- EVAL-MAINT-2026-04-29-PRODUCT-DETAIL START -->
+
+---
+
+## EVAL-MAINT-2026-04-29 — Product Detail Page Repair
+
+**Date:** 2026-04-29  
+**Tag:** `maint-product-detail-2026-04-29`  
+**Mode:** `[FULL_STACK_MODE]`  
+**Linked Task:** Ad hoc maintenance for product detail UX, cart interaction, and delivered-order reviews
+
+### Summary
+
+Repaired and completed the product detail page rewrite in `ecommerce/resources/views/products/show.blade.php`. The page now uses the shared layout cleanly, restores product image display and lightbox hooks, fixes AJAX add-to-cart badge updates against the shared navbar, exposes rating information prominently, shows customer reviews consistently, and restricts rating/review submission to users who actually received the specific product. The review flow was also aligned with the requirement that rating is required but written comment is optional.
+
+### Changes Made
+
+| File | Change |
+| ---- | ------ |
+| `ecommerce/resources/views/products/show.blade.php` | Removed duplicated stale content block, rebuilt the page with Bootstrap 5 structure, restored test hooks for lightbox/cart interactions, fixed shared navbar badge targeting, and updated review/rating rendering |
+| `ecommerce/resources/views/partials/navbar.blade.php` | Switched cart badge to compute from session cart quantities and exposed stable `navbar-cart-badge` hook |
+| `ecommerce/app/Http/Controllers/ProductController.php` | Review eligibility now requires delivered status for the specific ordered product |
+| `ecommerce/app/Http/Controllers/ReviewController.php` | Review submission now requires delivered status, keeps one-review-per-product, and allows optional comment text |
+| `ecommerce/database/migrations/2026_04_17_000008_create_product_reviews_table.php` | Review comment column updated to nullable for optional comment support |
+| `ecommerce/tests/Feature/ProductReviewTest.php` | Updated tests to reflect delivered-order eligibility and optional comments |
+| `ecommerce/tests/Feature/ProductReviewListTest.php` | Updated rating-sync submission test to use delivered orders |
+
+### Acceptance Criteria Met
+
+- Product image displays reliably with graceful fallback when no image exists
+- Product gallery/lightbox hooks render correctly
+- Add to Cart button works with AJAX flow and updates the shared navbar cart badge
+- Product rating is shown prominently even when sourced from the stored product rating field
+- Customer reviews render consistently on the page
+- Only users with delivered orders for that exact product can submit a rating/review
+- Written review comment is optional; rating can be submitted without comment
+
+### Test Results
+
+Focused validation completed with all targeted tests passing:
+
+- `ProductDetailTest` ✅
+- `ProductReviewTest` ✅
+- `ProductReviewListTest` ✅
+- `ProductLightboxTest` ✅
+- `AlpineCartMicroInteractionsTest` ✅
+
+**Targeted:** 58/58 ✅  
+**Regression:** No failures in the touched product-detail slice.
+
+### Notes
+
+- The cart drawer in the detail view now reads directly from session data inline to avoid Blade local-variable scope issues.
+- Existing unrelated repository changes outside this maintenance slice were left untouched.
+
+### Upgrade Proposals
+
+None at this time.
+
+<!-- EVAL-MAINT-2026-04-29-PRODUCT-DETAIL END -->
+
 ## <!-- EVAL-IMP-029 START -->
 
 ## EVAL-IMP-029 — Cart Page Full Redesign

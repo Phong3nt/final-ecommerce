@@ -15,7 +15,7 @@ class ReviewController extends Controller
      *
      * AC:
      *   - Only users who purchased the product can review
-     *   - 1–5 star rating + text comment
+    *   - 1–5 star rating with optional text comment
      *   - One review per product per user
      */
     public function store(Request $request, Product $product): RedirectResponse
@@ -24,7 +24,7 @@ class ReviewController extends Controller
 
         // AC: only users who purchased the product may review
         $hasPurchased = Order::where('user_id', $user->id)
-            ->whereIn('status', ['paid', 'processing', 'shipped', 'delivered'])
+            ->where('status', 'delivered')
             ->whereHas('items', fn($q) => $q->where('product_id', $product->id))
             ->exists();
 
@@ -45,14 +45,14 @@ class ReviewController extends Controller
 
         $data = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string|max:2000',
+            'comment' => 'nullable|string|max:2000',
         ]);
 
         Review::create([
             'user_id' => $user->id,
             'product_id' => $product->id,
             'rating' => $data['rating'],
-            'comment' => $data['comment'],
+            'comment' => $data['comment'] ?? null,
         ]);
         // RV-002: keep product.rating in sync with the live average from reviews
         $product->update(['rating' => round((float) $product->reviews()->avg('rating'), 2)]);

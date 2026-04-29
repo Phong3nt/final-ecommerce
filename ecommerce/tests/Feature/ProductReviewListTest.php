@@ -265,8 +265,8 @@ class ProductReviewListTest extends TestCase
         $user    = User::factory()->create();
         $product = $this->makeProduct();
 
-        // Create a paid order with this product
-        $order = \App\Models\Order::factory()->paid()->create(['user_id' => $user->id]);
+        // Create a delivered order with this product
+        $order = \App\Models\Order::factory()->delivered()->create(['user_id' => $user->id]);
         \App\Models\OrderItem::factory()->create([
             'order_id'   => $order->id,
             'product_id' => $product->id,
