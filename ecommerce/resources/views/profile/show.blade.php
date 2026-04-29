@@ -23,7 +23,7 @@
                                     width="88" height="88" style="object-fit:cover;">
                             @else
                                 <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex
-                                                                                align-items-center justify-content-center border"
+                                                                                        align-items-center justify-content-center border"
                                     style="width:88px;height:88px;">
                                     <i class="bi bi-person fs-2 text-primary"></i>
                                 </div>
@@ -87,75 +87,83 @@
             </div>
         </div>
 
-        {{-- IMP-035: Card Vault — saved payment methods --}}
+        {{-- IMP-035 / IMP-041: Card Vault — saved payment methods + inline Add New Card --}}
         <div class="row justify-content-center mt-4">
             <div class="col-lg-7 col-xl-6" x-data="{
-                                open: false,
-                                loading: false,
-                                errorMsg: '',
-                                pmId: '',
-                                stripeObj: null,
-                                elementsObj: null,
-                                async openModal() {
-                                    this.open = true;
-                                    this.loading = false;
-                                    this.errorMsg = '';
-                                    this.pmId = '';
-                                    await this.$nextTick();
-                                    document.getElementById('setup-element').innerHTML = '';
-                                    await this.initStripe();
-                                },
-                                async initStripe() {
-                                    const key = '{{ config('services.stripe.key') }}';
-                                    if (!key) { this.errorMsg = 'Payment is currently unavailable.'; return; }
-                                    this.stripeObj = Stripe(key);
-                                    try {
-                                        const resp = await fetch('{{ route('payment-methods.setup-intent') }}', {
-                                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                                            credentials: 'same-origin',
-                                        });
-                                        const data = await resp.json();
-                                        if (!data.client_secret) { this.errorMsg = 'Could not load payment form.'; return; }
-                                        this.elementsObj = this.stripeObj.elements({ clientSecret: data.client_secret });
-                                        const el = this.elementsObj.create('payment');
-                                        el.mount('#setup-element');
-                                    } catch (e) {
-                                        this.errorMsg = 'Could not load payment form.';
-                                    }
-                                },
-                                async saveCard() {
-                                    if (!this.stripeObj || !this.elementsObj) return;
-                                    this.loading = true;
-                                    this.errorMsg = '';
-                                    const { error, setupIntent } = await this.stripeObj.confirmSetup({
-                                        elements: this.elementsObj,
-                                        confirmParams: {},
-                                        redirect: 'if_required',
-                                    });
-                                    if (error) {
-                                        this.errorMsg = error.message;
-                                        this.loading = false;
-                                        return;
-                                    }
-                                    this.pmId = setupIntent.payment_method;
-                                    await this.$nextTick();
-                                    this.$refs.pmForm.submit();
-                                },
-                            }">
+                        open: false,
+                        loading: false,
+                        errorMsg: '',
+                        pmId: '',
+                        stripeObj: null,
+                        elementsObj: null,
+                        async openForm() {
+                            this.open = true;
+                            this.loading = false;
+                            this.errorMsg = '';
+                            this.pmId = '';
+                            await this.$nextTick();
+                            document.getElementById('setup-element').innerHTML = '';
+                            await this.initStripe();
+                        },
+                        closeForm() {
+                            this.open = false;
+                            this.errorMsg = '';
+                            this.loading = false;
+                            this.stripeObj = null;
+                            this.elementsObj = null;
+                        },
+                        async initStripe() {
+                            const key = '{{ config('services.stripe.key') }}';
+                            if (!key) { this.errorMsg = 'Payment is currently unavailable.'; return; }
+                            this.stripeObj = Stripe(key);
+                            try {
+                                const resp = await fetch('{{ route('payment-methods.setup-intent') }}', {
+                                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                                    credentials: 'same-origin',
+                                });
+                                const data = await resp.json();
+                                if (!data.client_secret) { this.errorMsg = 'Could not load payment form.'; return; }
+                                this.elementsObj = this.stripeObj.elements({ clientSecret: data.client_secret });
+                                const el = this.elementsObj.create('payment');
+                                el.mount('#setup-element');
+                            } catch (e) {
+                                this.errorMsg = 'Could not load payment form.';
+                            }
+                        },
+                        async saveCard() {
+                            if (!this.stripeObj || !this.elementsObj) return;
+                            this.loading = true;
+                            this.errorMsg = '';
+                            const { error, setupIntent } = await this.stripeObj.confirmSetup({
+                                elements: this.elementsObj,
+                                confirmParams: {},
+                                redirect: 'if_required',
+                            });
+                            if (error) {
+                                this.errorMsg = error.message;
+                                this.loading = false;
+                                return;
+                            }
+                            this.pmId = setupIntent.payment_method;
+                            await this.$nextTick();
+                            this.$refs.pmForm.submit();
+                        },
+                    }">
 
+                {{-- Saved cards list --}}
                 <div class="card shadow-sm border-0 rounded-3">
                     <div
                         class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                         <h2 class="h6 fw-semibold mb-0">
                             <i class="bi bi-credit-card me-1"></i> Saved Cards
                         </h2>
-                        <button type="button" class="btn btn-outline-primary btn-sm" @click="openModal()">
+                        <button type="button" class="btn btn-outline-primary btn-sm" @click="openForm()" x-show="!open">
                             <i class="bi bi-plus-lg me-1"></i>Add Card
                         </button>
                     </div>
                     <div class="card-body p-0">
                         @if ($user->savedPaymentMethods->isEmpty())
-                            <p class="text-muted text-center py-4 mb-0 small">No saved cards yet.</p>
+                            <p class="text-muted text-center py-4 mb-0 small" x-show="!open">No saved cards yet.</p>
                         @else
                             <ul class="list-group list-group-flush">
                                 @foreach ($user->savedPaymentMethods as $card)
@@ -195,39 +203,26 @@
                     </div>
                 </div>
 
-                {{-- Add Card Modal (IMP-041: Bootstrap .modal already uses position:fixed so it
-                escapes any CSS-transformed ancestor without needing x-teleport.
-                Keeping the modal in-tree preserves the Alpine x-data scope so that
-                @click / :disabled / x-show bindings remain reactive.) --}}
-                <div x-show="open" class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5);z-index:1060;"
-                    @keydown.escape.window="open = false" x-effect="document.body.style.overflow = open ? 'hidden' : ''">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content border-0 shadow-lg">
-                            <div class="modal-header border-bottom">
-                                <h5 class="modal-title fw-semibold">
-                                    <i class="bi bi-credit-card me-1"></i> Add New Card
-                                </h5>
-                                <button type="button" class="btn-close" @click="open = false" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <p class="text-muted small mb-3">
-                                    <i class="bi bi-shield-lock me-1 text-success"></i>
-                                    Your card details are handled securely by Stripe and never touch our
-                                    server.
-                                </p>
-                                <div id="setup-element" class="mb-3"></div>
-                                <div x-show="errorMsg" class="alert alert-danger small mb-0 py-2" x-text="errorMsg">
-                                </div>
-                            </div>
-                            <div class="modal-footer border-top">
-                                <button type="button" class="btn btn-outline-secondary"
-                                    @click="open = false">Cancel</button>
-                                <button type="button" class="btn btn-primary" :disabled="loading" @click="saveCard()">
-                                    <span x-show="loading" class="spinner-border spinner-border-sm me-1"
-                                        role="status"></span>
-                                    <span x-text="loading ? 'Saving…' : 'Save Card'">Save Card</span>
-                                </button>
-                            </div>
+                {{-- IMP-041: Inline Add New Card form (no modal — avoids Alpine scope issues) --}}
+                <div x-show="open" x-cloak class="card shadow-sm border-0 rounded-3 mt-3">
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-credit-card me-1"></i> Add New Card
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-shield-lock me-1 text-success"></i>
+                            Your card details are handled securely by Stripe and never touch our server.
+                        </p>
+                        <div id="setup-element" class="mb-3"></div>
+                        <div x-show="errorMsg" class="alert alert-danger small py-2" x-text="errorMsg"></div>
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="button" class="btn btn-outline-secondary" @click="closeForm()">Cancel</button>
+                            <button type="button" class="btn btn-primary" :disabled="loading" @click="saveCard()">
+                                <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                <span x-text="loading ? 'Saving…' : 'Save Card'">Save Card</span>
+                            </button>
                         </div>
                     </div>
                 </div>
