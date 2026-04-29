@@ -201,6 +201,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // IMP-039: Admin bulk product status change
     Route::post('/products/bulk-status', [AdminProductController::class, 'bulkStatus'])->name('products.bulkStatus');
 
+    // Export products as CSV (must be before {product} wildcard)
+    Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
+
+    // Restore a soft-deleted product
+    Route::post('/products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore')->where('id', '[0-9]+');
+
     // PM-002: Admin product edit
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
     Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');

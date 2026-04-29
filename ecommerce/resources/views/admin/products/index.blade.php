@@ -7,8 +7,27 @@
 @section('content')
 <div x-data x-init="$el.classList.add('fade-in')">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Products</h4>
-        <div class="d-flex gap-2">
+        <h4 class="mb-0">
+            Products
+            @if($showArchived)
+                <span class="badge bg-danger ms-2" style="font-size:.7rem">Archived view</span>
+            @endif
+        </h4>
+        <div class="d-flex gap-2 flex-wrap">
+            @if($showArchived)
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Active
+                </a>
+            @else
+                <a href="{{ route('admin.products.index', ['show_archived' => 1]) }}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-archive me-1"></i> Show Archived
+                </a>
+            @endif
+            <a href="{{ route('admin.products.export', array_filter(['show_archived' => $showArchived ? 1 : null])) }}"
+               class="btn btn-outline-success btn-sm" id="export-btn">
+                <i class="bi bi-download me-1"></i> Export CSV
+            </a>
+            @unless($showArchived)
             <button type="button" class="btn btn-outline-primary btn-sm"
                     data-bs-toggle="modal" data-bs-target="#icecatImportModal">
                 <i class="bi bi-cloud-download me-1"></i> Import from Icecat
@@ -24,6 +43,7 @@
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> New Product
             </a>
+            @endunless
         </div>
     </div>
 
@@ -93,7 +113,8 @@
             {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }},
             {{ request('category_id') ?? 'null' }},
             {{ request('brand_id') ?? 'null' }},
-            {{ json_encode(request('search', '')) }}
+            {{ json_encode(request('search', '')) }},
+            {{ $showArchived ? 'true' : 'false' }}
         )"
         x-init="bindPaginationLinks()">
 
@@ -458,7 +479,7 @@
 @push('scripts')
 <script>
     // IMP-040 + IMP-039 + IMP-013: unified Alpine component for admin product list
-    function productListAdmin(initTotal, initHasCategoryFilter, initPageIds, initCategoryId, initBrandId, initSearch) {
+    function productListAdmin(initTotal, initHasCategoryFilter, initPageIds, initCategoryId, initBrandId, initSearch, initShowArchived) {
         return {
             // ─── AJAX filter state (IMP-040 / IMP-047) ────────────
             totalInFilter:     initTotal,
@@ -467,6 +488,7 @@
             currentCategoryId: initCategoryId,
             currentBrandId:    initBrandId,
             currentSearch:     initSearch || '',
+            showArchived:      initShowArchived || false,
             loading:           false,
 
             // ─── selection state (IMP-039) ────────────────────────
@@ -512,6 +534,17 @@
                 else         { base.searchParams.delete('brand_id'); }
                 if (search) { base.searchParams.set('search', search); }
                 else        { base.searchParams.delete('search'); }
+                if (this.showArchived) { base.searchParams.set('show_archived', '1'); }
+                else                  { base.searchParams.delete('show_archived'); }
+                // Update export button URL to reflect current filters
+                const exportBtn = document.getElementById('export-btn');
+                if (exportBtn) {
+                    const exp = new URL(exportBtn.href, window.location.origin);
+                    if (catId) { exp.searchParams.set('category_id', catId); } else { exp.searchParams.delete('category_id'); }
+                    if (brandId) { exp.searchParams.set('brand_id', brandId); } else { exp.searchParams.delete('brand_id'); }
+                    if (search) { exp.searchParams.set('search', search); } else { exp.searchParams.delete('search'); }
+                    exportBtn.href = exp.toString();
+                }
                 fetch(base.toString(), {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',

@@ -14,16 +14,26 @@
             <span class="badge bg-{{ $product->status === 'published' ? 'success' : 'secondary' }}">
                 {{ ucfirst($product->status) }}
             </span>
+            @if($product->trashed())
+                <span class="badge bg-danger ms-1">Archived</span>
+            @endif
         </td>
         <td>{{ $product->created_at->format('Y-m-d') }}</td>
         <td>
-            <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
-            <form method="POST" action="{{ route('admin.products.destroy', $product) }}" style="display:inline"
-                data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger btn-sm ms-1">Archive</button>
-            </form>
+            @if($product->trashed())
+                <form method="POST" action="{{ route('admin.products.restore', $product->id) }}" style="display:inline">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm">Restore</button>
+                </form>
+            @else
+                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                <form method="POST" action="{{ route('admin.products.destroy', $product) }}" style="display:inline"
+                    data-confirm="Archive &quot;{{ $product->name }}&quot;? This will hide it from the store.">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm ms-1">Archive</button>
+                </form>
+            @endif
         </td>
     </tr>
 @empty
