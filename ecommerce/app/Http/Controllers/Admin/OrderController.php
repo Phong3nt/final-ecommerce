@@ -45,7 +45,9 @@ class OrderController extends Controller
             default => $query->reorder('created_at', 'desc'),
         };
 
-        $orders = $query->paginate(20)->withQueryString();
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $orders */
+        $orders = $query->paginate(20);
+        $orders->withQueryString();
         $statuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'failed'];
 
         return view('admin.orders.index', compact('orders', 'statuses'));

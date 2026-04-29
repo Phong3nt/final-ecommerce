@@ -47,12 +47,15 @@ class ProductController extends Controller
         $products = Cache::remember(
             'catalog.idx.' . $version . '.' . $page . '.' . md5(json_encode($filters)),
             now()->addMinutes(5),
-            fn () => Product::published()
-                ->with(['category', 'brand'])
-                ->filter($filters)
-                ->sort($sort)
-                ->paginate(12)
-                ->withQueryString()
+            function () use ($filters, $sort) {
+                /** @var \Illuminate\Pagination\LengthAwarePaginator $p */
+                $p = Product::published()
+                    ->with(['category', 'brand'])
+                    ->filter($filters)
+                    ->sort($sort)
+                    ->paginate(12);
+                return $p->withQueryString();
+            }
         );
 
         return view('products.index', compact('products', 'filters', 'categories', 'brands'));
@@ -111,9 +114,9 @@ class ProductController extends Controller
             'catalog.srch.' . $version . '.' . $page . '.' . md5($q),
             now()->addMinutes(5),
             function () use ($q) {
+                /** @var \Illuminate\Pagination\LengthAwarePaginator $r */
                 $r = Product::published()->search($q)->latest()->paginate(12);
-                $r->withQueryString();
-                return $r;
+                return $r->withQueryString();
             }
         );
 

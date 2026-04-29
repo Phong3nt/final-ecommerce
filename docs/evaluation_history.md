@@ -6457,3 +6457,732 @@ returned `"0/0 products imported, 0 skipped"` despite valid credentials.
 > ⚠️ Proposals are listed only. No code changes until explicit instruction.
 
 <!-- EVAL-IMP-040 END -->
+
+---
+
+<!-- ============================================================
+     UNNAMED FIX — IMP-040 Pagination AJAX Supplement
+     ============================================================ -->
+
+## FIX — IMP-040 Admin Products Pagination AJAX
+
+**Date:** 2026-04-28  
+**Commit:** `0817261`  
+**Branch:** improve/IMP-010
+
+### Summary
+
+After the IMP-040 stable tag, pagination links on the admin products page still triggered full-page reloads instead of using the AJAX filter path. The `index.blade.php` pagination nav was rewritten to intercept `click` events on page links via Alpine.js and delegate them through the same `filterByCategory()` fetch flow as the category `<select>`. `_ajax=1` is appended to pagination fetch calls internally and stripped from rendered pagination HTML. No new tests required (covered by TC-11 in `AdminProductAjaxCategoryFilterTest`).
+
+**Files Changed:** `resources/views/admin/products/index.blade.php` (+32 / -7)  
+**New Tests:** 0 · **All previous tests:** PASS ✅
+
+---
+
+<!-- EVAL-IMP-041 START -->
+
+## EVAL-IMP-041 — Fix Profile "Add New Card" Modal Interactivity `[UIUX_MODE]`
+
+**Date:** 2026-04-28  
+**Linked Task:** [IMP-041](backlog.md)  
+**Git Tag:** v1.0-IMP-041-stable  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                 | Type  | Result  |
+| ----- | --------------------------------------------------------------------------- | ----- | ------- |
+| TC-01 | Profile page returns 200 and shows Card Vault section                       | Happy | PASS ✅ |
+| TC-02 | "Add New Card" modal markup is present in the response (button + form body) | Happy | PASS ✅ |
+
+**New Tests:** 2 (added to `tests/Feature/Auth/ProfileTest.php` as TC-13, TC-14)  
+**Regression:** All previous ProfileTest cases (TC-01..TC-12) PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                        |
+| ----------- | ----- | -------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | Single Blade-only fix — `x-teleport` moves the modal to `<body>` level, zero JS changes      |
+| Security    | 5/5   | No new endpoints; Stripe tokenization flow unchanged                                         |
+| Performance | 5/5   | Static Blade change, no extra DB queries                                                     |
+| Coverage    | 4/5   | 2 new test cases confirm markup presence; interactive open/close cannot be tested in PHPUnit |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                                                                                                                                    | Severity | Resolution                                                                             |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| 1   | "Add New Card" modal was nested inside a Bootstrap card `<div>`, causing the modal backdrop to be clipped by `overflow:hidden` parent          | Medium   | Fixed — wrapped modal in `<template x-teleport="body">` so it renders at `<body>` root |
+| 2   | Clicking "Add New Card" button had no visible effect in the browser (button had no `@click` binding after prior refactor removed Alpine state) | Medium   | Fixed — re-added `x-data` with `open` toggle on the surrounding card section           |
+
+---
+
+### D. Technical Notes
+
+- **`x-teleport`** (Alpine.js 3.x) moves a DOM node to a different target at runtime. Using `<template x-teleport="body">` ensures the modal is a direct child of `<body>`, bypassing any CSS `overflow` constraints of parent containers.
+- No controller changes — this was a pure Blade / Alpine fix.
+- The existing Stripe.js card element initialisation inside the modal was unaffected.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                           | Benefit                                  | Complexity |
+| ----------- | --------------------------------------------------------------------- | ---------------------------------------- | ---------- |
+| IMP-041.1   | Add browser-level (Playwright/Dusk) test to assert modal opens/closes | Full confidence in interactive behaviour | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-041 END -->
+
+---
+
+<!-- EVAL-IMP-042 START -->
+
+## EVAL-IMP-042 — Addresses Country Dropdown (ISO + Flag) `[UIUX_MODE]`
+
+**Date:** 2026-04-28  
+**Linked Task:** [IMP-042](backlog.md)  
+**Git Tag:** v1.0-IMP-042-stable  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                      | Type     | Result  |
+| ----- | -------------------------------------------------------------------------------- | -------- | ------- |
+| TC-01 | `country` field must be a supported ISO-3166-1 alpha-2 code on store/update      | Negative | PASS ✅ |
+| TC-02 | Legacy free-text country value in DB is normalised to ISO code in the index view | Edge     | PASS ✅ |
+
+**New Tests:** 2 (added to `tests/Feature/UserAddressTest.php` as `test_imp042_*`)  
+**Regression:** All previous UserAddressTest cases (TC-01..TC-12 equiv.) PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                               |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | Validation rule added to `UserAddressController`; Blade `<select>` replaces free-text input         |
+| Security    | 5/5   | Server-side `in:` validation rule prevents arbitrary strings being stored as `country`              |
+| Performance | 5/5   | Country list is a static PHP array — zero DB overhead                                               |
+| Coverage    | 4/5   | Covers validation rejection and legacy normalisation; full 250-country list not enumerated in tests |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                                                                                             | Severity | Resolution                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| 1   | Existing addresses with free-text countries (e.g. "Vietnam") would fail `in:` validation on next update | Medium   | Fixed — `normaliseCountry()` helper maps legacy strings to ISO codes before validation runs |
+
+---
+
+### D. Technical Notes
+
+- **ISO-3166-1 alpha-2 list** stored as `SUPPORTED_COUNTRIES` constant in `UserAddressController`. The `<select>` renders flag emoji + country name.
+- **`normaliseCountry()`** is a private controller method that maps known legacy plain-text values (e.g. `"Vietnam"` → `"VN"`) before the `in:` rule fires, preventing update breakage for existing records.
+- **`User::$appends`** — `country_label` accessor added to `User` model for display purposes; not stored in DB.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                          | Benefit                          | Complexity |
+| ----------- | -------------------------------------------------------------------- | -------------------------------- | ---------- |
+| IMP-042.1   | Extract country list + normalisation to a dedicated `CountryService` | Reusable in checkout and profile | Low        |
+| IMP-042.2   | Add flag emoji support for all 249 ISO codes                         | Better visual UX                 | Low        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-042 END -->
+
+---
+
+<!-- EVAL-IMP-043 START -->
+
+## EVAL-IMP-043 — Icecat Re-import: Preserve Published Products `[LOGIC_MODE]`
+
+**Date:** 2026-04-28  
+**Linked Task:** [IMP-043](backlog.md)  
+**Git Tag:** v1.0-IMP-043-stable  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                    | Type  | Result  |
+| ----- | ------------------------------------------------------------------------------ | ----- | ------- |
+| TC-19 | Re-import skips a published product entirely — status and stock unchanged      | Logic | PASS ✅ |
+| TC-20 | Re-import updates draft product fields but preserves existing stock            | Logic | PASS ✅ |
+| TC-21 | Import creates a new draft product for an EAN not present in the DB            | Happy | PASS ✅ |
+| TC-22 | `run()` summary reports correct new / updated_draft / skipped_published counts | Logic | PASS ✅ |
+
+**New Tests:** 4 (TC-19..TC-22 added to `tests/Feature/IcecatImportTest.php`)  
+**Regression:** TC-01..TC-18 (IMP-038 suite) all PASS ✅
+
+Also includes static analysis fixes (no new tests):
+
+- `@var LengthAwarePaginator` annotation in `AdminProductController`
+- `@var App\Models\User` annotations in `UserAddressController`
+- `StripeRefundWebhookTest` TC-06: `SignatureVerificationException` code `''` → `0`
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                 |
+| ----------- | ----- | ----------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | Logic contained in `IcecatImportService::upsertGroups()`; three branches (skip / update / create)     |
+| Security    | 5/5   | Published products are immutable from automated imports — prevents accidental data overwrite          |
+| Performance | 5/5   | EAN lookup uses indexed `sku` column; O(1) per product                                                |
+| Coverage    | 5/5   | All three code paths (skip published, update draft, create new) plus summary counts explicitly tested |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                                                                                       | Severity | Resolution                                                                |
+| --- | ------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- |
+| 1   | Prior to IMP-043, re-running Icecat import could silently overwrite admin-edited published fields | High     | Fixed — `status=published` rows are now completely skipped by the service |
+
+---
+
+### D. Technical Notes
+
+- **Three-way upsert branches:**
+  - `status = published` → `skipped_published_count++`, no write
+  - `status = draft` (EAN match) → update safe fields, preserve `stock`, `updated_draft_count++`
+  - No EAN match → `create()` with random stock 50–100, `new_count++`
+- **`AdminNotification` message** extended to include all three counts for import visibility.
+- **`run()` return value** changed from `int` to `array` (`new_count`, `updated_draft_count`, `skipped_published_count`).
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                            | Benefit                               | Complexity |
+| ----------- | ---------------------------------------------------------------------- | ------------------------------------- | ---------- |
+| IMP-043.1   | Expose per-product skip/update/create result in the admin progress log | Admins can see exactly what changed   | Low        |
+| IMP-043.2   | Add `force` flag to allow intentional overwrite of published products  | Useful for emergency bulk corrections | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-043 END -->
+
+---
+
+<!-- EVAL-IMP-044 START -->
+
+## EVAL-IMP-044 — Icecat Sync Existing Products `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-28  
+**Linked Task:** [IMP-044](backlog.md)  
+**Git Tag:** v1.0-IMP-044-stable  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                    | Type  | Result  |
+| ----- | ------------------------------------------------------------------------------ | ----- | ------- |
+| TC-23 | `SyncProductsIcecatJob` implements `ShouldQueue`                               | Unit  | PASS ✅ |
+| TC-24 | `sync()` updates safe fields when Icecat data is newer                         | Happy | PASS ✅ |
+| TC-25 | `sync()` skips a product when Icecat data is NOT newer (up-to-date)            | Edge  | PASS ✅ |
+| TC-26 | `sync()` skips published products (`skipped_published`)                        | Logic | PASS ✅ |
+| TC-27 | `sync()` creates a new draft product for EANs not in DB (`new_added`)          | Happy | PASS ✅ |
+| TC-28 | `POST /admin/icecat/sync` dispatches `SyncProductsIcecatJob` for each category | Happy | PASS ✅ |
+
+**New Tests:** 6 (TC-23..TC-28 added to `tests/Feature/IcecatImportTest.php`)  
+**Regression:** TC-01..TC-22 all PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                  |
+| ----------- | ----- | ------------------------------------------------------------------------------------------------------ |
+| Simplicity  | 5/5   | New `sync()` method in `IcecatImportService`; separate `SyncProductsIcecatJob` keeps concerns separate |
+| Security    | 5/5   | Route protected by `auth + role:admin`; published products remain write-protected                      |
+| Performance | 4/5   | Sync is a queued background job; `icecat_synced_at` timestamp prevents redundant re-fetches            |
+| Coverage    | 5/5   | All sync branches (newer/up-to-date/published/new) and job dispatch tested                             |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                                       | Severity | Resolution |
+| --- | ------------------------------------------------- | -------- | ---------- |
+| —   | No bugs found — all 6 new TCs passed on first run | —        | —          |
+
+---
+
+### D. Technical Notes
+
+- **`IcecatImportService::sync()`** — fetches current Icecat data for each EAN already in DB. Compares `icecat_synced_at` timestamp against Icecat's `Updated` field. Updates only safe (non-admin-edited) fields.
+- **`SyncProductsIcecatJob`** — queued, chainable per-category. Runs on `database` queue driver.
+- **Admin UI** — "Sync with Icecat" button added to `admin/products/index.blade.php` alongside the existing "Import from Icecat" button. Returns JSON progress similar to import.
+- **Route:** `POST /admin/icecat/sync` → `admin.icecat.sync`
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                                  | Benefit                                | Complexity |
+| ----------- | ---------------------------------------------------------------------------- | -------------------------------------- | ---------- |
+| IMP-044.1   | Add scheduled `icecat:sync` Artisan command to run nightly via Scheduler     | Keeps product data fresh automatically | Low        |
+| IMP-044.2   | Show per-product sync result (updated / skipped / new) in admin progress log | Better operational visibility          | Low        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-044 END -->
+
+---
+
+<!-- ============================================================
+     UNNAMED FIX — Product Image URL Resolution + Upload Disk
+     ============================================================ -->
+
+## FIX — Product Image URL Resolution + Upload Disk
+
+**Date:** 2026-04-28  
+**Commit:** `6ec781c`  
+**Branch:** improve/IMP-010
+
+### Summary
+
+Root cause: `IMAGE_DISK` env variable was unset, causing Laravel to fall back to the `s3` driver which is not installed. Any attempt to resolve a stored image URL threw a `PortableVisibilityConverter` exception.
+
+**Changes:**
+
+- Set `IMAGE_DISK=public` in `.env` so local uploads use the `public` disk
+- Added `Product::getImageUrlAttribute()` accessor — returns Icecat full HTTPS URLs as-is; resolves local `storage/` paths via `Storage::disk('public')`
+- Added `Product::getImagesUrlsAttribute()` for the `images[]` JSON array
+- Replaced all `asset('storage/'.$product->image)` usages in Blade views with `$product->imageUrl` / `$product->imagesUrls`
+- Fixed `admin/products/images.blade.php` to render Icecat image URLs directly without storage resolution
+
+**New Tests:** 0 (existing image upload tests cover the accessor; fix confirmed by visual inspection and no 500 errors on `/admin/products`)  
+**All previous tests:** PASS ✅
+
+---
+
+<!-- ============================================================
+     UNNAMED FIX — Image Management Page: Nested Forms + Add More Images
+     ============================================================ -->
+
+## FIX — Image Management Page: Nested Forms + Add More Images
+
+**Date:** 2026-04-28  
+**Commit:** `6a5ed1e`  
+**Branch:** improve/IMP-010
+
+### Test Results
+
+| TC    | Description                                                              | Type     | Result  |
+| ----- | ------------------------------------------------------------------------ | -------- | ------- |
+| TC-14 | Admin can upload additional images via the images page                   | Happy    | PASS ✅ |
+| TC-15 | `storeImages` preserves the existing thumbnail on append                 | Edge     | PASS ✅ |
+| TC-16 | `storeImages` on a product with no images sets first upload as thumbnail | Edge     | PASS ✅ |
+| TC-17 | `storeImages` requires at least one file (validation)                    | Negative | PASS ✅ |
+| TC-18 | Manage images page shows the "Add More Images" upload form               | Happy    | PASS ✅ |
+
+**New Tests:** 5 (TC-14..TC-18 added to `tests/Feature/AdminProductImageManagementTest.php`)  
+**Cumulative suite after this fix:** 1112 tests · All PASS ✅
+
+### Bugs Fixed
+
+| #   | Bug                                                                                                                                                                                                                     | Severity | Resolution                                                                                                                                                            |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | "Add More Images" button was absent — products that already had images could not have new ones appended through the UI                                                                                                  | High     | Added `storeImages()` controller method + `POST /admin/products/{product}/images` route + dedicated upload card                                                       |
+| 2   | "Set Thumbnail" and "Remove" forms were nested inside `<form id="reorder-form">`. HTML5 strips nested forms, silently ignoring `@method('DELETE')`, submitting the outer reorder form to a non-existent route → 500/503 | High     | Converted image list from `<form><ul>` to `<div id="image-list">` with individual top-level forms per action. Drag-and-drop JS updated to use `[data-path]` selector. |
+
+---
+
+<!-- EVAL-IMP-045 START -->
+
+## EVAL-IMP-045 — Icecat Import by Product ID / EAN `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-28  
+**Linked Task:** [IMP-045](backlog.md)  
+**Git Tag:** v1.0-IMP-045-stable  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                               | Type     | Result  |
+| ----- | ------------------------------------------------------------------------- | -------- | ------- |
+| TC-01 | `importByIds` creates product with `status=draft`                         | Happy    | PASS ✅ |
+| TC-02 | `importByIds` sets `import_source = 'icecat'`                             | Happy    | PASS ✅ |
+| TC-03 | `importByIds` returns `already_exists` when EAN already in DB             | Edge     | PASS ✅ |
+| TC-04 | `importByIds` returns `failed` when Icecat returns 404                    | Negative | PASS ✅ |
+| TC-05 | `fetchProductDetailByIcecatId` calls `ICECAT-ADD-ID` param                | Unit     | PASS ✅ |
+| TC-06 | `fetchProductDetailByIcecatId` returns null on 404                        | Negative | PASS ✅ |
+| TC-07 | `fetchProductDetailByIcecatId` returns null when title missing            | Negative | PASS ✅ |
+| TC-08 | `fetchProductDetailByIcecatId` rejects non-Icecat image URL               | Security | PASS ✅ |
+| TC-09 | `POST /admin/icecat/import-by-id` requires auth                           | Security | PASS ✅ |
+| TC-10 | `POST /admin/icecat/import-by-id` requires admin role                     | Security | PASS ✅ |
+| TC-11 | `POST /admin/icecat/import-by-id` validates `ids` required                | Negative | PASS ✅ |
+| TC-12 | `POST /admin/icecat/import-by-id` rejects more than 20 IDs                | Negative | PASS ✅ |
+| TC-13 | `POST /admin/icecat/import-by-id` rejects invalid characters in ID string | Negative | PASS ✅ |
+| TC-14 | `POST /admin/icecat/import-by-id` returns per-item JSON results           | Happy    | PASS ✅ |
+| TC-15 | `importByIds` with numeric ID uses `ICECAT-ADD-ID` param (service level)  | Unit     | PASS ✅ |
+| TC-16 | Admin products index shows "Import by ID" button                          | Happy    | PASS ✅ |
+
+**New Tests:** 16 (new file `tests/Feature/IcecatImportByIdTest.php`)  
+**Cumulative suite:** 1128 tests · All PASS ✅  
+**Regression:** All IcecatImportTest (TC-01..TC-28) PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                                 |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | New `fetchProductDetailByIcecatId()` + `importByIds()` methods in existing service; single new controller method      |
+| Security    | 5/5   | Auth + role:admin guard; image URL validation rejects non-Icecat domains; max 20 IDs per request caps abuse potential |
+| Performance | 5/5   | Synchronous per-item import (no queue) is intentional for small batch UX; max 20 IDs limits blast radius              |
+| Coverage    | 5/5   | 16 tests covering happy, negative, edge, security, and service-level unit scenarios                                   |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                              | Severity | Resolution |
+| --- | ---------------------------------------- | -------- | ---------- |
+| —   | No bugs — all 16 TCs passed on first run | —        | —          |
+
+Also includes static analysis fixes in this commit:
+
+- `Product.php`: `@var Cloud` cast annotation for `Storage::disk()->url()` call (resolves PHP0418)
+- `UserAddress.php`: `@property int` docblock added (resolves PHP0418)
+
+---
+
+### D. Technical Notes
+
+- **`ICECAT-ADD-ID` param** — Icecat's product detail endpoint accepts either `ean={EAN}` (EAN-13) or `ICECAT-ADD-ID={id}` (internal Icecat numeric ID). `fetchProductDetailByIcecatId()` detects numeric-only input and routes to `ICECAT-ADD-ID`, otherwise falls back to EAN lookup.
+- **`importByIds()` return format** — `array<string, array{status: string, name?: string, error?: string}>` keyed by input ID.
+- **"Import by ID" modal** — Alpine.js textarea component in `admin/products/index.blade.php`; comma-or-newline-separated IDs, live JSON result displayed below.
+- **Max 20 IDs** — prevents runaway synchronous HTTP fan-out in a single request.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                               | Benefit                              | Complexity |
+| ----------- | --------------------------------------------------------- | ------------------------------------ | ---------- |
+| IMP-045.1   | Move `importByIds` to a queued job for batches > 5        | Prevents timeout on slow Icecat API  | Medium     |
+| IMP-045.2   | Add CSV upload for bulk ID import (> 20 products at once) | Scales to large catalogue migrations | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-045 END -->
+
+---
+
+<!-- EVAL-IMP-046 START -->
+
+## EVAL-IMP-046 — Brand Module + Icecat Brand Import `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-29  
+**Linked Task:** [IMP-046](backlog.md)  
+**Git Tag:** v1.0-IMP-046-stable (commit `d36171b`)  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                          | Type     | Result  |
+| ----- | -------------------------------------------------------------------- | -------- | ------- |
+| TC-01 | Guest is redirected from brands index                                | Security | PASS ✅ |
+| TC-02 | Non-admin user gets 403 on brands index                              | Security | PASS ✅ |
+| TC-03 | Admin can view brands index                                          | Happy    | PASS ✅ |
+| TC-04 | Admin can create a brand                                             | Happy    | PASS ✅ |
+| TC-05 | Brand creation requires name                                         | Negative | PASS ✅ |
+| TC-06 | Duplicate brand name is rejected                                     | Negative | PASS ✅ |
+| TC-07 | Slug is auto-generated on create                                     | Edge     | PASS ✅ |
+| TC-08 | Admin can update a brand                                             | Happy    | PASS ✅ |
+| TC-09 | Admin can delete a brand (product `brand_id` set to null)            | Happy    | PASS ✅ |
+| TC-10 | Product create form shows brand `<select>`                           | Happy    | PASS ✅ |
+| TC-11 | Product edit form shows brand `<select>`                             | Happy    | PASS ✅ |
+| TC-12 | Admin can set `brand_id` when creating a product                     | Happy    | PASS ✅ |
+| TC-13 | Admin can set `brand_id` when updating a product                     | Happy    | PASS ✅ |
+| TC-14 | Brands index shows product count per brand                           | Happy    | PASS ✅ |
+| TC-15 | Brand name appears on storefront product card                        | Happy    | PASS ✅ |
+| TC-16 | Brand name appears on product detail page                            | Happy    | PASS ✅ |
+| TC-17 | `POST /admin/icecat/import-from-icecat` requires auth                | Security | PASS ✅ |
+| TC-18 | `POST /admin/icecat/import-from-icecat` returns JSON (demo fallback) | Happy    | PASS ✅ |
+
+**New Tests:** 18 (new file `tests/Feature/AdminBrandTest.php`)  
+**Cumulative suite:** 1146 tests · All PASS ✅  
+**Regression:** IMP-045 suite (16 TCs) PASS ✅ · All previous suites PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                    |
+| ----------- | ----- | -------------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | Clean MVC: `Brand` model + `BrandController` (CRUD) + `brands` table migration + `BrandFactory`          |
+| Security    | 5/5   | Auth + role:admin on all brand routes; `brand_id` FK with `setNull` on delete prevents orphaned products |
+| Performance | 5/5   | Brand select is a small lookup; storefront product cards load brand name via eager-loaded relationship   |
+| Coverage    | 5/5   | 18 TCs: access control, full CRUD, FK null cascade, storefront display, Icecat import integration        |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                              | Severity | Resolution |
+| --- | ---------------------------------------- | -------- | ---------- |
+| —   | No bugs — all 18 TCs passed on first run | —        | —          |
+
+---
+
+### D. Technical Notes
+
+- **`brands` table** (`2026_04_29_000002`) — `id`, `name` (unique), `slug` (unique), `logo_url`, `timestamps`.
+- **`products.brand_id` FK** (`2026_04_29_000003`) — nullable, `onDelete('set null')`.
+- **`IcecatImportService` extension** — during import, the `Brand` field from Icecat JSON is used to `firstOrCreate` a `Brand` record. The brand's `id` is then assigned to the created product.
+- **Admin sidebar** — "Brands" link added under Product Management section.
+- **Storefront** — brand name shown as a small badge on product card and full name on product detail page.
+- **`BrandFactory`** — used in tests; generates realistic brand names via `fake()->company()`.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                            | Benefit                        | Complexity |
+| ----------- | ---------------------------------------------------------------------- | ------------------------------ | ---------- |
+| IMP-046.1   | Add brand logo upload (image upload to `public` disk, render in admin) | Richer brand presentation      | Low        |
+| IMP-046.2   | Add storefront filter by brand on the product list page (see IMP-047)  | Already implemented in IMP-047 | Done       |
+| IMP-046.3   | Brand detail page showing all products from that brand                 | Better brand browsing UX       | Medium     |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-046 END -->
+
+---
+
+<!-- EVAL-IMP-047 START -->
+
+## EVAL-IMP-047 — Admin/User Product Filter & Search Enhancements `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-29  
+**Linked Task:** [IMP-047](backlog.md)  
+**Git Tag:** improve/IMP-010 (commit `963e6c1`)  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                              | Type     | Result  |
+| ----- | ------------------------------------------------------------------------ | -------- | ------- |
+| TC-01 | Storefront: filter by brand returns only products from that brand        | Happy    | PASS ✅ |
+| TC-02 | Storefront: filter by brand excludes products with no brand              | Happy    | PASS ✅ |
+| TC-03 | Storefront: keyword search matches product name                          | Happy    | PASS ✅ |
+| TC-04 | Storefront: keyword search matches product description                   | Happy    | PASS ✅ |
+| TC-05 | Storefront: brand + category combined filter                             | Happy    | PASS ✅ |
+| TC-06 | Storefront: brand filter `<select>` shown in sidebar when brands exist   | Happy    | PASS ✅ |
+| TC-07 | Storefront: cache key includes `brand` param (distinct caches per brand) | Edge     | PASS ✅ |
+| TC-08 | Storefront: cache key includes `search` param                            | Edge     | PASS ✅ |
+| TC-09 | Admin: AJAX search by name returns matching rows                         | Happy    | PASS ✅ |
+| TC-10 | Admin: AJAX search by SKU returns matching rows                          | Happy    | PASS ✅ |
+| TC-11 | Admin: AJAX search by description returns matching rows                  | Happy    | PASS ✅ |
+| TC-12 | Admin: AJAX brand filter narrows products                                | Happy    | PASS ✅ |
+| TC-13 | Admin: AJAX response includes `brand_id` and `search` fields             | Happy    | PASS ✅ |
+| TC-14 | Admin: combined category + brand + search filter                         | Happy    | PASS ✅ |
+| TC-15 | Admin: search with no results returns empty rows and `total=0`           | Edge     | PASS ✅ |
+| TC-16 | Admin: brand filter with no products returns empty rows                  | Edge     | PASS ✅ |
+| TC-17 | Admin: guest is redirected; regular user gets 403 on AJAX endpoint       | Security | PASS ✅ |
+| TC-18 | Storefront: unknown brand ID returns empty result set, not 404           | Edge     | PASS ✅ |
+
+**New Tests:** 18 (new file `tests/Feature/ProductFilterSearchTest.php`)  
+**Cumulative suite:** 1164 tests · All PASS ✅  
+**Regression:** IMP-046 (18), IMP-040 AJAX (12), all previous suites PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                           |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | `Product::scopeFilter()` centralises all filter logic; controllers pass `$request->only(...)` as one argument   |
+| Security    | 5/5   | All filter params are bound via Eloquent scopes — no raw SQL; admin AJAX behind auth + role:admin               |
+| Performance | 4/5   | Cache key updated to include brand + search; IMP-040 AJAX path uses existing partial view with minimal overhead |
+| Coverage    | 5/5   | 18 TCs covering storefront + admin paths, combinations, cache isolation, empty states, auth                     |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                              | Severity | Resolution |
+| --- | ---------------------------------------- | -------- | ---------- |
+| —   | No bugs — all 18 TCs passed on first run | —        | —          |
+
+---
+
+### D. Technical Notes
+
+- **`Product::scopeFilter($query, $filters)`** — handles `category_id`, `brand_id`, `search`, `price_min`, `price_max`, `rating_min`, `sort` in a single unified scope. Replaces scattered inline `when()` chains in both controllers.
+- **Storefront** — `ProductController::index()` now passes `$brands` collection to the view; Blade sidebar renders a brand `<select>` when `$brands->isNotEmpty()`.
+- **Admin AJAX** — `AdminProductController::index()` extended to accept `brand_id` and `search` in AJAX mode; JSON response includes `brand_id` and `search` echo for Alpine state sync.
+- **Cache isolation** — `products.index.{category}.{brand}.{search}.{sort}.{page}` key pattern ensures distinct cache entries per filter combination.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                              | Benefit                           | Complexity |
+| ----------- | ------------------------------------------------------------------------ | --------------------------------- | ---------- |
+| IMP-047.1   | Add full-text index on `products.name` + `products.description` in MySQL | Faster search on large catalogues | Medium     |
+| IMP-047.2   | Add URL-state sync for storefront brand filter (pushState)               | Shareable filtered URLs           | Low        |
+| IMP-047.3   | Debounce admin search input (150ms) to reduce AJAX call frequency        | Reduce server load on typing      | Low        |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-047 END -->
+
+---
+
+<!-- EVAL-IMP-048 START -->
+
+## EVAL-IMP-048 — Shipping Simulator [DEMO] `[FULL_STACK_MODE]`
+
+**Date:** 2026-04-29  
+**Linked Task:** [IMP-048](backlog.md)  
+**Git Tag:** improve/IMP-010 (commit `3eca86a`)  
+**Branch:** improve/IMP-010
+
+---
+
+### A. Test Results
+
+| TC    | Description                                                                      | Type     | Result  |
+| ----- | -------------------------------------------------------------------------------- | -------- | ------- |
+| TC-01 | Admin can access the demo sandbox page                                           | Happy    | PASS ✅ |
+| TC-02 | Guest is redirected away from demo sandbox                                       | Security | PASS ✅ |
+| TC-03 | Regular user cannot access demo sandbox (403)                                    | Security | PASS ✅ |
+| TC-04 | `simulate()` creates an order with `is_demo=true`                                | Happy    | PASS ✅ |
+| TC-05 | `simulate()` does NOT decrement product stock                                    | Edge     | PASS ✅ |
+| TC-06 | `simulate()` dispatches `ShipmentSimulatorJob`                                   | Happy    | PASS ✅ |
+| TC-07 | Demo order is NOT counted in dashboard revenue                                   | Logic    | PASS ✅ |
+| TC-08 | Demo order is NOT included in admin order list                                   | Logic    | PASS ✅ |
+| TC-09 | Demo order is NOT included in admin order CSV export                             | Logic    | PASS ✅ |
+| TC-10 | Demo order is excluded from revenue report                                       | Logic    | PASS ✅ |
+| TC-11 | `Order::scopeReal()` excludes demo orders                                        | Unit     | PASS ✅ |
+| TC-12 | `status()` endpoint returns `ship_sim_status` as JSON                            | Happy    | PASS ✅ |
+| TC-13 | `status()` returns 404 for non-demo orders                                       | Negative | PASS ✅ |
+| TC-14 | `ShipmentSimulatorJob` advances `preparing` → `picked_up`                        | Happy    | PASS ✅ |
+| TC-15 | `ShipmentSimulatorJob` advances `arrived` → `delivered` or `incident` (terminal) | Happy    | PASS ✅ |
+| TC-16 | `ShipmentSimulatorJob` creates `AdminNotification` for `payment_confirmed` state | Happy    | PASS ✅ |
+| TC-17 | `ShipmentSimulatorJob` creates `AdminNotification` for `incident` state          | Happy    | PASS ✅ |
+| TC-18 | `ShipmentSimulatorJob` is idempotent on a terminal order (no-op)                 | Edge     | PASS ✅ |
+
+**New Tests:** 18 (new file `tests/Feature/ShippingSimulatorTest.php`)  
+**Cumulative suite:** 1182 tests · All PASS ✅  
+**Regression:** IMP-047 (18), IMP-046 (18), all previous suites PASS ✅
+
+---
+
+### B. Quality Scores
+
+| Dimension   | Score | Notes                                                                                                                             |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Simplicity  | 5/5   | Self-contained: `DemoController` (3 methods) + `ShipmentSimulatorJob` (chained with delays) + 1 migration + 1 Blade view          |
+| Security    | 5/5   | `is_demo=true` filter on all analytics/order queries prevents demo data contamination; demo routes are admin-only                 |
+| Performance | 4/5   | Polling every 3s via Alpine.js `setInterval` + `fetch()`; no WebSockets needed. `scopeReal()` adds a trivial indexed WHERE clause |
+| Coverage    | 5/5   | 18 TCs covering auth, stock isolation, analytics exclusion, job state machine, notifications, and idempotency                     |
+
+---
+
+### C. Bugs / Side Effects
+
+| #   | Description                                                                                                                             | Severity | Resolution                                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | TC-16 initially failed: `AdminNotification` for `payment_confirmed` was created during `nextState` advance instead of the current state | High     | Fixed — `handle()` restructured to call `notify($order, $this->currentState)` before advancing to `nextState` |
+
+---
+
+### D. Technical Notes
+
+- **`orders` table additions** (`2026_04_29_000010`) — `is_demo` (boolean, default false), `ship_sim_status` (string nullable), `ship_sim_started_at`, `ship_sim_updated_at` (timestamps nullable).
+- **`Order::scopeReal()`** — `->where('is_demo', false)`. Applied to all admin KPI queries in `AdminController`, `RevenueController`, and `OrderController` (list + export).
+- **Job chaining with delays** — `ShipmentSimulatorJob` dispatches itself recursively with `delay(now()->addSeconds($delay))`. State transitions: `payment_confirmed → preparing (5–10s) → picked_up (5–15s) → in_transit (10–20s) → arrived (5–10s) → delivered (90%) / incident (10%)`.
+- **Notifications** — `AdminNotification` created for `payment_confirmed` (admin + user), `arrived` (user only), `incident` (admin + user).
+- **Alpine.js polling** — `setInterval(fetchStatus, 3000)` on `admin/demo/index.blade.php` and order detail views (`orders/show.blade.php`, `admin/orders/show.blade.php`) when `order.is_demo = true`. Stops polling once terminal state (`delivered` / `incident`) is reached.
+- **Queue driver** — `database` queue required; `php artisan queue:work` must be running for the simulator to advance in demo sessions.
+- **[DEMO] badges** — all demo UI elements are marked with a yellow `[DEMO]` badge to clearly distinguish simulated from real orders.
+
+---
+
+### E. Improvement Proposals
+
+| Proposal ID | Description                                                                               | Benefit                                    | Complexity |
+| ----------- | ----------------------------------------------------------------------------------------- | ------------------------------------------ | ---------- |
+| IMP-048.1   | Add configurable delay multiplier (e.g. `0.1×` for fast demo) via query param             | Faster demos during presentations          | Low        |
+| IMP-048.2   | Add a "Reset / Delete Demo Order" button in the sandbox UI                                | Clean up demo orders without DB access     | Low        |
+| IMP-048.3   | Extend simulator to user-facing orders (non-admin) for testing the full order detail view | Broader QA coverage without a real payment | Medium     |
+| IMP-048.4   | Replace Alpine polling with Server-Sent Events (SSE) for zero-overhead real-time updates  | Eliminates N × 3s polling load in demos    | High       |
+
+> ⚠️ Proposals are listed only. No code changes until explicit instruction.
+
+<!-- EVAL-IMP-048 END -->
+
+<!-- EVAL-FIX-STATIC-ANALYSIS START -->
+
+## EVAL-FIX-STATIC-ANALYSIS — Static Analysis Annotations (PHP0418 / P1013 / PHP0416)
+
+**Version:** A  
+**Date:** 2025-01-29  
+**Status in Backlog:** Done  
+**Linked Task:** N/A (maintenance fix)
+
+### Summary
+
+Three files triggered IDE static analysis warnings (Intelephense P1013 / PHP0418 / PHP0416). All were **false positives at runtime** — tests passed 1182/1182 both before and after. Annotations were added to silence the warnings and maintain codebase consistency with the IMP-043 pattern.
+
+### Errors Fixed
+
+| Error Code | File | Description | Root Cause | Fix Applied |
+|-----------|------|-------------|------------|-------------|
+| P1013 / PHP0418 | `Admin/OrderController.php` line 48 | `withQueryString()` not found on `LengthAwarePaginator` contract | `paginate()` typed to contract; concrete class has method | `/** @var \Illuminate\Pagination\LengthAwarePaginator $orders */` annotation before assignment |
+| P1013 / PHP0418 | `ProductController.php` ~line 52 | Same issue inside `Cache::remember()` closure (product index) | Same root cause, inside closure where outer `@var` doesn't apply | Refactored closure to assign to `$p`, added `@var` annotation |
+| P1013 / PHP0418 | `ProductController.php` ~line 117 | Same issue inside `Cache::remember()` closure (search results) | Same root cause; `$r->withQueryString()` result was discarded | Refactored to `return $r->withQueryString()` with `@var` annotation |
+| PHP0416 | `Models/Order.php` | `$id`, `$ship_sim_status` and other dynamic Eloquent properties undefined | No `@property` docblock on `Order` class | Added full `@property` docblock (25 properties) to `Order` class |
+
+### Files Changed
+
+- `ecommerce/app/Http/Controllers/Admin/OrderController.php` — `@var` annotation before paginate chain
+- `ecommerce/app/Http/Controllers/ProductController.php` — 2 closure refactors with `@var` annotations
+- `ecommerce/app/Models/Order.php` — `@property` docblock added before class declaration
+
+### Test Results
+
+| Metric | Value |
+|--------|-------|
+| Total Tests | 1182 |
+| Passed | 1182 |
+| Failed | 0 |
+| Cumulative Tests | 1182 |
+
+All 1182 tests pass. No regressions introduced.
+
+### Notes
+
+- Pattern consistent with IMP-043 approach (`AdminProductController.php` line 30 and `UserAddressController.php`)
+- `DemoController.php` required **no changes** — its code was correct; only `Order.php` needed `@property` docs
+- The one flaky failure observed in one test run (`pm005 invalid headers are rejected` — missing temp directory) is a pre-existing infrastructure issue unrelated to these changes; the parallel test run confirmed 1182/1182 passing
+
+<!-- EVAL-FIX-STATIC-ANALYSIS END -->
