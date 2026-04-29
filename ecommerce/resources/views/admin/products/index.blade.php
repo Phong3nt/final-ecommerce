@@ -7,8 +7,27 @@
 @section('content')
 <div x-data x-init="$el.classList.add('fade-in')">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Products</h4>
-        <div class="d-flex gap-2">
+        <h4 class="mb-0">
+            Products
+            @if($showArchived)
+                <span class="badge bg-danger ms-2" style="font-size:.7rem">Archived view</span>
+            @endif
+        </h4>
+        <div class="d-flex gap-2 flex-wrap">
+            @if($showArchived)
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Active
+                </a>
+            @else
+                <a href="{{ route('admin.products.index', ['show_archived' => 1]) }}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-archive me-1"></i> Show Archived
+                </a>
+            @endif
+            <a href="{{ route('admin.products.export', array_filter(['show_archived' => $showArchived ? 1 : null])) }}"
+               class="btn btn-outline-success btn-sm" id="export-btn">
+                <i class="bi bi-download me-1"></i> Export CSV
+            </a>
+            @unless($showArchived)
             <button type="button" class="btn btn-outline-primary btn-sm"
                     data-bs-toggle="modal" data-bs-target="#icecatImportModal">
                 <i class="bi bi-cloud-download me-1"></i> Import from Icecat
@@ -24,6 +43,7 @@
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> New Product
             </a>
+            @endunless
         </div>
     </div>
 
@@ -91,14 +111,17 @@
             {{ $products->total() }},
             {{ request('category_id') ? 'true' : 'false' }},
             {{ json_encode($products->pluck('id')->map(fn($id) => (string)$id)->toArray()) }},
-            {{ request('category_id') ?? 'null' }}
+            {{ request('category_id') ?? 'null' }},
+            {{ request('brand_id') ?? 'null' }},
+            {{ json_encode(request('search', '')) }},
+            {{ $showArchived ? 'true' : 'false' }}
         )"
         x-init="bindPaginationLinks()">
 
-        {{-- IMP-040: Category filter (AJAX — no page reload, no URL change, table only) --}}
-        <div class="d-flex align-items-center gap-2 mb-3">
-            <label for="category_id" class="fw-semibold small mb-0">Filter by category:</label>
-            <select id="category_id" class="form-select form-select-sm" style="max-width:200px;"
+        {{-- IMP-040 + IMP-047: Category / Brand / Search filters (AJAX — no page reload) --}}
+        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <label for="category_id" class="fw-semibold small mb-0">Category:</label>
+            <select id="category_id" class="form-select form-select-sm" style="max-width:180px;"
                     :disabled="loading"
                     @change="filterByCategory($event.target.value)">
                 <option value="">All categories</option>
@@ -108,12 +131,35 @@
                     </option>
                 @endforeach
             </select>
+
+            <label for="brand_id" class="fw-semibold small mb-0">Brand:</label>
+            <select id="brand_id" class="form-select form-select-sm" style="max-width:160px;"
+                    :disabled="loading"
+                    @change="filterByBrand($event.target.value)">
+                <option value="">All brands</option>
+                @foreach($brands as $b)
+                    <option value="{{ $b->id }}" {{ request('brand_id') == $b->id ? 'selected' : '' }}>
+                        {{ $b->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <div class="input-group input-group-sm" style="max-width:220px;">
+                <input type="text" id="product_search" class="form-control" placeholder="Search name / SKU…"
+                       x-model="currentSearch"
+                       :disabled="loading"
+                       @keydown.enter.prevent="applySearch()">
+                <button class="btn btn-outline-secondary" type="button" @click="applySearch()" :disabled="loading">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
             <span x-show="loading" x-cloak
                   class="spinner-border spinner-border-sm text-secondary" role="status"
                   aria-label="Loading products…"></span>
             <button type="button" class="btn btn-link btn-sm p-0"
-                    x-show="currentCategoryId" x-cloak
-                    @click="filterByCategory('')">Clear</button>
+                    x-show="currentCategoryId || currentBrandId || currentSearch" x-cloak
+                    @click="clearFilters()">Clear all</button>
         </div>
 
         {{-- Hidden bulk-submit form (populated dynamically by Alpine) --}}
@@ -433,13 +479,16 @@
 @push('scripts')
 <script>
     // IMP-040 + IMP-039 + IMP-013: unified Alpine component for admin product list
-    function productListAdmin(initTotal, initHasCategoryFilter, initPageIds, initCategoryId) {
+    function productListAdmin(initTotal, initHasCategoryFilter, initPageIds, initCategoryId, initBrandId, initSearch, initShowArchived) {
         return {
-            // ─── AJAX filter state (IMP-040) ──────────────────────
+            // ─── AJAX filter state (IMP-040 / IMP-047) ────────────
             totalInFilter:     initTotal,
             hasCategoryFilter: initHasCategoryFilter,
             pageIds:           initPageIds,
             currentCategoryId: initCategoryId,
+            currentBrandId:    initBrandId,
+            currentSearch:     initSearch || '',
+            showArchived:      initShowArchived || false,
             loading:           false,
 
             // ─── selection state (IMP-039) ────────────────────────
@@ -458,7 +507,7 @@
                 return this.hasCategoryFilter && !this.allInCategory && this.isAllPageChecked;
             },
 
-            // ─── IMP-040: AJAX category filter + pagination ───────
+            // ─── IMP-040 / IMP-047: AJAX filter + pagination ──────
             bindPaginationLinks() {
                 const pagination = document.getElementById('products-pagination');
                 if (!pagination || pagination._ajaxBound) return;
@@ -467,11 +516,11 @@
                     const link = event.target.closest('a');
                     if (!link) return;
                     event.preventDefault();
-                    this.loadProducts(link.href, this.currentCategoryId);
+                    this.loadProducts(link.href, this.currentCategoryId, this.currentBrandId, this.currentSearch);
                 });
             },
 
-            loadProducts(urlOrPath, catId) {
+            loadProducts(urlOrPath, catId, brandId, search) {
                 this.loading = true;
                 this.selected = [];
                 this.allInCategory = false;
@@ -479,10 +528,22 @@
                     ? new URL(urlOrPath, window.location.origin)
                     : new URL('/admin/products', window.location.origin);
                 base.searchParams.set('_ajax', '1');
-                if (catId) {
-                    base.searchParams.set('category_id', catId);
-                } else {
-                    base.searchParams.delete('category_id');
+                if (catId) { base.searchParams.set('category_id', catId); }
+                else       { base.searchParams.delete('category_id'); }
+                if (brandId) { base.searchParams.set('brand_id', brandId); }
+                else         { base.searchParams.delete('brand_id'); }
+                if (search) { base.searchParams.set('search', search); }
+                else        { base.searchParams.delete('search'); }
+                if (this.showArchived) { base.searchParams.set('show_archived', '1'); }
+                else                  { base.searchParams.delete('show_archived'); }
+                // Update export button URL to reflect current filters
+                const exportBtn = document.getElementById('export-btn');
+                if (exportBtn) {
+                    const exp = new URL(exportBtn.href, window.location.origin);
+                    if (catId) { exp.searchParams.set('category_id', catId); } else { exp.searchParams.delete('category_id'); }
+                    if (brandId) { exp.searchParams.set('brand_id', brandId); } else { exp.searchParams.delete('brand_id'); }
+                    if (search) { exp.searchParams.set('search', search); } else { exp.searchParams.delete('search'); }
+                    exportBtn.href = exp.toString();
                 }
                 fetch(base.toString(), {
                     headers: {
@@ -499,6 +560,8 @@
                     this.totalInFilter     = data.total;
                     this.pageIds           = data.page_ids;
                     this.currentCategoryId = data.category_id || null;
+                    this.currentBrandId    = data.brand_id    || null;
+                    this.currentSearch     = data.search      || '';
                     this.hasCategoryFilter = !!data.category_id;
                     this.loading           = false;
                     // Re-bind archive confirm dialogs on newly injected rows
@@ -515,7 +578,27 @@
             },
 
             filterByCategory(catId) {
-                this.loadProducts('/admin/products', catId || null);
+                this.currentCategoryId = catId || null;
+                this.loadProducts('/admin/products', this.currentCategoryId, this.currentBrandId, this.currentSearch);
+            },
+
+            filterByBrand(brandId) {
+                this.currentBrandId = brandId || null;
+                this.loadProducts('/admin/products', this.currentCategoryId, this.currentBrandId, this.currentSearch);
+            },
+
+            applySearch() {
+                this.loadProducts('/admin/products', this.currentCategoryId, this.currentBrandId, this.currentSearch);
+            },
+
+            clearFilters() {
+                this.currentCategoryId = null;
+                this.currentBrandId    = null;
+                this.currentSearch     = '';
+                document.getElementById('category_id').value = '';
+                document.getElementById('brand_id').value    = '';
+                document.getElementById('product_search').value = '';
+                this.loadProducts('/admin/products', null, null, '');
             },
 
             // ─── selection actions (IMP-039) ──────────────────────

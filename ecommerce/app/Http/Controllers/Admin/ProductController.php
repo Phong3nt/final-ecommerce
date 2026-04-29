@@ -18,34 +18,114 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
     public function index(Request $request): View|JsonResponse
     {
-        $categoryId = $request->integer('category_id') ?: null;
+        $categoryId   = $request->integer('category_id') ?: null;
+        $brandId      = $request->integer('brand_id') ?: null;
+        $search       = trim($request->input('search', ''));
+        $showArchived = $request->boolean('show_archived');
+
         /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
-        $products = Product::with(['category', 'brand'])
+        $base = $showArchived
+            ? Product::onlyTrashed()->with(['category', 'brand'])
+            : Product::with(['category', 'brand']);
+
+        $products = $base
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($brandId,    fn($q) => $q->where('brand_id', $brandId))
+            ->when($search !== '', fn($q) => $q->where(fn($q2) => $q2
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%")))
             ->latest()->paginate(20);
         $categories = Category::orderBy('name')->get();
+        $brands     = Brand::orderBy('name')->get();
         $imports = ProductImport::with('user')->latest()->limit(10)->get();
 
         // IMP-040: AJAX category filter — return JSON with rendered rows + pagination only
         if ($request->boolean('_ajax')) {
-            $appends = $categoryId ? ['category_id' => $categoryId] : [];
+            $appends = array_filter([
+                'category_id'   => $categoryId,
+                'brand_id'      => $brandId,
+                'search'        => $search ?: null,
+                'show_archived' => $showArchived ? '1' : null,
+            ]);
             $products->appends($appends);
 
             return response()->json([
-                'rows_html'       => view('admin.products._rows', compact('products'))->render(),
+                'rows_html'       => view('admin.products._rows', compact('products', 'showArchived'))->render(),
                 'pagination_html' => $products->links()->toHtml(),
                 'total'           => $products->total(),
                 'page_ids'        => $products->pluck('id')->map(fn($id) => (string) $id)->values()->toArray(),
                 'category_id'     => $categoryId,
+                'brand_id'        => $brandId,
+                'search'          => $search,
+                'show_archived'   => $showArchived,
             ]);
         }
 
-        return view('admin.products.index', compact('products', 'categories', 'imports'));
+        return view('admin.products.index', compact('products', 'categories', 'brands', 'imports', 'showArchived'));
+    }
+
+    /**
+     * Restore a soft-deleted (archived) product.
+     */
+    public function restore(int $id): RedirectResponse
+    {
+        $product = Product::withTrashed()->findOrFail($id);
+        $product->restore();
+
+        return redirect()->route('admin.products.index', ['show_archived' => 1])
+            ->with('success', "Product \"{$product->name}\" restored successfully.");
+    }
+
+    /**
+     * Export products as a CSV download.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $categoryId   = $request->integer('category_id') ?: null;
+        $brandId      = $request->integer('brand_id') ?: null;
+        $search       = trim($request->input('search', ''));
+        $showArchived = $request->boolean('show_archived');
+
+        $base = $showArchived
+            ? Product::onlyTrashed()->with(['category', 'brand'])
+            : Product::with(['category', 'brand']);
+
+        $products = $base
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($brandId,    fn($q) => $q->where('brand_id', $brandId))
+            ->when($search !== '', fn($q) => $q->where(fn($q2) => $q2
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")))
+            ->latest()->get();
+
+        $filename = 'products-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($products) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Name', 'SKU', 'Price', 'Stock', 'Category', 'Brand', 'Status', 'Import Source', 'Created At']);
+            foreach ($products as $p) {
+                fputcsv($handle, [
+                    $p->id,
+                    $p->name,
+                    $p->sku ?? '',
+                    $p->price,
+                    $p->stock,
+                    $p->category?->name ?? '',
+                    $p->brand?->name ?? '',
+                    $p->status,
+                    $p->import_source ?? '',
+                    $p->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv', 'Cache-Control' => 'no-store']);
     }
 
     public function import(Request $request): RedirectResponse
@@ -98,7 +178,7 @@ class ProductController extends Controller
             'brand_id'    => ['nullable', 'integer', 'exists:brands,id'],
             'status' => ['required', 'in:draft,published'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'max:10240'],
+            'images.*' => ['image', 'max:20480'],
         ]);
 
         $slug = $this->uniqueSlug(Str::slug($validated['name']));
@@ -212,7 +292,7 @@ class ProductController extends Controller
             'brand_id'    => ['nullable', 'integer', 'exists:brands,id'],
             'status' => ['required', 'in:draft,published'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'max:10240'],
+            'images.*' => ['image', 'max:20480'],
         ]);
 
         $slug = $product->slug;
@@ -299,7 +379,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'images'   => ['required', 'array', 'min:1'],
-            'images.*' => ['image', 'max:10240'],
+            'images.*' => ['image', 'max:20480'],
         ]);
 
         $disk  = config('filesystems.image_disk', 's3');

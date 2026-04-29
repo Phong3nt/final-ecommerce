@@ -124,6 +124,14 @@
                     <div class="card-body">
                         <form action="{{ route('products.index') }}" method="GET" id="filter-form">
 
+                            {{-- IMP-047: keyword search --}}
+                            <div class="mb-3">
+                                <label for="search"
+                                    class="form-label small fw-semibold text-uppercase text-muted">Search</label>
+                                <input type="text" name="search" id="search" class="form-control form-control-sm"
+                                    placeholder="Name or description…" value="{{ $filters['search'] ?? '' }}">
+                            </div>
+
                             <div class="mb-3">
                                 <label for="category"
                                     class="form-label small fw-semibold text-uppercase text-muted">Category</label>
@@ -136,6 +144,22 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            {{-- IMP-047: brand filter --}}
+                            @if ($brands->isNotEmpty())
+                                <div class="mb-3">
+                                    <label for="brand"
+                                        class="form-label small fw-semibold text-uppercase text-muted">Brand</label>
+                                    <select name="brand" id="brand" class="form-select form-select-sm">
+                                        <option value="">All Brands</option>
+                                        @foreach ($brands as $b)
+                                            <option value="{{ $b->id }}" {{ (string) ($filters['brand'] ?? '') === (string) $b->id ? 'selected' : '' }}>
+                                                {{ $b->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-uppercase text-muted">Price
@@ -208,7 +232,7 @@
                                             loading="lazy" onload="this.classList.remove('skel-img')">
                                     @else
                                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center
-                                                                                                                                {{ $loop->first ? '' : '' }}"
+                                                                                                                                                {{ $loop->first ? '' : '' }}"
                                             style="height: {{ $loop->first ? '340px' : '180px' }};">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ced4da"
                                                 viewBox="0 0 16 16">

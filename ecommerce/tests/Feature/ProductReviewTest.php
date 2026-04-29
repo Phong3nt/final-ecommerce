@@ -37,10 +37,10 @@ class ProductReviewTest extends TestCase
         return Product::factory()->create(['status' => 'published', 'stock' => 10]);
     }
 
-    /** Create a paid order that contains the given product for the given user. */
+    /** Create a delivered order that contains the given product for the given user. */
     private function purchaseProduct(User $user, Product $product): Order
     {
-        $order = Order::factory()->paid()->create(['user_id' => $user->id]);
+        $order = Order::factory()->delivered()->create(['user_id' => $user->id]);
         OrderItem::factory()->create([
             'order_id'   => $order->id,
             'product_id' => $product->id,
@@ -226,11 +226,11 @@ class ProductReviewTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // TC-09: Edge — Comment is required
+    // TC-09: Edge — Comment is optional
     // -------------------------------------------------------------------------
 
     /** @test */
-    public function test_rv001_comment_is_required(): void
+    public function test_rv001_comment_is_optional(): void
     {
         $user    = $this->makeUser();
         $product = $this->makeProduct();
@@ -241,8 +241,14 @@ class ProductReviewTest extends TestCase
             $this->validPayload(['comment' => ''])
         );
 
-        $response->assertSessionHasErrors('comment');
-        $this->assertDatabaseCount('product_reviews', 0);
+        $response->assertRedirect(route('products.show', $product->slug));
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('product_reviews', [
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'rating' => 4,
+            'comment' => null,
+        ]);
     }
 
     // -------------------------------------------------------------------------

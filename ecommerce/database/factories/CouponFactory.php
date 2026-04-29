@@ -16,13 +16,18 @@ class CouponFactory extends Factory
     {
         return [
             'code' => strtoupper(fake()->unique()->bothify('??##??')),
+            'name' => fake()->sentence(3),
+            'description' => fake()->sentence(12),
+            'coupon_template_id' => null,
+            'user_id' => null,
             'type' => fake()->randomElement(['percent', 'fixed']),
             'value' => fake()->randomFloat(2, 1, 50),
             'expires_at' => null,
             'usage_limit' => null,
-            'min_order_amount' => null,
+            'min_order_amount' => 1,
             'is_active' => true,
             'times_used' => 0,
+            'assigned_at' => null,
         ];
     }
 

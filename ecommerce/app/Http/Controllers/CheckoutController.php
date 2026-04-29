@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\NotifyAdminOfNewOrder;
 use App\Jobs\SendOrderConfirmationEmail;
 use App\Models\AdminNotification;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\UserAddress;
 use App\Services\PaymentServiceInterface;
@@ -576,9 +577,19 @@ class CheckoutController extends Controller
                 $order = Order::where('stripe_payment_intent_id', $intentId)->first();
                 if ($order) {
                     if ($event->type === 'payment_intent.succeeded') {
-                        $order->update(['status' => 'paid']);
-                        SendOrderConfirmationEmail::dispatch($order);
-                        NotifyAdminOfNewOrder::dispatch($order);
+                        if ($order->status !== 'paid') {
+                            $order->update(['status' => 'paid']);
+
+                            if ($order->coupon_code) {
+                                $coupon = Coupon::where('code', $order->coupon_code)->first();
+                                if ($coupon && $coupon->isValid()) {
+                                    $coupon->consumeOneUse();
+                                }
+                            }
+
+                            SendOrderConfirmationEmail::dispatch($order);
+                            NotifyAdminOfNewOrder::dispatch($order);
+                        }
                     } elseif ($event->type === 'payment_intent.payment_failed') {
                         $order->update(['status' => 'failed']);
                     }

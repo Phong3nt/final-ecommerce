@@ -230,6 +230,15 @@
                       {{ request()->is('admin/audit-log*') ? 'bg-primary text-white active' : 'text-white-50' }}">
                 <i class="bi bi-journal-text"></i> Audit Log
             </a>
+
+            <span class="sidebar-section-label mt-2">Demo</span>
+
+            <a href="{{ route('admin.demo.index') }}" class="nav-link px-3 py-2 d-flex align-items-center gap-2
+                      {{ request()->is('admin/demo*') ? 'bg-warning text-dark active' : 'text-white-50' }}">
+                <i class="bi bi-rocket-takeoff"></i> Demo Sandbox
+                <span
+                    style="font-size:.6rem;font-weight:700;background:#fbbf24;color:#78350f;padding:1px 5px;border-radius:3px;margin-left:auto">[DEMO]</span>
+            </a>
         </div>
 
         {{-- Sidebar footer: logout --}}
@@ -269,7 +278,7 @@
                 @auth
                     <div class="d-flex align-items-center gap-2">
                         <div class="rounded-circle bg-primary text-white d-flex align-items-center
-                                        justify-content-center fw-bold flex-shrink-0"
+                                            justify-content-center fw-bold flex-shrink-0"
                             style="width:30px;height:30px;font-size:0.75rem;">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>

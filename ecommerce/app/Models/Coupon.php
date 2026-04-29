@@ -4,12 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Coupon extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'type', 'value', 'expires_at', 'is_active', 'usage_limit', 'min_order_amount', 'times_used'];
+    protected $fillable = [
+        'coupon_template_id',
+        'user_id',
+        'code',
+        'name',
+        'description',
+        'type',
+        'value',
+        'expires_at',
+        'is_active',
+        'usage_limit',
+        'min_order_amount',
+        'times_used',
+        'assigned_at',
+    ];
 
     protected $casts = [
         'value' => 'float',
@@ -18,7 +33,18 @@ class Coupon extends Model
         'usage_limit' => 'integer',
         'min_order_amount' => 'float',
         'times_used' => 'integer',
+        'assigned_at' => 'datetime',
     ];
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(CouponTemplate::class, 'coupon_template_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Returns true when the coupon can be applied:
@@ -30,10 +56,21 @@ class Coupon extends Model
             return false;
         }
 
+        if ($this->usage_limit !== null && $this->times_used >= $this->usage_limit) {
+            return false;
+        }
+
         if ($this->expires_at !== null && $this->expires_at->isPast()) {
             return false;
         }
 
         return true;
+    }
+
+    public function consumeOneUse(): void
+    {
+        if ($this->usage_limit === null || $this->times_used < $this->usage_limit) {
+            $this->increment('times_used');
+        }
     }
 }

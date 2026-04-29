@@ -12,7 +12,7 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Order::with('user')->latest();
+        $query = Order::with('user')->where('is_demo', false)->latest();
 
         // Filter: status
         if ($request->filled('status')) {
@@ -45,7 +45,9 @@ class OrderController extends Controller
             default => $query->reorder('created_at', 'desc'),
         };
 
-        $orders = $query->paginate(20)->withQueryString();
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $orders */
+        $orders = $query->paginate(20);
+        $orders->withQueryString();
         $statuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'failed'];
 
         return view('admin.orders.index', compact('orders', 'statuses'));
@@ -62,7 +64,7 @@ class OrderController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $query = Order::with(['user', 'items'])->latest();
+        $query = Order::with(['user', 'items'])->where('is_demo', false)->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

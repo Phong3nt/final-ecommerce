@@ -20,17 +20,14 @@
             </ul>
 
             {{-- Right: cart + user --}}
+            @php $__navCartCount = array_sum(array_column(session('cart', []), 'quantity')); @endphp
             <ul class="navbar-nav align-items-center gap-2">
                 {{-- Cart icon with badge --}}
                 <li class="nav-item">
                     <a class="nav-link position-relative" href="{{ route('cart.index') }}">
                         <i class="bi bi-cart3 fs-5"></i>
-                        @if(session('cart_count', 0) > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle
-                                             badge rounded-pill bg-danger">
-                                {{ session('cart_count') }}
-                            </span>
-                        @endif
+                        <span id="navbar-cart-badge"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger{{ $__navCartCount > 0 ? '' : ' d-none' }}">{{ $__navCartCount > 0 ? $__navCartCount : '' }}</span>
                     </a>
                 </li>
 
@@ -44,7 +41,7 @@
                                     height="28" style="object-fit:cover;" alt="">
                             @else
                                 <div class="rounded-circle bg-primary text-white d-flex
-                                                    align-items-center justify-content-center fw-bold"
+                                                            align-items-center justify-content-center fw-bold"
                                     style="width:28px;height:28px;font-size:0.75rem;">
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 </div>

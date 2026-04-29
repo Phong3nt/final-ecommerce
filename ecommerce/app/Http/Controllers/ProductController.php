@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -22,7 +23,7 @@ class ProductController extends Controller
 
     public function index(Request $request): View
     {
-        $filters = $request->only(['category', 'min_price', 'max_price', 'min_rating', 'sort']);
+        $filters = $request->only(['category', 'brand', 'min_price', 'max_price', 'min_rating', 'sort', 'search']);
         $sort    = $filters['sort'] ?? 'newest';
         $page    = (int) $request->input('page', 1);
         $version = self::catalogVersion();
@@ -34,20 +35,30 @@ class ProductController extends Controller
             fn () => Category::orderBy('name')->get()
         );
 
+        // IMP-047: brand list for filter sidebar
+        $brands = Cache::remember(
+            'catalog.brands.' . $version,
+            now()->addMinutes(30),
+            fn () => Brand::orderBy('name')->get()
+        );
+
         // IMP-014: cache paginated product list keyed by version + page + filters
         /** @var \Illuminate\Pagination\LengthAwarePaginator $products */
         $products = Cache::remember(
             'catalog.idx.' . $version . '.' . $page . '.' . md5(json_encode($filters)),
             now()->addMinutes(5),
-            fn () => Product::published()
-                ->with(['category', 'brand'])
-                ->filter($filters)
-                ->sort($sort)
-                ->paginate(12)
-                ->withQueryString()
+            function () use ($filters, $sort) {
+                /** @var \Illuminate\Pagination\LengthAwarePaginator $p */
+                $p = Product::published()
+                    ->with(['category', 'brand'])
+                    ->filter($filters)
+                    ->sort($sort)
+                    ->paginate(12);
+                return $p->withQueryString();
+            }
         );
 
-        return view('products.index', compact('products', 'filters', 'categories'));
+        return view('products.index', compact('products', 'filters', 'categories', 'brands'));
     }
 
     public function show(Product $product): View
@@ -62,7 +73,7 @@ class ProductController extends Controller
             $userId = auth()->id();
 
             $hasPurchased = Order::where('user_id', $userId)
-                ->whereIn('status', ['paid', 'processing', 'shipped', 'delivered'])
+                ->where('status', 'delivered')
                 ->whereHas('items', fn($q) => $q->where('product_id', $product->id))
                 ->exists();
 
@@ -103,9 +114,9 @@ class ProductController extends Controller
             'catalog.srch.' . $version . '.' . $page . '.' . md5($q),
             now()->addMinutes(5),
             function () use ($q) {
+                /** @var \Illuminate\Pagination\LengthAwarePaginator $r */
                 $r = Product::published()->search($q)->latest()->paginate(12);
-                $r->withQueryString();
-                return $r;
+                return $r->withQueryString();
             }
         );
 

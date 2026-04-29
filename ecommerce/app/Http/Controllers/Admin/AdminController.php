@@ -21,8 +21,8 @@ class AdminController extends Controller
 
     public function dashboard(Request $request): View
     {
-        $totalRevenue = Order::whereIn('status', self::REVENUE_STATUSES)->sum('total');
-        $ordersToday = Order::whereDate('created_at', today())->count();
+        $totalRevenue = Order::whereIn('status', self::REVENUE_STATUSES)->where('is_demo', false)->sum('total');
+        $ordersToday = Order::whereDate('created_at', today())->where('is_demo', false)->count();
         $newUsersToday = User::whereDate('created_at', today())->count();
         $lowStockProducts = Product::where('stock', '<=', self::LOW_STOCK_THRESHOLD)->count();
 
@@ -36,7 +36,8 @@ class AdminController extends Controller
 
         $query = OrderItem::query()
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereIn('orders.status', self::REVENUE_STATUSES);
+            ->whereIn('orders.status', self::REVENUE_STATUSES)
+            ->where('orders.is_demo', false);
         if ($dateStart) {
             $query->where('orders.created_at', '>=', Carbon::parse($dateStart)->startOfDay());
         }
@@ -58,6 +59,7 @@ class AdminController extends Controller
 
         // Recent orders (last 10)
         $recentOrders = Order::with('user')
+            ->where('is_demo', false)
             ->latest('created_at')
             ->limit(10)
             ->get();
@@ -100,8 +102,9 @@ class AdminController extends Controller
 
         $start = $periods->first();
         $revenueOrders = Order::whereIn('status', self::REVENUE_STATUSES)
+            ->where('is_demo', false)
             ->where('created_at', '>=', $start)->get(['total', 'created_at']);
-        $allOrders = Order::where('created_at', '>=', $start)->get(['created_at']);
+        $allOrders = Order::where('created_at', '>=', $start)->where('is_demo', false)->get(['created_at']);
 
         $revenueMap = [];
         foreach ($revenueOrders as $o) {

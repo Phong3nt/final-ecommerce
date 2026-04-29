@@ -200,6 +200,71 @@
 @section('content')
     <div x-data x-init="$el.classList.add('fade-in')">
 
+        {{-- IMP-048: Demo order banner + shipping simulator --}}
+        @if ($order->is_demo)
+            <div class="alert alert-warning border-warning mb-4 d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-cone-striped fs-5"></i>
+                <div>
+                    <strong>[DEMO]</strong> This is a demo order — it does not affect stock or revenue.
+                </div>
+            </div>
+            <div class="card shadow-sm border-warning border-2 mb-4"
+                x-data="shipSimPoller('{{ route('orders.show', $order->id) }}__status', '{{ route('admin.demo.status', $order->id) }}', '{{ $order->ship_sim_status }}')">
+                <div class="card-header bg-warning-subtle d-flex align-items-center justify-content-between border-0">
+                    <span class="fw-semibold"><i class="bi bi-truck me-1"></i> Shipping Simulation <span
+                            class="badge bg-warning text-dark ms-1">[DEMO]</span></span>
+                    <span class="text-muted small" x-text="isTerminal ? 'Completed' : 'Live'"></span>
+                </div>
+                <div class="card-body">
+                    {{-- Step bar --}}
+                    <div class="d-flex align-items-center gap-0 overflow-auto pb-2">
+                        @php
+                            $simSteps = [
+                                ['payment_confirmed', 'Payment Confirmed', 'bi-check-circle'],
+                                ['preparing', 'Preparing Goods', 'bi-box-seam'],
+                                ['picked_up', 'Handed to Courier', 'bi-truck'],
+                                ['in_transit', 'On the Way', 'bi-geo-alt'],
+                                ['arrived', 'Arrived', 'bi-house-check'],
+                            ];
+                            $simOrder = array_column($simSteps, 0);
+                        @endphp
+                        @foreach ($simSteps as [$sKey, $sLabel, $sIcon])
+                            <div class="text-center flex-fill" style="min-width:80px">
+                                <div :class="{
+                                                'bg-success text-white border-success': stepDone('{{ $sKey }}') || currentStatus === '{{ $sKey }}' && isTerminal && currentStatus !== 'incident',
+                                                'bg-primary text-white border-primary': currentStatus === '{{ $sKey }}' && !isTerminal,
+                                                'bg-danger text-white border-danger': currentStatus === 'incident' && '{{ $sKey }}' === 'arrived',
+                                                'bg-white text-secondary border-secondary': !stepDone('{{ $sKey }}') && currentStatus !== '{{ $sKey }}'
+                                             }"
+                                    class="rounded-circle border d-inline-flex align-items-center justify-content-center"
+                                    style="width:36px;height:36px">
+                                    <i class="bi {{ $sIcon }}"></i>
+                                </div>
+                                <div class="mt-1" style="font-size:.7rem;font-weight:600">{{ $sLabel }}</div>
+                            </div>
+                            @if (!$loop->last)
+                                <div class="flex-shrink-0 align-self-start mt-3 px-1 text-muted"><i class="bi bi-arrow-right"></i></div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    {{-- Incident / delivered banner --}}
+                    <template x-if="currentStatus === 'incident'">
+                        <div class="alert alert-danger mt-3 mb-0 py-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>[DEMO] Incident occurred</strong> — a refund will be processed.
+                        </div>
+                    </template>
+                    <template x-if="currentStatus === 'delivered'">
+                        <div class="alert alert-success mt-3 mb-0 py-2">
+                            <i class="bi bi-bag-check me-1"></i>
+                            <strong>[DEMO] Delivered!</strong> Simulation complete.
+                        </div>
+                    </template>
+                </div>
+            </div>
+        @endif
+
         {{-- Page header --}}
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
@@ -403,3 +468,55 @@
 
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        { { --IMP -048: Shipping Simulator poller(Alpine.js component)-- } }
+        function shipSimPoller(_unused, statusUrl, initialStatus) {
+            const STEP_ORDER = ['payment_confirmed', 'preparing', 'picked_up', 'in_transit', 'arrived'];
+            const TERMINAL = ['delivered', 'incident'];
+            return {
+                currentStatus: initialStatus,
+                timer: null,
+                get isTerminal() { return TERMINAL.includes(this.currentStatus); },
+                init() {
+                    if (!this.isTerminal) {
+                        this.timer = setInterval(() => this.poll(), 3000);
+                    }
+                },
+                async poll() {
+                    try {
+                        const res = await fetch(statusUrl);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        const prev = this.currentStatus;
+                        this.currentStatus = data.ship_sim_status ?? prev;
+                        if (data.toast) {
+                            this.showToast(data.toast);
+                        }
+                        if (this.isTerminal) {
+                            clearInterval(this.timer);
+                        }
+                    } catch (_) { }
+                },
+                stepDone(key) {
+                    const curIdx = STEP_ORDER.indexOf(this.currentStatus);
+                    const keyIdx = STEP_ORDER.indexOf(key);
+                    if (keyIdx === -1 || curIdx === -1) return false;
+                    return keyIdx < curIdx || (this.currentStatus === 'delivered' && keyIdx <= curIdx);
+                },
+                showToast(msg) {
+                    const container = document.getElementById('toast-container');
+                    if (!container) return;
+                    const el = document.createElement('div');
+                    el.className = 'toast align-items-center text-bg-warning border-0 show mb-2';
+                    el.setAttribute('role', 'alert');
+                    el.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${msg}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+                    container.appendChild(el);
+                    setTimeout(() => el.remove(), 6000);
+                },
+            };
+        }
+    </script>
+@endpush

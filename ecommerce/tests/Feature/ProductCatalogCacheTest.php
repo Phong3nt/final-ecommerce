@@ -149,7 +149,7 @@ class ProductCatalogCacheTest extends TestCase
     {
         $buyer   = $this->makeUser();
         $product = Product::factory()->create(['status' => 'published', 'stock' => 10]);
-        $order   = Order::factory()->paid()->create(['user_id' => $buyer->id]);
+        $order   = Order::factory()->delivered()->create(['user_id' => $buyer->id]);
         OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id]);
 
         // Guest warms the cache first

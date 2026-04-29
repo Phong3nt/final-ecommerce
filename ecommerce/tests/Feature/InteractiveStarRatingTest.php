@@ -50,7 +50,7 @@ class InteractiveStarRatingTest extends TestCase
     /** Create a delivered order that links user → product so $canReview = true. */
     private function purchaseProduct(User $user, Product $product): void
     {
-        $order = Order::factory()->paid()->create(['user_id' => $user->id]);
+        $order = Order::factory()->delivered()->create(['user_id' => $user->id]);
         OrderItem::factory()->create([
             'order_id'   => $order->id,
             'product_id' => $product->id,

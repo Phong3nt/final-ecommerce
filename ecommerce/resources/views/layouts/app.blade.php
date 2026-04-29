@@ -77,6 +77,11 @@
             text-transform: uppercase;
             color: #6c757d;
         }
+
+        /* ── Alpine cloak ─────────────────────────────────── */
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 
     @stack('head')

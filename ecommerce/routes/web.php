@@ -201,6 +201,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // IMP-039: Admin bulk product status change
     Route::post('/products/bulk-status', [AdminProductController::class, 'bulkStatus'])->name('products.bulkStatus');
 
+    // Export products as CSV (must be before {product} wildcard)
+    Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
+
+    // Restore a soft-deleted product
+    Route::post('/products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore')->where('id', '[0-9]+');
+
     // PM-002: Admin product edit
     Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
     Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
@@ -266,6 +272,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
     Route::patch('/coupons/{coupon}/toggle', [AdminCouponController::class, 'toggle'])->name('coupons.toggle');
+    Route::post('/coupons/bulk', [AdminCouponController::class, 'bulkCoupons'])->name('coupons.bulk');
+    Route::post('/coupons/templates/generate', [AdminCouponController::class, 'storeTemplates'])->name('coupons.templates.generate');
+    Route::post('/coupons/templates/presets/{preset}', [AdminCouponController::class, 'generatePreset'])->name('coupons.templates.presets.generate');
+    Route::post('/coupons/templates/bulk', [AdminCouponController::class, 'bulkTemplates'])->name('coupons.templates.bulk');
+    Route::patch('/coupons/templates/{template}/toggle', [AdminCouponController::class, 'toggleTemplate'])->name('coupons.templates.toggle');
+    Route::post('/coupons/templates/{template}/assign', [AdminCouponController::class, 'assignTemplate'])->name('coupons.templates.assign');
 
     // NT-002: Admin in-app notifications for new orders
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
@@ -274,6 +286,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // IMP-016: Consolidated audit log
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+    // IMP-048: Shipping Simulator [DEMO] sandbox
+    Route::get('/demo', [\App\Http\Controllers\Admin\DemoController::class, 'index'])->name('demo.index');
+    Route::post('/demo/simulate', [\App\Http\Controllers\Admin\DemoController::class, 'simulate'])->name('demo.simulate');
+    Route::get('/demo/status/{order}', [\App\Http\Controllers\Admin\DemoController::class, 'status'])->name('demo.status');
 });
 
 // CP-003: Stripe webhook — public, no CSRF, no auth (Stripe signs the payload)

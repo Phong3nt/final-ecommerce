@@ -20,15 +20,36 @@ class CouponController extends Controller
             'code' => 'required|string|max:100',
         ]);
 
-        $coupon = Coupon::where('code', $request->input('code'))->first();
+        $code = strtoupper(trim((string) $request->input('code')));
+        $couponQuery = Coupon::query()->where('code', $code);
+
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $couponQuery->where(function ($query) use ($userId) {
+                $query->whereNull('user_id')->orWhere('user_id', $userId);
+            });
+        } else {
+            $couponQuery->whereNull('user_id');
+        }
+
+        $coupon = $couponQuery->first();
 
         if (!$coupon || !$coupon->isValid()) {
             return redirect()->route('cart.index')
                 ->withErrors(['coupon' => 'Invalid or expired coupon code.']);
         }
 
+        $cart = session('cart', []);
+        $subtotal = (float) collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        if ($coupon->min_order_amount !== null && $subtotal < $coupon->min_order_amount) {
+            return redirect()->route('cart.index')
+                ->withErrors(['coupon' => 'This coupon requires a higher minimum order amount.']);
+        }
+
         session()->put('checkout.coupon', [
+            'id' => $coupon->id,
             'code' => $coupon->code,
+            'name' => $coupon->name,
             'type' => $coupon->type,
             'value' => $coupon->value,
         ]);
